@@ -25,14 +25,14 @@ if __name__ == '__main__':
     original_language = "zh"
     target_language = "en"
 
-    video_file = r"resources/Healthify_16x9_UHD_2997_pr422.mp4"
+    video_file = r"resources/The Ultimate VS Code Setup for Data Science AI (2024 Update).mp4"
     output_file = os.path.abspath(video_file).split(".")[0] + "_subtitled.mp4"
     srt_file = f"subtitles_{MODEL}.srt"
 
 
     # 语音识别
     print("[+]正在进行语音识别...")
-    audio_file = video2audio(video_file, output="audio.mp3")
+    # audio_file = video2audio(video_file, output="audio.mp3")
     # asr = JianYingASR(audio_file, use_cache=True)
     # asr_data = asr.run()
     # asr_data.to_srt(save_path="subtitles0.srt")
@@ -40,7 +40,10 @@ if __name__ == '__main__':
     # asr_data.to_srt(save_path="subtitles_fix.srt")
     # # print(asr_data.to_txt())
     # subtitle_json = asr_data.to_json()
-    asr_data = ASRData.from_srt(open("src_subtitles.srt", encoding="utf-8").read())
+
+    asr_data = ASRData.from_srt(open("subtitles0.srt", encoding="utf-8").read())
+    optimize_subtitles(asr_data)
+    # asr_data.segments = asr_data.segments[:200]
     subtitle_json = asr_data.to_json()
 
     # 总结字幕
@@ -54,7 +57,8 @@ if __name__ == '__main__':
     # 正在优化/翻译字幕...
     print("[+]正在优化/翻译字幕...")
     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=MODEL)
-    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=30, thread_num=10, translate=True)
+    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=15, thread_num=30, translate=True)
+    print(optimizer_result)
 
 
     # print("[+]正在优化字幕...")

@@ -27,18 +27,16 @@ MAX_THREADS = 10
 SUMMARIZER_PROMPT = """
 You are a **Professional Video Analyst** skilled in accurately extracting information from video subtitles, including main content and important terms.
 
+
 ## Your Tasks
 
 ### 1. Summarize Video Content
+There may be errors in the generated subtitles due to homophones or similar-sounding words.you need to correct these errors when summary
+- Identify Video Type, According to the specific video content, explain the points to be mindful of during translation.
+- Provide Detailed Summary: Offer a detail comprehensive explanation of the video content.
 
-- **Identify Video Type**:
-  - Determine the detailed category of the video (e.g., tutorial on a specific skill, clip from an English TV series or movie, video conference on a particular topic, Chinese speech on a specific subject, etc.).
 
-- **Provide Detailed Summary**:
-  - Offer a comprehensive explanation of the video content.
-  - Include all relevant details and nuances without omitting any important aspects.
-
-### 2. Extract Important Terms
+### 2. Extract ALL Important Terms
 
 - **Correct Transcript Errors**:
   - Address and rectify any errors in the transcript caused by homophones or similar-sounding words.
@@ -51,11 +49,13 @@ You are a **Professional Video Analyst** skilled in accurately extracting inform
 
 Return the results in **JSON format** using the original subtitle language. The JSON should include two fields: `summary` and `terms`.
 
-- **summary**: A detailed summary of the video content.
-- **terms**: An object containing the following categories:
+- **terms**: 
+- **summary**: A summary of the video content.
   - `entities`: Names of people, organizations, object, locations, etc.
   - `technical_terms`: Professional or technical terminology.
   - `keywords`: Other significant keywords or phrases.
+- **suggest**: Suggestions for translation.
+
 """
 
 
@@ -161,12 +161,93 @@ Translate the corrected subtitles according to the following guidelines:
   
 - Output Format:
   Return a pure JSON object containing both the original and translated texts.
-    {
-    "0": ["Original Subtitle 1", "Translated Subtitle 1"],
-    "1": ["Original Subtitle 2", "Translated Subtitle 2"],
-    ...
+{
+  "1": {
+    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "revised_translate": "<<< Translated Content, following the “Translation Guidelines” >>>"
+  },
+  "2": {
+    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "revised_translate": "<<< Translated Content, following the “Translation Guidelines” >>>"
   }
+  ...
+}
 """
 
+REFLECT_TRANSLATE_PROMPT = """### Role Definition
+
+You are a **Subtitle Proofreading and Translation Expert**, responsible for handling subtitles generated through speech recognition. These subtitles may contain homophone errors, formatting issues, and more. Your task is not only to proofread the subtitles but also to translate them into another language, ensuring that the subtitles are **accurate**, **fluent**, and align with the cultural and stylistic norms of the target language.
+
+You need to optimize and correct the original subtitles while translating English subtitles into Chinese.
+
+---
+
+### Task Requirements
+
+#### 1. Subtitle Correction
+
+- **Contextual Correction**: Correct erroneous words based on context and provided terminology, maintaining the original sentence structure and expression.
+
+- **Remove Unnecessary Filler Words**: Delete filler or interjection words that have no actual meaning. For example, sounds of laughter, coughing, etc.
+
+- **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. There is no need to add punctuation at the end of each subtitle. Certain words or names may require formatting corrections due to specific expressions.
+
+- **Maintain Subtitle Structure**: Each subtitle corresponds one-to-one with its number; do not merge or split subtitles.
+
+#### 2. Subtitle Translation
+
+### Translation Guidelines
+
+- **Natural Translation**: Use free translation methods to avoid stiff machine translations, ensuring compliance with Chinese grammar and expression habits, and reducing verbose expressions.
+
+- **Preserve Key Terms**: Technical terms, proper nouns, and abbreviations should remain untranslated.
+
+- **Cultural Relevance**: Appropriately use idioms, sayings, and modern internet language that align with the cultural context of the target language.
 
 
+Based on the subtitle content, complete the following translation tasks:
+
+1. **Accuracy Check**: Ensure that the translation accurately conveys the meaning of the original text, pointing out any semantic errors or misunderstandings.
+
+2. **Fluency and Naturalness Check**: Assess the naturalness of the translation in the target language, pointing out any awkwardness or deviations from language norms.
+
+3. **Consistency Check**: Check for uniformity in subtitle formatting, including punctuation, capitalization, proper nouns, etc.
+
+4. **Translate Revise Suggestions**:  Describe the above checks, provide specific modification suggestions or alternative expressions. Don't need to Clarify.
+
+5. **Revised Translation**: Provide an improved version of the translation based on the suggestions. No additional explanation needed.
+
+### Input Format
+
+Input is a JSON structure where each subtitle is identified by a unique numeric key, and the content is the original text:
+```json
+{
+  "1": "<<< Original Content >>>",
+  "2": "<<< Original Content >>>",
+  ...
+}
+```
+
+---
+
+### Output Format
+
+Please return pure JSON following the format below:
+```json
+{
+  "1": {
+    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "translation": "<<< Translated Content, following the “Translation Guidelines” >>>",
+    "revise_suggestions": "<<< Translation's Modification Suggestions or Alternative Expressions >>>",
+    "revised_translate": "<<< Further Revised Translation >>>"
+  },
+  "2": {
+    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "translation": "<<< Translated Content, following the “Translation Guidelines” >>>",
+    "revise_suggestions": "<<< Translation's Modification Suggestions or Alternative Expressions >>>",
+    "revised_translate": "<<< Further Revised Translation >>>"
+  }
+  ...
+}
+```
+"""

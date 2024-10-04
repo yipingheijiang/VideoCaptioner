@@ -9,6 +9,7 @@ from openai import OpenAI
 from configs.subtitle_config import (
     TRANSLATE_PROMPT,
     OPTIMIZER_PROMPT,
+    REFLECT_TRANSLATE_PROMPT,
     DEFAULT_MODEL,
     SIMILARITY_THRESHOLD,
     REPAIR_THRESHOLD,
@@ -81,13 +82,14 @@ class SubtitleOptimizer:
             messages=message)
 
         response_content = json_repair.loads(response.choices[0].message.content)
-
-        optimized_text = {k: v[0] for k, v in response_content.items()}  # 字幕文本
+        print(response_content)
+        optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
 
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
 
-        # 在 translations 中查找对应的翻译
-        translations = dict(response_content.values())  # 文本-翻译 映射
+        # 在 translations 中查找对应的翻译  文本-翻译 映射
+        translations = {item["optimized_subtitle"]: item["revised_translate"] for item in response_content.values()}
+
         translated_subtitle = {k: f"{v}\n{translations.get(v, ' ')}" for k, v in aligned_subtitle.items()}
 
         return translated_subtitle
@@ -97,18 +99,22 @@ class SubtitleOptimizer:
         if self.summary_content:
             input_content += f"\nBelow is a summary of the subtitle content and related keywords:\n<summary>{self.summary_content}</summary>\n"
 
-        example_input = ('{"0": "hello everyone my name is Yang Yuxi","1": "i come from Xiamen Fujian which has a '
-                         'great musical atmosphere","2": "i used to play with myself to entertain myself.",'
-                         '"3": "the world in my eye is blurry","4": "fairy tale books are chaotic lines of various '
-                         'colors","5": "my buddies are mosaics that can be heard but not seen"}')
-        example_output = ('{"0": ["Hello everyone, my name is Yang Yuxi", "大家好，我叫杨玉熙"],"1": ["I come from Xiamen, '
-                          'Fujian, which has a great musical atmosphere", "来自有着良好音乐氛围的福建厦门"],"2": ["I used to play '
-                          'with myself to entertain myself.", "我以前常常自娱自乐"],"3": ["The world in my eyes is blurry", '
-                          '"我眼中的世界就是朦胧的"],"4": ["Fairy tale books are chaotic lines of various colors", '
-                          '"童话书是各色杂乱的线条"],"5": ["My buddies are mosaics that can be heard but not seen", '
-                          '"小伙伴是只听其声不见其形的马赛克"]}')
+        # example_input = ('{"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE '
+        #                  'right now."}')
+        # example_output = ('{"1": {"optimized_subtitle": "If you\'re a developer", "revised_translate": '
+        #                   '"如果你是开发者"}, "2": {"optimized_subtitle": "Then you probably cannot get around the Cursor IDE right '
+        #                   'now.", "revised_translate": '
+        #                   '"那么你现在可能无法避开Cursor这款IDE。"}}')
+        example_input = ('{"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE '
+                         'right now."}')
+        example_output = ('{"1": {"optimized_subtitle": "If you\'re a developer", "translate": "如果你是开发者", '
+                          '"revise_suggestions": "the translation is accurate and fluent.", "revised_translate": '
+                          '"如果你是开发者"}, "2": {"optimized_subtitle": "Then you probably cannot get around the Cursor IDE right '
+                          'now.", "translate": "那么你现在可能无法绕开Cursor这款IDE。", "revise_suggestions": "The term \'绕开\' '
+                          'feels awkward in this context. Consider using \'避开\' instead.", "revised_translate": '
+                          '"那么你现在可能无法避开Cursor这款IDE。"}}')
 
-        message = [{"role": "system", "content": TRANSLATE_PROMPT},
+        message = [{"role": "system", "content": REFLECT_TRANSLATE_PROMPT},
                    {"role": "user", "content": example_input},
                    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]

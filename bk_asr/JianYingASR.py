@@ -2,7 +2,7 @@ import datetime
 import hashlib
 import hmac
 import json
-import logging
+# import logging
 import os
 import re
 import subprocess
@@ -79,10 +79,10 @@ class JianYingASR(BaseASR):
         return response.json()
 
     def _run(self):
-        logging.info("正在上传文件...")
+        # logging.info("正在上传文件...")
         self.upload()
         query_id = self.submit()
-        logging.info(f"任务提交成功, 查询ID: {query_id}")
+        # logging.info(f"任务提交成功, 查询ID: {query_id}")
         resp_data = self.query(query_id)
         return resp_data
 
