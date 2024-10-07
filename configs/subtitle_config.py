@@ -7,7 +7,6 @@ OPENAI_BASE_URL = 'http://10.0.0.128:8000/v1'
 OPENAI_API_KEY = 'sk-4StuHHm6Z1q0VcPHdPTUBdmKMsHW9JNZKe4jV7pJikBsGRuj'
 MODEL = "gpt-4o-mini"
 
-
 # OPENAI_BASE_URL = 'https://api.smnet.asia/v1'
 # OPENAI_API_KEY = 'sk-zr0f9rc6VtfzdnAs0257Ee091a3e49119d7f8d1d55A33517'
 # MODEL = "gpt-4o-mini"
@@ -16,13 +15,15 @@ MODEL = "gpt-4o-mini"
 # OPENAI_API_KEY = 'sk-ZOCYCz5kexAS3X8JD3A33a5eB20f486eA26896798055F2C5'
 # MODEL = "claude-3-5-sonnet-20240620"
 
+OPENAI_BASE_URL = 'https://api.groq.com/openai/v1'
+OPENAI_API_KEY = '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'
+MODEL = "llama-3.1-70b-versatile"
 
 DEFAULT_MODEL = "gpt-4o-mini"
 SIMILARITY_THRESHOLD = 0.4
 REPAIR_THRESHOLD = 0.5
 BATCH_SIZE = 50
 MAX_THREADS = 10
-
 
 SUMMARIZER_PROMPT = """
 You are a **Professional Video Analyst** skilled in accurately extracting information from video subtitles, including main content and important terms.
@@ -57,7 +58,6 @@ Return the results in **JSON format** using the original subtitle language. The 
 - **suggest**: Suggestions for translation.
 
 """
-
 
 OPTIMIZER_PROMPT = """
 You are a Subtitle Correction Expert.
@@ -96,7 +96,7 @@ Based on the original text, perform the following corrections:
     "1": "Original Subtitle 2",
     ...
   }
-  
+
 - Output Format:
     {
     "0": ["Optimized Subtitle 1"],
@@ -104,7 +104,6 @@ Based on the original text, perform the following corrections:
     ...
   }
 """
-
 
 TRANSLATE_PROMPT = """
 You are a Subtitle Correction and Translation Expert tasked with processing subtitle texts generated through speech recognition. These subtitles may contain various errors, such as homophone mistakes and formatting issues.
@@ -134,7 +133,7 @@ Based on the original text, perform the following corrections:
    - Ensure a strict one-to-one correspondence between each subtitle number and its text.
    - Do not merge multiple subtitles into one
    - Do not split a single subtitle into multiple parts. 
-   
+
 ## Provide Subtitle Translations
 
 Translate the corrected subtitles according to the following guidelines:
@@ -158,7 +157,7 @@ Translate the corrected subtitles according to the following guidelines:
     "1": "Original Subtitle 2",
     ...
   }
-  
+
 - Output Format:
   Return a pure JSON object containing both the original and translated texts.
 {
@@ -251,3 +250,58 @@ Please return pure JSON following the format below:
 }
 ```
 """
+
+REFLECT_TRANSLATE_PROMPT0 = """You are a subtitle proofreading and translation expert. Your task is to process subtitles generated through speech recognition.
+
+These subtitles may contain errors, and you need to correct the original subtitles and translate them from English to Chinese. Please follow these guidelines:
+
+1. Subtitle correction:
+    - **Contextual Correction**: Correct erroneous words based on context and provided terminology, maintaining the original sentence structure and expression.
+    - **Remove Unnecessary Filler Words**: Delete filler or interjection words that have no actual meaning. For example, sounds of laughter, coughing, etc.
+    - **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. There is no need to add punctuation at the end of each subtitle. Certain words or names may require formatting corrections due to specific expressions.
+    - **Maintain Subtitle Structure**: Each subtitle corresponds one-to-one with its number; do not merge or split subtitles.
+
+
+2. Translation process:
+   a) Translation:
+      Provide an accurate translation of the original subtitle. Follow these translation guidelines:
+      - Natural translation: Use paraphrasing to avoid stiff machine translations, ensuring it conforms to Chinese grammar and expression habits.
+      - Retain key terms: Technical terms, proper nouns, and abbreviations should remain untranslated.
+      - Cultural relevance: Appropriately use idioms, proverbs, and modern expressions that fit the target language's cultural background.
+
+   b) Translation revision suggestions:
+      - Check accuracy: Ensure the translation accurately conveys the original meaning. Pointing out any semantic errors or misunderstandings.
+      - Evaluate fluency and naturalness in Chinese, **reduce lengthy expressions**. Pointing out any awkwardness or deviations from language norms.
+      - Verify consistency in formatting, punctuation, and proper nouns.
+      - If not conforming to Chinese expression habits, clearly point out the non-conforming parts.
+
+   c) Revised translation:
+      Provide an improved version of the translation based on the suggestions. No additional explanation needed.
+
+Input format:
+A JSON structure where each subtitle is identified by a unique numeric key:
+{
+  "1": "<<< Original Content >>>",
+  "2": "<<< Original Content >>>",
+  ...
+}
+
+Output format:
+Return a pure JSON following this structure:
+{
+  "1": {
+    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "translation": "<<< Direct Translation >>>",
+    "revise_suggestions": "<<< Translation Revision Suggestions >>>",
+    "revised_translate": "<<< Revised Paraphrased Translation >>>"
+  },
+  "2": {
+    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "translation": "<<< Direct Translation >>>",
+    "revise_suggestions": "<<< Translation Revision Suggestions >>>",
+    "revised_translate": "<<< Revised Paraphrased Translation >>>"
+  },
+  ...
+}
+
+Please process the given subtitles according to these instructions and return the results in the specified JSON format."""
