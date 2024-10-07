@@ -16,7 +16,7 @@ from utils.logger import setup_logger
 os.environ['OPENAI_BASE_URL'] = OPENAI_BASE_URL
 os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
 # MODEL = "gpt-4o"
-MODEL = "claude-3-5-sonnet@20240620"
+# MODEL = "claude-3-5-sonnet@20240620"
 
 logger = setup_logger("main")
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     original_language = "zh"
     target_language = "en"
 
-    video_file = r"resources/The Ultimate VS Code Setup for Data Science AI (2024 Update).mp4"
+    video_file = r"resources/Pointless Ai Products.mp4"
     output_file = os.path.abspath(video_file).split(".")[0] + "_subtitled.mp4"
     srt_file = f"subtitles_{MODEL}.srt"
 
@@ -39,25 +39,26 @@ if __name__ == '__main__':
     # optimize_subtitles(asr_data)
     # asr_data.to_srt(save_path="subtitles_fix.srt")
     # # print(asr_data.to_txt())
+    # # raise 4
     # subtitle_json = asr_data.to_json()
 
     asr_data = ASRData.from_srt(open("subtitles0.srt", encoding="utf-8").read())
     optimize_subtitles(asr_data)
-    # asr_data.segments = asr_data.segments[:200]
+    asr_data.segments = asr_data.segments[:20]
     subtitle_json = asr_data.to_json()
+    print(subtitle_json)
 
     # 总结字幕
     print("[+]正在总结字幕...")
     summarizer = SubtitleSummarizer(model=MODEL)
     summarize_result = summarizer.summarize(asr_data.to_txt())
     print(summarize_result)
-    # summarize_result = ""
     # raise 0
 
     # 正在优化/翻译字幕...
     print("[+]正在优化/翻译字幕...")
     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=MODEL)
-    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=15, thread_num=30, translate=True)
+    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=10, thread_num=100, translate=True)
     print(optimizer_result)
 
 
