@@ -8,17 +8,7 @@ from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, Mess
 from qfluentwidgets import FluentIcon as FIF
 
 # from .gallery_interface import GalleryInterface
-# from .home_interface import HomeInterface
-# from .basic_input_interface import BasicInputInterface
-# from .date_time_interface import DateTimeInterface
-# from .dialog_interface import DialogInterface
-# from .layout_interface import LayoutInterface
-# from .icon_interface import IconInterface
-# from .material_interface import MaterialInterface
-# from .menu_interface import MenuInterface
-# from .navigation_view_interface import NavigationViewInterface
-# from .scroll_interface import ScrollInterface
-# from .status_info_interface import StatusInfoInterface
+from .home_interface import HomeInterface
 from .setting_interface import SettingInterface
 # from .text_interface import TextInterface
 # from .view_interface import ViewInterface
@@ -35,40 +25,39 @@ class MainWindow(FluentWindow):
         super().__init__()
         self.initWindow()
 
-        # create sub interface
-        self.homeInterface = SettingInterface(self)
+        # 创建子界面
+        self.homeInterface = HomeInterface(self)
         self.settingInterface = SettingInterface(self)
 
-        # enable acrylic effect
+        # 启用亚克力效果
         self.navigationInterface.setAcrylicEnabled(True)
 
         self.connectSignalToSlot()
 
-        # add items to navigation interface
+        # 向导航界面添加项目
         self.initNavigation()
         self.splashScreen.finish()
 
-    def connectSignalToSlot(self):
-        signalBus.micaEnableChanged.connect(self.setMicaEffectEnabled)
-
     def initNavigation(self):
-        # add navigation items
+        """初始化导航栏"""
+        # 添加导航项
         t = Translator()
-        # self.addSubInterface(self.homeInterface, FIF.HOME, self.tr('hhh'))
+        
+        self.addSubInterface(self.homeInterface, FIF.HOME, self.tr('主页'))
         self.navigationInterface.addSeparator()
         pos = NavigationItemPosition.SCROLL
 
-        # add custom widget to bottom
+        # 在底部添加自定义小部件
         self.navigationInterface.addWidget(
             routeKey='avatar',
             widget=NavigationAvatarWidget('zhiyiYo', ':/gallery/images/shoko.png'),
             onClick=self.onSupport,
             position=NavigationItemPosition.BOTTOM
         )
-        self.addSubInterface(
-            self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
+        self.addSubInterface(self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
 
     def initWindow(self):
+        """初始化窗口"""
         self.resize(960, 780)
         self.setMinimumWidth(760)
         self.setWindowIcon(QIcon(':/gallery/images/logo.png'))
@@ -76,18 +65,25 @@ class MainWindow(FluentWindow):
 
         self.setMicaEffectEnabled(cfg.get(cfg.micaEnabled))
 
-        # create splash screen
+        # 创建启动画面
         self.splashScreen = SplashScreen(self.windowIcon(), self)
         self.splashScreen.setIconSize(QSize(106, 106))
         self.splashScreen.raise_()
 
         desktop = QApplication.desktop().availableGeometry()
+        # 设置窗口位置, 居中
         w, h = desktop.width(), desktop.height()
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
+
         self.show()
         QApplication.processEvents()
 
+    def connectSignalToSlot(self):
+        """连接信号和槽"""
+        signalBus.micaEnableChanged.connect(self.setMicaEffectEnabled)
+
     def onSupport(self):
+        """支持作者"""
         w = MessageBox(
             '支持作者🥰',
             '个人开发不易，如果这个项目帮助到了您，可以考虑请作者喝一瓶快乐水🥤。您的支持就是作者开发和维护项目的动力🚀',

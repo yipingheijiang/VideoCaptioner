@@ -288,8 +288,8 @@ class SettingInterface(ScrollArea):
                 parent=self
             )
             return
+        # TODO: 检查 API Key 是否正确
 
-        # 检查连接
         InfoBar.success(
             self.tr('成功'),
             self.tr('API 正常'),
