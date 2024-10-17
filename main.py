@@ -1,77 +1,56 @@
-import logging
+# coding:utf-8
 import os
+import sys
 
-from bk_asr import BcutASR, JianYingASR, KuaiShouASR
-from bk_asr.ASRData import ASRData
-from configs.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
-from subtitle_processor.optimizer import SubtitleOptimizer
-from subtitle_processor.summarizer import SubtitleSummarizer
-# from subtitle_processor.translator import SubtitleTranslator
+from PyQt5.QtCore import Qt, QTranslator
+from PyQt5.QtGui import QFont, QFontDatabase
+from PyQt5.QtWidgets import QApplication
+from qfluentwidgets import FluentTranslator
 
-from utils.video_utils import add_subtitles, video2audio
-from configs.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
-from utils.optimize_subtitles import optimize_subtitles
-from utils.logger import setup_logger
-
-os.environ['OPENAI_BASE_URL'] = OPENAI_BASE_URL
-os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
-# MODEL = "gpt-4o"
-# MODEL = "claude-3-5-sonnet@20240620"
-
-logger = setup_logger("main")
-
-if __name__ == '__main__':
-    # logging.basicConfig(level=logging.DEBUG)
-    original_language = "zh"
-    target_language = "en"
-
-    video_file = r"resources/Pointless Ai Products.mp4"
-    output_file = os.path.abspath(video_file).split(".")[0] + "_subtitled.mp4"
-    srt_file = f"subtitles_{MODEL}.srt"
+from app.common.config import cfg
+from app.view.main_window import MainWindow
 
 
-    # 语音识别
-    print("[+]正在进行语音识别...")
-    # audio_file = video2audio(video_file, output="audio.mp3")
-    # asr = JianYingASR(audio_file, use_cache=True)
-    # asr_data = asr.run()
-    # asr_data.to_srt(save_path="subtitles0.srt")
-    # optimize_subtitles(asr_data)
-    # asr_data.to_srt(save_path="subtitles_fix.srt")
-    # # print(asr_data.to_txt())
-    # # raise 4
-    # subtitle_json = asr_data.to_json()
+# enable dpi scale
+if cfg.get(cfg.dpiScale) == "Auto":
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+else:
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+    os.environ["QT_SCALE_FACTOR"] = str(cfg.get(cfg.dpiScale))
 
-    asr_data = ASRData.from_srt(open("subtitles0.srt", encoding="utf-8").read())
-    optimize_subtitles(asr_data)
-    asr_data.segments = asr_data.segments[:20]
-    subtitle_json = asr_data.to_json()
-    print(subtitle_json)
+QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
-    # 总结字幕
-    print("[+]正在总结字幕...")
-    summarizer = SubtitleSummarizer(model=MODEL)
-    summarize_result = summarizer.summarize(asr_data.to_txt())
-    print(summarize_result)
-    # raise 0
+# create application
+app = QApplication(sys.argv)
+app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
 
-    # 正在优化/翻译字幕...
-    print("[+]正在优化/翻译字幕...")
-    optimizer = SubtitleOptimizer(summary_content=summarize_result, model=MODEL)
-    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=10, thread_num=100, translate=True)
-    print(optimizer_result)
+# 创建一个全局字体
+# font = QFont("./app/resource/AlibabaPuHuiTi-Medium.ttf")
+# app.setFont(font)
+# 加载自定义字体
+# font_path = os.path.join(os.path.dirname(__file__), "app/resource/AlibabaPuHuiTi-Medium.ttf")  # 替换为你的字体路径
+# font_id = QFontDatabase.addApplicationFont(font_path)
+# if font_id == -1:
+#     print("字体加载失败")
+# else:
+#     # 获取字体系列名称
+#     font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+#     print(font_family)
+#     app.setFont(QFont(font_family, 12))  # 字体大小为 12
 
+# internationalization
+locale = cfg.get(cfg.language).value
+translator = FluentTranslator(locale)
+galleryTranslator = QTranslator()
+galleryTranslator.load(locale, "gallery", ".", ":/gallery/i18n")
 
-    # print("[+]正在优化字幕...")
-    # optimizer = SubtitleOptimizer(summary_content=summarize_result)
-    # optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=50, thread_num=10)
+app.installTranslator(translator)
+app.installTranslator(galleryTranslator)
 
-    # 保存字幕
-    for i, subtitle_text in optimizer_result.items():
-        seg = asr_data.segments[int(i)-1]
-        seg.text = subtitle_text
-    asr_data.to_srt(save_path=srt_file)
+# create main window
+w = MainWindow()
+w.show()
 
-    print("[+]正在添加字幕...")
-    subtitle_file = srt_file
-    add_subtitles(video_file, subtitle_file, output_file, log='quiet', soft_subtitle=True)
+app.exec_()
