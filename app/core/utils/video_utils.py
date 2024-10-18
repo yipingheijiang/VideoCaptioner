@@ -41,8 +41,11 @@ def add_subtitles(
     try:
         if soft_subtitle:
             # 添加软字幕
-            cmd = ['ffmpeg', '-i', input_file, '-i', subtitle_file, '-c:v', 'copy', '-c:a', 'copy', '-c:s', 'mov_text', '-loglevel', 'quiet',output, '-y']
-            subprocess.run(cmd)
+            cmd = ['ffmpeg', '-i', input_file, '-i', subtitle_file, '-c:v', 'copy', '-c:a', 'copy', '-c:s', 'mov_text',output, '-y']
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            # print(result.stdout)
+            # print(result.stderr)
+            # print(" ".join(cmd))
         else:
             # 硬字幕
             # 格式化 font_color 为 &HBBGGRR&

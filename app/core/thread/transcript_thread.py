@@ -12,6 +12,7 @@ from ..utils.video_utils import video2audio
 class TranscriptThread(QThread):
     finished = pyqtSignal(Task)
     progress = pyqtSignal(int, str)
+    error = pyqtSignal(str)
 
     def __init__(self, task: Task):
         super().__init__()
@@ -55,7 +56,8 @@ class TranscriptThread(QThread):
             self.finished.emit(self.task)
         except Exception as e:
             self.task.status = Task.Status.FAILED
-            self.finished.emit(self.task)
+            self.error.emit(str(e))
+            self.progress.emit(100, "转录失败")
     
     def progress_callback(self, value, message):
         self.progress.emit(int(30 + int(value)//100 * 70), message)

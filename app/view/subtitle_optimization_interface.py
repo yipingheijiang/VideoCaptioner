@@ -167,7 +167,7 @@ class SubtitleOptimizationInterface(QWidget):
         self.setup_signals()
         self.task = None
 
-        self.load_srt_file("E:\\GithubProject\\VideoCaptioner\\app\\core\\subtitles_llama-3.1-70b-versatile.srt")
+        # self.load_srt_file("E:\\GithubProject\\VideoCaptioner\\app\\core\\subtitles_llama-3.1-70b-versatile.srt")
 
     def setup_signals(self):
         """
@@ -198,6 +198,7 @@ class SubtitleOptimizationInterface(QWidget):
         self.subtitle_optimization_thread.finished.connect(self.on_subtitle_optimization_finished)
         self.subtitle_optimization_thread.progress.connect(self.on_subtitle_optimization_progress)
         self.subtitle_optimization_thread.update.connect(self.update_data)
+        self.subtitle_optimization_thread.error.connect(self.on_subtitle_optimization_error)
         self.subtitle_optimization_thread.start()
 
         InfoBar.info(
@@ -239,6 +240,7 @@ class SubtitleOptimizationInterface(QWidget):
         """
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
+        
         # 更新 model 字幕数据
         # file_path = task.result_subtitle_save_path
         # print(file_path)
@@ -250,6 +252,19 @@ class SubtitleOptimizationInterface(QWidget):
         InfoBar.success(
             self.tr("优化完成"),
             self.tr("优化完成字幕"),
+            duration=1500,
+            parent=self
+        )
+    
+    def on_subtitle_optimization_error(self, error):
+        """
+        字幕优化错误时的处理函数。
+        """
+        self.start_button.setEnabled(True)
+        self.file_select_button.setEnabled(True)
+        InfoBar.error(
+            self.tr("优化失败"),
+            self.tr(error),
             duration=1500,
             parent=self
         )

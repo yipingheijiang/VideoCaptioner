@@ -136,12 +136,24 @@ class VideoInfoCard(CardWidget):
         self.transcript_thread = TranscriptThread(self.task)
         self.transcript_thread.finished.connect(self.on_transcript_finished)
         self.transcript_thread.progress.connect(self.on_transcript_progress)
+        self.transcript_thread.error.connect(self.on_transcript_error)
         self.transcript_thread.start()
 
     def on_transcript_progress(self, value, message):
         self.start_button.setText(f"{message}")
         self.progress_ring.setValue(value)
 
+    def on_transcript_error(self, error):
+        self.start_button.setDisabled(False)
+        self.start_button.setText("开始转录")
+        self.progress_ring.setValue(100)
+        InfoBar.error(
+            self.tr("转录失败"),
+            self.tr(error),
+            duration=1500,
+            parent=self
+        )
+    
     def on_transcript_finished(self, task):
         self.start_button.setDisabled(False)
         self.start_button.setText("开始转录")

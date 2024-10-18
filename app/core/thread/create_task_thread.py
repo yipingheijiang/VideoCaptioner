@@ -147,6 +147,19 @@ class CreateTaskThread(QThread):
         self.finished.emit(task)
         return task
 
-    def create_video_synthesis_task(self):
-        # 实现视频合成任务的创建逻辑
-        pass
+    def create_video_synthesis_task(subtitle_file, video_file):
+        video_save_path = Path(video_file).parent / "generated_video.mp4"
+        
+        # 创建 Task 对象
+        task = Task(
+            id=0,
+            queued_at=datetime.datetime.now(),
+            started_at=datetime.datetime.now(),
+            completed_at=None,
+            status=Task.Status.OPTIMIZING,
+            file_paths=str(Path(video_file)),
+            result_subtitle_save_path=str(Path(subtitle_file)),
+            video_save_path=str(video_save_path),
+            soft_subtitle=cfg.soft_subtitle.value,
+        )
+        return task

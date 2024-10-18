@@ -58,6 +58,7 @@ class Config(QConfig):
     subtitle_style = OptionsConfigItem("Subtitle", "Subtitle_STYLE", SubtitleStyle.DEFAULT.value, OptionsValidator(SubtitleStyle), EnumSerializer(SubtitleStyle))
     target_language = OptionsConfigItem("Subtitle", "TARGET_LANGUAGE", TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
                                         OptionsValidator(TargetLanguageEnum), EnumSerializer(TargetLanguageEnum))
+    soft_subtitle = ConfigItem("Subtitle", "Soft_Subtitle", True, BoolValidator())
 
     # 保存配置
     work_dir = ConfigItem("Save", "Work_Dir", "app/work_dir", FolderValidator())
