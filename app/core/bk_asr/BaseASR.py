@@ -14,13 +14,12 @@ class BaseASR:
     CACHE_FILE = os.path.join(tempfile.gettempdir(), "bk_asr", "asr_cache.json")
     _lock = threading.Lock()
 
-    def __init__(self, audio_path: Optional[Union[str, bytes]] = None, use_cache: bool = False):
+    def __init__(self, audio_path: Optional[Union[str, bytes]] = None, use_cache: bool = False, need_word_time_stamp: bool = False):
         self.audio_path = audio_path
         self.file_binary = None
 
         self.crc32_hex = None
         self.use_cache = use_cache
-
         self._set_data()
 
         self.cache = self._load_cache()
@@ -67,12 +66,12 @@ class BaseASR:
     def _get_key(self):
         return f"{self.__class__.__name__}-{self.crc32_hex}"
 
-    def run(self, callback=None):
+    def run(self, callback=None, **kwargs):
         k = self._get_key()
         if k in self.cache and self.use_cache:
             resp_data = self.cache[k]
         else:
-            resp_data = self._run(callback)
+            resp_data = self._run(callback, **kwargs)
             # Cache the result
             self.cache[k] = resp_data
             self._save_cache()
@@ -82,7 +81,7 @@ class BaseASR:
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
         raise NotImplementedError("_make_segments method must be implemented in subclass")
 
-    def _run(self, callback=None) -> dict:
+    def _run(self, callback=None, **kwargs) -> dict:
         """ Run the ASR service and return the response data. """
         raise NotImplementedError("_run method must be implemented in subclass")
 

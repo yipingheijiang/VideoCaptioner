@@ -27,6 +27,13 @@ class Language(Enum):
     ENGLISH = QLocale(QLocale.English)
     AUTO = QLocale()
 
+class SubtitleLayoutEnum(Enum):
+    """ 字幕布局 ["译文在上", "原文在上", "仅原文", "仅译文"]"""
+    TRANSLATE_ON_TOP = "译文在上"
+    ORIGINAL_ON_TOP = "原文在上"
+    ONLY_ORIGINAL = "仅原文"
+    ONLY_TRANSLATE = "仅译文"
+
 
 class LanguageSerializer(ConfigSerializer):
     """ Language serializer """
@@ -55,10 +62,14 @@ class Config(QConfig):
     # 字幕配置
     need_optimize = ConfigItem("Subtitle", "Need_Optimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "Need_Translate", True, BoolValidator())
-    subtitle_style = OptionsConfigItem("Subtitle", "Subtitle_STYLE", SubtitleStyle.DEFAULT.value, OptionsValidator(SubtitleStyle), EnumSerializer(SubtitleStyle))
+    # subtitle_style = OptionsConfigItem("Subtitle", "Subtitle_STYLE", SubtitleStyle.DEFAULT.value, OptionsValidator(SubtitleStyle), EnumSerializer(SubtitleStyle))
     target_language = OptionsConfigItem("Subtitle", "TARGET_LANGUAGE", TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
                                         OptionsValidator(TargetLanguageEnum), EnumSerializer(TargetLanguageEnum))
     soft_subtitle = ConfigItem("Subtitle", "Soft_Subtitle", True, BoolValidator())
+    # 字幕样式配置
+    subtitle_style_name = ConfigItem("SubtitleStyle", "StyleName", "default")
+    subtitle_layout = ConfigItem("SubtitleStyle", "Layout", "原文在上")
+    subtitle_preview_image = ConfigItem("SubtitleStyle", "PreviewImage", "")
 
     # 保存配置
     work_dir = ConfigItem("Save", "Work_Dir", "app/work_dir", FolderValidator())

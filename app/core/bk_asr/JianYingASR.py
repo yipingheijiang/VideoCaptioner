@@ -134,6 +134,8 @@ class JianYingASR(BaseASR):
                                                            tdid='3943278516897751')
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, data=payload, headers=headers)
+        print("resp=============")
+        print(response.text)
         response.raise_for_status()
         login_data = response.json()
         self.access_key = login_data['data']['access_key_id']

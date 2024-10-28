@@ -7,6 +7,8 @@ from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, Mess
                             SplashScreen)
 from qfluentwidgets import FluentIcon as FIF
 
+from app.view.subtitle_style_interface import SubtitleStyleInterface
+
 # from .gallery_interface import GalleryInterface
 from .home_interface import HomeInterface
 from .setting_interface import SettingInterface
@@ -28,6 +30,7 @@ class MainWindow(FluentWindow):
         # 创建子界面
         self.homeInterface = HomeInterface(self)
         self.settingInterface = SettingInterface(self)
+        self.subtitleStyleInterface = SubtitleStyleInterface(self)
 
         # 启用亚克力效果
         self.navigationInterface.setAcrylicEnabled(True)
@@ -44,6 +47,7 @@ class MainWindow(FluentWindow):
         t = Translator()
         
         self.addSubInterface(self.homeInterface, FIF.HOME, self.tr('主页'))
+        self.addSubInterface(self.subtitleStyleInterface, FIF.FONT, self.tr('字幕样式'))
         self.navigationInterface.addSeparator()
         pos = NavigationItemPosition.SCROLL
 
@@ -56,9 +60,12 @@ class MainWindow(FluentWindow):
         )
         self.addSubInterface(self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
 
+        # 添加字幕样式
+
+
     def initWindow(self):
         """初始化窗口"""
-        self.resize(940, 780)
+        self.resize(1000, 800)
         self.setMinimumWidth(700)
         self.setWindowIcon(QIcon(':/gallery/images/logo.png'))
         self.setWindowTitle('VideoCaptioner')

@@ -24,7 +24,7 @@ class LineEditSettingCard(SettingCard):
 
         self.lineEdit.setMinimumWidth(280)
 
-        # self.setValue(qconfig.get(configItem))
+        self.setValue(qconfig.get(configItem))
 
         self.lineEdit.textChanged.connect(self.__onTextChanged)
         configItem.valueChanged.connect(self.setValue)

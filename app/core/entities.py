@@ -28,17 +28,17 @@ class TranscribeModelEnum(Enum):
 class TargetLanguageEnum(Enum):
     """ 目标语言 """
     CHINESE_SIMPLIFIED = "简体中文"
-    CHINESE_TRADITIONAL = "繁体中文"
-    ENGLISH = "英语"
-    JAPANESE = "日语"
-    KOREAN = "韩语"
-    FRENCH = "法语"
-    GERMAN = "德语"
-    SPANISH = "西班牙语"
-    ITALIAN = "意大利语"
-    PORTUGUESE = "葡萄牙语"
-    RUSSIAN = "俄语"
-    TURKISH = "土耳其语"
+    CHINESE_TRADITIONAL = "繁体中文" 
+    ENGLISH = "English"
+    JAPANESE = "日本語"
+    KOREAN = "Korean"
+    FRENCH = "French" 
+    GERMAN = "German"
+    SPANISH = "Spanish"
+    ITALIAN = "Italian"
+    PORTUGUESE = "Portuguese"
+    RUSSIAN = "Russian"
+    TURKISH = "Turkish"
 
 
 @dataclass
@@ -68,7 +68,7 @@ class Task:
         TRANSCRIBING = "转录中"
         OPTIMIZING = "优化中"
         TRANSLATING = "翻译中"
-        GENERATING = "合成视频中"
+        GENERATING = "生成视频中"
         COMPLETED = "已完成"
         FAILED = "失败"
         CANCELED = "已取消"
@@ -87,7 +87,7 @@ class Task:
     work_dir: Optional[str] = None
 
     # 初始输入
-    file_paths: Optional[str] = None
+    file_path: Optional[str] = None
     url: Optional[str] = None
     source: Source = Source.FILE_IMPORT
     original_language: Optional[str] = None
@@ -101,6 +101,7 @@ class Task:
     # 转录（转录模型）
     transcribe_model: Optional[TranscribeModelEnum] = TranscribeModelEnum.JIANYING
     use_asr_cache: bool = True
+    
     original_subtitle_save_path: Optional[str] = None
 
     # LLM（优化翻译模型）

@@ -115,13 +115,29 @@ class SettingInterface(ScrollArea):
 
         # 字幕合成配置
         self.subtitleGroup = SettingCardGroup(self.tr("字幕合成配置"), self.scrollWidget)
-        self.subtitleStyleCard = ComboBoxSettingCard(
-            cfg.subtitle_style,
+        self.subtitleStyleCard = HyperlinkCard(
+            "",
+            self.tr('修改'),
             FIF.FONT,
             self.tr('字幕样式'),
-            self.tr('选择字幕的样式'),
-            texts=[style.value for style in cfg.subtitle_style.validator.options],
-            parent=self.subtitleGroup
+            self.tr('选择字幕的颜色、大小、字体等'),
+            self.subtitleGroup
+        )
+        self.subtitleLayoutCard = HyperlinkCard(
+            "",
+            self.tr('修改'),
+            FIF.FONT,
+            self.tr('字幕布局'),
+            self.tr('选择字幕的布局'),
+            self.subtitleGroup
+        )
+        # 开启软字幕
+        self.softSubtitleCard = SwitchSettingCard(
+            FIF.FONT,
+            self.tr('软字幕'),
+            self.tr('是否开启软字幕'),
+            cfg.soft_subtitle,
+            self.subtitleGroup
         )
 
         # 保存配置
@@ -214,21 +230,21 @@ class SettingInterface(ScrollArea):
         self.scrollWidget.setObjectName('scrollWidget')
         self.settingLabel.setObjectName('settingLabel')
 
-        StyleSheet.SETTING_INTERFACE.apply(self)
-        # self.setStyleSheet("""        
-        #     SettingInterface, #scrollWidget {
-        #         background-color: transparent;
-        #     }
-        #     QScrollArea {
-        #         border: none;
-        #         background-color: transparent;
-        #     }
-        #     QLabel#settingLabel {
-        #         font: 33px 'LXGW WenKai';
-        #         background-color: transparent;
-        #         color: white;
-        #     }
-        # """)
+        # StyleSheet.SETTING_INTERFACE.apply(self)
+        self.setStyleSheet("""        
+            SettingInterface, #scrollWidget {
+                background-color: transparent;
+            }
+            QScrollArea {
+                border: none;
+                background-color: transparent;
+            }
+            QLabel#settingLabel {
+                font: 33px 'LXGW WenKai';
+                background-color: transparent;
+                color: white;
+            }
+        """)
 
         # initialize layout
         self.__initLayout()
@@ -252,7 +268,8 @@ class SettingInterface(ScrollArea):
         self.translateGroup.addSettingCard(self.targetLanguageCard)
 
         self.subtitleGroup.addSettingCard(self.subtitleStyleCard)
-
+        self.subtitleGroup.addSettingCard(self.subtitleLayoutCard)
+        self.subtitleGroup.addSettingCard(self.softSubtitleCard)
         self.saveGroup.addSettingCard(self.savePathCard)
 
         self.personalGroup.addSettingCard(self.themeCard)
@@ -285,6 +302,10 @@ class SettingInterface(ScrollArea):
         # 保存路径
         self.savePathCard.clicked.connect(self.__onsavePathCardClicked)
 
+        # 字幕样式修改跳转
+        self.subtitleStyleCard.linkButton.clicked.connect(lambda: self.window().switchTo(self.window().subtitleStyleInterface))
+        self.subtitleLayoutCard.linkButton.clicked.connect(lambda: self.window().switchTo(self.window().subtitleStyleInterface))
+        
         # 个性化
         self.themeCard.optionChanged.connect(lambda ci: setTheme(cfg.get(ci)))
         self.themeColorCard.colorChanged.connect(setThemeColor)

@@ -34,23 +34,24 @@ class BcutASR(BaseASR):
         'Content-Type': 'application/json'
     }
 
-    def __init__(self, audio_path: [str, bytes], use_cache: bool = False):
+    def __init__(self, audio_path: str | bytes, use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache=use_cache)
         self.session = requests.Session()
-        self.task_id = None
-        self.__etags = []
+        self.task_id: Optional[str] = None
+        self.__etags: list[str] = []
 
-        self.__in_boss_key: Optional[str, None] = None
-        self.__resource_id: Optional[str, None] = None
-        self.__upload_id: Optional[str, None] = None
-        self.__upload_urls: Optional[list[str]] = []
-        self.__per_size: Optional[int, None] = None
-        self.__clips: Optional[int, None] = None
+        self.__in_boss_key: Optional[str] = None
+        self.__resource_id: Optional[str] = None
+        self.__upload_id: Optional[str] = None
+        self.__upload_urls: list[str] = []
+        self.__per_size: Optional[int] = None
+        self.__clips: Optional[int] = None
 
         self.__etags: Optional[list[str]] = []
-        self.__download_url: Optional[str, None] = None
-        self.task_id: Optional[str, None] = None
+        self.__download_url: Optional[str] = None
+        self.task_id: Optional[str] = None
 
+        self.need_word_time_stamp = need_word_time_stamp
 
     def upload(self) -> None:
         """申请上传"""
@@ -139,20 +140,36 @@ class BcutASR(BaseASR):
         resp = resp.json()
         return resp["data"]
 
-    def _run(self):
+    def _run(self, callback=None, **kwargs):
+        if callback is None:
+            callback = lambda x, y: None
+
+        callback(0, "上传中")
         self.upload()
+
+        callback(40, "创建任务中")
+
         self.create_task()
+
+        callback(60, "正在转录")
+
         # 轮询检查任务状态
         for _ in range(500):
             task_resp = self.result()
             if task_resp["state"] == 4:
                 break
             time.sleep(1)
+
+        callback(100, "转录成功")
+
         logging.info(f"转换成功")
         return json.loads(task_resp["result"])
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
-        return [ASRDataSeg(u['transcript'], u['start_time'], u['end_time']) for u in resp_data['utterances']]
+        if self.need_word_time_stamp:
+            return [ASRDataSeg(w['label'].strip(), w['start_time'], w['end_time']) for u in resp_data['utterances'] for w in u['words']]
+        else:
+            return [ASRDataSeg(u['transcript'], u['start_time'], u['end_time']) for u in resp_data['utterances']]
 
 
 if __name__ == '__main__':

@@ -19,20 +19,19 @@ class VideoSynthesisThread(QThread):
 
     def run(self):
         try:
-            video_file = self.task.file_paths
+            video_file = self.task.file_path
             result_subtitle_save_path = self.task.result_subtitle_save_path
             video_save_path = self.task.video_save_path
             soft_subtitle = self.task.soft_subtitle
-            
-            self.progress.emit(5, "正在合成视频...")
-            add_subtitles(video_file, result_subtitle_save_path, video_save_path, log='quiet', soft_subtitle=soft_subtitle)
-            
-            self.progress.emit(100, "视频合成完成")
+            self.progress.emit(5, "正在合成")
+            add_subtitles(video_file, result_subtitle_save_path, video_save_path, soft_subtitle=soft_subtitle, progress_callback=self.progress_callback)
+            self.progress.emit(100, "合成完成")
             self.finished.emit(self.task)
         except Exception as e:
-            self.task.status = Task.Status.FAILED
             self.error.emit(str(e))
             self.progress.emit(100, "视频合成失败")
     
     def progress_callback(self, value, message):
-        self.progress.emit(int(50 + int(value)//100 * 50), message)
+        print("===",value, message, int(5 + int(value)/100 * 95))
+        progress = int(5 + int(value)/100 * 95)
+        self.progress.emit(progress, f"{progress}% {message}")

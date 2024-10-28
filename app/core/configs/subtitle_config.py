@@ -252,7 +252,7 @@ Please return pure JSON following the format below:
 
 REFLECT_TRANSLATE_PROMPT = """You are a subtitle proofreading and translation expert. Your task is to process subtitles generated through speech recognition.
 
-These subtitles may contain errors, and you need to correct the original subtitles and translate them. Please follow these guidelines:
+These subtitles may contain errors, and you need to correct the original subtitles and translate them into [TargetLanguage]. Please follow these guidelines:
 
 1. Subtitle correction:
     - **Contextual Correction**: Correct erroneous words based on context and provided terminology, maintaining the original sentence structure and expression.
@@ -262,7 +262,7 @@ These subtitles may contain errors, and you need to correct the original subtitl
 
 
 2. Translation process:
-   a) Translation:
+   a) Translation into [TargetLanguage]:
       Provide an accurate translation of the original subtitle. Follow these translation guidelines:
       - Natural translation: Use paraphrasing to avoid stiff machine translations, ensuring it conforms to Chinese grammar and expression habits.
       - Retain key terms: Technical terms, proper nouns, and abbreviations should remain untranslated.
@@ -286,17 +286,17 @@ A JSON structure where each subtitle is identified by a unique numeric key:
 }
 
 Output format:
-Return a pure JSON following this structure:
+Return a pure JSON following this structure and translate into :
 {
   "1": {
     "optimized_subtitle": "<<< Corrected Original Content >>>",
-    "translation": "<<< Direct Translation >>>",
+    "translation": "<<< optimized_subtitle's Translation in [TargetLanguage] >>>",
     "revise_suggestions": "<<< Translation Revision Suggestions >>>",
     "revised_translate": "<<< Revised Paraphrased Translation >>>"
   },
   "2": {
     "optimized_subtitle": "<<< Corrected Original Content >>>",
-    "translation": "<<< Direct Translation >>>",
+    "translation": "<<< optimized_subtitle's Translation in [TargetLanguage] >>>",
     "revise_suggestions": "<<< Translation Revision Suggestions >>>",
     "revised_translate": "<<< Revised Paraphrased Translation >>>"
   },

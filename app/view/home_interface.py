@@ -53,25 +53,22 @@ class HomeInterface(QWidget):
 
         self.task_creation_interface.finished.connect(self.switch_to_transcription)
         self.transcription_interface.finished.connect(self.switch_to_subtitle_optimization)
-        # self.subtitle_optimization_interface.finished.connect(self.switch_to_video_synthesis)
+        self.subtitle_optimization_interface.finished.connect(self.switch_to_video_synthesis)
     
     def switch_to_transcription(self, task):
         # 切换到转录界面
-        task.status = Task.Status.TRANSCRIBING
         self.transcription_interface.set_task(task)  # 假设TranscriptionInterface有一个set_task方法
         self.stackedWidget.setCurrentWidget(self.transcription_interface)
         self.pivot.setCurrentItem('TranscriptionInterface')
     
     def switch_to_subtitle_optimization(self, task):
         # 切换到字幕优化界面
-        task.status = Task.Status.OPTIMIZING
         self.subtitle_optimization_interface.set_task(task)  # 假设SubtitleOptimizationInterface有一个set_task方法
         self.stackedWidget.setCurrentWidget(self.subtitle_optimization_interface)
         self.pivot.setCurrentItem('SubtitleOptimizationInterface')
 
     def switch_to_video_synthesis(self, task):
         # 切换到视频合成界面
-        task.status = Task.Status.GENERATING
         self.video_synthesis_interface.set_task(task)  # 假设VideoSynthesisInterface有一个set_task方法
         self.stackedWidget.setCurrentWidget(self.video_synthesis_interface)
         self.pivot.setCurrentItem('VideoSynthesisInterface')

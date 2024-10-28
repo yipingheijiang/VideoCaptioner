@@ -1,0 +1,4 @@
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,微软雅黑,62,&H0017f1be,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,1.0,0,1,1.2,0,2,10,10,10,1
+Style: Secondary,微软雅黑,40,&H00ffffff,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0.0,0,1,2.4,0,2,10,10,10,1

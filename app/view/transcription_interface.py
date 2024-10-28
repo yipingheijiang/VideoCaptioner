@@ -2,6 +2,7 @@
 
 import datetime
 import os
+from pathlib import Path
 import sys
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
@@ -16,66 +17,59 @@ from ..common.config import cfg
 from ..components.ImageLable import ImageLabel
 from ..core.thread.transcript_thread import TranscriptThread
 
+
+
 class VideoInfoCard(CardWidget):
     finished = pyqtSignal(Task)
     
-    """
-    视频信息卡片组件
-    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.task = None
+        self.setup_ui()
+        self.setup_signals()
 
-        self.setFixedHeight(150)  # 设置卡片固定高度
+    def setup_ui(self):
+        self.setFixedHeight(150)
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(20, 15, 20, 15)
         self.layout.setSpacing(20)
         
+        self.setup_thumbnail()
+        self.setup_info_layout()
+        self.setup_button_layout()
+
+    def setup_thumbnail(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         default_thumbnail_path = os.path.join(current_dir, "..", "resource", "default_thumbnail.jpg")
 
-        # 左侧视频缩略图
         self.video_thumbnail = QLabel(self)
-        self.video_thumbnail.setFixedSize(208, 117)  # 设置固定大小
+        self.video_thumbnail.setFixedSize(208, 117)
         self.video_thumbnail.setStyleSheet("background-color: #1E1F22;")
-        self.video_thumbnail.setAlignment(Qt.AlignCenter)  # 居中对齐
+        self.video_thumbnail.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap(default_thumbnail_path).scaled(
             self.video_thumbnail.size(),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
         )
         self.video_thumbnail.setPixmap(pixmap)
-        self.layout.addWidget(self.video_thumbnail, 0, Qt.AlignLeft)  # 在布局中左对齐
+        self.layout.addWidget(self.video_thumbnail, 0, Qt.AlignLeft)
 
-        # 信息布局
+    def setup_info_layout(self):
         self.info_layout = QVBoxLayout()
         self.info_layout.setContentsMargins(3, 8, 3, 8)
         self.info_layout.setSpacing(10)
         
-        # 视频标题
         self.video_title = BodyLabel("未选择视频", self)
         self.video_title.setFont(QFont("Microsoft YaHei", 14, QFont.Bold))
-        self.video_title.setWordWrap(True)  # 设置可以换行
+        self.video_title.setWordWrap(True)
         self.info_layout.addWidget(self.video_title, alignment=Qt.AlignTop)
         
-        # 视频详细信息
         self.details_layout = QHBoxLayout()
         self.details_layout.setSpacing(15)
         
-        self.resolution_info = PillPushButton("画质", self)
-        self.resolution_info.setCheckable(False)
-        setFont(self.resolution_info, 11)
-        self.resolution_info.setFixedWidth(110)
-        
-        self.file_size_info = PillPushButton("文件大小", self)
-        self.file_size_info.setCheckable(False)
-        setFont(self.file_size_info, 11)
-        self.file_size_info.setFixedWidth(110)
-        
-        self.duration_info = PillPushButton("时长", self)
-        self.duration_info.setCheckable(False)
-        setFont(self.duration_info, 11)
-        self.duration_info.setFixedWidth(100)
+        self.resolution_info = self.create_pill_button("画质", 110)
+        self.file_size_info = self.create_pill_button("文件大小", 110)
+        self.duration_info = self.create_pill_button("时长", 100)
 
         self.progress_ring = ProgressRing(self)
         self.progress_ring.setFixedSize(20, 20)
@@ -86,39 +80,48 @@ class VideoInfoCard(CardWidget):
         self.details_layout.addWidget(self.file_size_info)
         self.details_layout.addWidget(self.duration_info)
         self.details_layout.addWidget(self.progress_ring)
-        self.details_layout.addStretch(1)  # 添加弹性空间
+        self.details_layout.addStretch(1)
         self.info_layout.addLayout(self.details_layout)
         self.layout.addLayout(self.info_layout)
 
-        # 按钮布局
+    def create_pill_button(self, text, width):
+        button = PillPushButton(text, self)
+        button.setCheckable(False)
+        setFont(button, 11)
+        button.setFixedWidth(width)
+        return button
+
+    def setup_button_layout(self):
         self.button_layout = QVBoxLayout()
-        self.remove_button = PushButton("删除", self)
+        # self.remove_button = PushButton("删除", self)
+        self.open_folder_button = PushButton("打开文件夹", self)
         self.start_button = PrimaryPushButton("开始转录", self)
-        self.button_layout.addWidget(self.remove_button)
+        # self.button_layout.addWidget(self.remove_button)
+        self.button_layout.addWidget(self.open_folder_button)
         self.button_layout.addWidget(self.start_button)
+
         self.start_button.setDisabled(True)
 
         button_widget = QWidget()
         button_widget.setLayout(self.button_layout)
-        button_widget.setFixedWidth(130)  # 设置固定宽度，可以根据需要调整
+        button_widget.setFixedWidth(130)
         self.layout.addWidget(button_widget)
 
-        self.setup_signals()
-
     def update_info(self, video_info: VideoInfo):
-        """
-        更新视频信息
-        """
+        """更新视频信息显示"""
+        print(video_info)
         self.video_title.setText(video_info.file_name.rsplit('.', 1)[0])
         self.resolution_info.setText(f"画质: {video_info.width}x{video_info.height}")
-        file_size_mb = video_info.bitrate_kbps * video_info.duration_seconds / 8 / 1024
+        file_size_mb = os.path.getsize(self.task.file_path) / 1024 / 1024
         self.file_size_info.setText(f"大小: {file_size_mb:.1f} MB")
-
         duration = datetime.timedelta(seconds=int(video_info.duration_seconds))
         self.duration_info.setText(f"时长: {duration}")
         self.start_button.setDisabled(False)
-        # 更新视频缩略图
-        pixmap = QPixmap(video_info.thumbnail_path).scaled(
+        self.update_thumbnail(video_info.thumbnail_path)
+
+    def update_thumbnail(self, thumbnail_path):
+        """更新视频缩略图"""
+        pixmap = QPixmap(thumbnail_path).scaled(
             self.video_thumbnail.size(),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
@@ -127,12 +130,33 @@ class VideoInfoCard(CardWidget):
 
     def setup_signals(self):
         self.start_button.clicked.connect(self.on_start_button_clicked)
+        self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
     
     def on_start_button_clicked(self):
+        """开始转录按钮点击事件"""
         self.progress_ring.show()
         self.progress_ring.setValue(100)
         self.start_button.setDisabled(True)
+        self.start_transcription()
 
+    def on_open_folder_clicked(self):
+        """打开文件夹按钮点击事件"""
+        if self.task and self.task.work_dir:
+            result_subtitle_file_path = Path(self.task.result_subtitle_save_path)
+            if os.path.exists(result_subtitle_file_path):
+                os.system(f'explorer /select,"{result_subtitle_file_path}"')
+            else:
+                os.startfile(self.task.work_dir)
+        else:
+            InfoBar.warning(
+                self.tr("警告"),
+                self.tr("没有可用的字幕文件夹"),
+                duration=2000,
+                parent=self
+            )
+
+    def start_transcription(self):
+        """开始转录过程"""
         self.transcript_thread = TranscriptThread(self.task)
         self.transcript_thread.finished.connect(self.on_transcript_finished)
         self.transcript_thread.progress.connect(self.on_transcript_progress)
@@ -140,13 +164,14 @@ class VideoInfoCard(CardWidget):
         self.transcript_thread.start()
 
     def on_transcript_progress(self, value, message):
-        self.start_button.setText(f"{message}")
+        """更新转录进度"""
+        self.start_button.setText(message)
         self.progress_ring.setValue(value)
 
     def on_transcript_error(self, error):
-        self.start_button.setDisabled(False)
-        self.start_button.setText("开始转录")
-        self.progress_ring.setValue(100)
+        """处理转录错误"""
+        self.start_button.setEnabled(True)
+        self.start_button.setText("重新转录")
         InfoBar.error(
             self.tr("转录失败"),
             self.tr(error),
@@ -155,47 +180,57 @@ class VideoInfoCard(CardWidget):
         )
     
     def on_transcript_finished(self, task):
+        """转录完成处理"""
+        self.start_button.setEnabled(True)
+        self.start_button.setText("转录完成")
+        if self.task.status == Task.Status.PENDING:
+            self.finished.emit(task)
+
+    def reset_ui(self):
+        """重置UI状态"""
         self.start_button.setDisabled(False)
         self.start_button.setText("开始转录")
         self.progress_ring.setValue(100)
-        # 发送任务完成信号
-        self.finished.emit(task)
+
+    def set_task(self, task):
+        """设置任务并更新UI"""
+        self.task = task
+        self.update_info(self.task.video_info)
+        self.reset_ui()
 
 
 class TranscriptionInterface(QWidget):
-    """
-    转录界面类，用于显示视频信息和转录进度。
-    """
-    finished = pyqtSignal(Task)  # 添加新的信号
+    """转录界面类,用于显示视频信息和转录进度"""
+    finished = pyqtSignal(Task)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAcceptDrops(True)
+        self.task = None
 
+        self._init_ui()
+        self._setup_signals()
+
+    def _init_ui(self):
+        """初始化UI"""
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setObjectName("main_layout")
         self.main_layout.setSpacing(20)
 
-        # 视频信息卡片
         self.video_info_card = VideoInfoCard(self)
         self.main_layout.addWidget(self.video_info_card)
 
-        # 文件选择按钮
         self.file_select_button = PushButton("选择视频文件", self)
         self.main_layout.addWidget(self.file_select_button, alignment=Qt.AlignCenter)
 
-        self.setup_signals()
-        self.task = None
+    def _setup_signals(self):
+        """设置信号连接"""
+        self.file_select_button.clicked.connect(self._on_file_select)
+        self.video_info_card.finished.connect(self._on_transcript_finished)
 
-    def setup_signals(self):
-        """
-        设置信号连接。
-        """
-        self.file_select_button.clicked.connect(self.on_file_select)
-        self.video_info_card.finished.connect(self.on_transcript_finished)
-
-    def on_transcript_finished(self, task):
+    def _on_transcript_finished(self, task):
+        """转录完成处理"""
         self.finished.emit(task)
         InfoBar.success(
             self.tr("转录完成"),
@@ -205,61 +240,53 @@ class TranscriptionInterface(QWidget):
             parent=self.parent()
         )
 
-    def on_file_select(self):
-        """
-        文件选择按钮点击时的处理函数。
-        """
-        desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
-        file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self, "选择视频文件", desktop_path, "视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)")
+    def _on_file_select(self):
+        """文件选择处理"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, 
+            "选择视频文件", 
+            QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
+            "视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)"
+        )
         if file_path:
-            print(f"正在处理文件: {file_path}")
-            self.create_task_thread = CreateTaskThread(file_path, 'transcription')
-            self.create_task_thread.finished.connect(self.on_create_task_finished)
-            self.create_task_thread.start()
+            self.create_task(file_path)
 
-    def update_video_info(self, file_path):
-        """
-        更新视频信息
-        """
-        self.video_info_card.update_info(file_path)
+    def create_task(self, file_path):
+        """创建任务"""
+        self.create_task_thread = CreateTaskThread(file_path, 'transcription')
+        self.create_task_thread.finished.connect(self.set_task)
+        self.create_task_thread.start()
+
+    def set_task(self, task: Task):
+        """设置任务并更新UI"""
+        self.task = task
+        self.update_info()
+
+    def update_info(self):
+        """更新页面信息"""
+        self.video_info_card.set_task(self.task)
+
+    def process(self):
+        """主处理函数"""
+        self.video_info_card.start_transcription()
 
     def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.accept()
-        else:
-            event.ignore()
+        """拖拽进入事件处理"""
+        event.accept() if event.mimeData().hasUrls() else event.ignore()
 
     def dropEvent(self, event):
-        files = [u.toLocalFile() for u in event.mimeData().urls()]
-        for file_path in files:
-            if os.path.isfile(file_path):
-                print(f"正在处理文件: {file_path}")
-                self.create_task_thread = CreateTaskThread(file_path, 'transcription')
-                self.create_task_thread.finished.connect(self.on_create_task_finished)
-                self.create_task_thread.start()
+        """拖拽放下事件处理"""
+        for url in event.mimeData().urls():
+            file_path = url.toLocalFile()
+            if os.path.isfile(file_path) and file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.mp3', '.wav')):
+                self.create_task(file_path)
                 InfoBar.success(
                     self.tr("导入成功"),
-                    self.tr("开始处理的视频文件"),
+                    self.tr("开始处理视频文件"),
                     duration=1500,
                     parent=self
                 )
                 break
-        
-
-    def set_task(self, task: Task):
-        """
-        设置任务并更新界面
-        """
-        self.task = task
-        self.video_info_card.task = task
-        self.update_video_info(task.video_info)
-
-    def on_create_task_finished(self, task):
-        """
-        创建任务完成时的处理函数
-        """
-        self.set_task(task)
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

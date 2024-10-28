@@ -121,9 +121,9 @@ class SubtitleOptimizer:
                           'feels awkward in this context. Consider using \'避开\' instead.", "revised_translate": '
                           '"那么你现在可能无法避开Cursor这款IDE。"}}')
 
-        message = [{"role": "system", "content": REFLECT_TRANSLATE_PROMPT},
-                   {"role": "user", "content": example_input},
-                   {"role": "assistant", "content": example_output},
+        message = [{"role": "system", "content": REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)},
+                #    {"role": "user", "content": example_input},
+                #    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
         return message
 
