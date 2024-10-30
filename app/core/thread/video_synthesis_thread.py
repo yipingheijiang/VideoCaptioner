@@ -32,6 +32,5 @@ class VideoSynthesisThread(QThread):
             self.progress.emit(100, "视频合成失败")
     
     def progress_callback(self, value, message):
-        print("===",value, message, int(5 + int(value)/100 * 95))
         progress = int(5 + int(value)/100 * 95)
         self.progress.emit(progress, f"{progress}% {message}")

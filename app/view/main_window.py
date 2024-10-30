@@ -12,6 +12,7 @@ from app.view.subtitle_style_interface import SubtitleStyleInterface
 # from .gallery_interface import GalleryInterface
 from .home_interface import HomeInterface
 from .setting_interface import SettingInterface
+from .batch_process_interface import BatchProcessInterface
 # from .text_interface import TextInterface
 # from .view_interface import ViewInterface
 from ..common.config import SUPPORT_URL, cfg
@@ -31,7 +32,7 @@ class MainWindow(FluentWindow):
         self.homeInterface = HomeInterface(self)
         self.settingInterface = SettingInterface(self)
         self.subtitleStyleInterface = SubtitleStyleInterface(self)
-
+        self.batchProcessInterface = BatchProcessInterface(self)
         # 启用亚克力效果
         self.navigationInterface.setAcrylicEnabled(True)
 
@@ -48,6 +49,8 @@ class MainWindow(FluentWindow):
         
         self.addSubInterface(self.homeInterface, FIF.HOME, self.tr('主页'))
         self.addSubInterface(self.subtitleStyleInterface, FIF.FONT, self.tr('字幕样式'))
+        self.addSubInterface(self.batchProcessInterface, FIF.VIDEO, self.tr('批量处理'))
+        
         self.navigationInterface.addSeparator()
         pos = NavigationItemPosition.SCROLL
 
@@ -60,8 +63,8 @@ class MainWindow(FluentWindow):
         )
         self.addSubInterface(self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
 
-        # 添加字幕样式
-
+        # 设置默认界面
+        self.switchTo(self.batchProcessInterface)
 
     def initWindow(self):
         """初始化窗口"""

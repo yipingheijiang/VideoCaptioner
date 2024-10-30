@@ -108,8 +108,8 @@ class Task:
     base_url: Optional[str] = None
     api_key: Optional[str] = None
     llm_model: Optional[str] = None
-    need_translate: bool = True
-    need_optimize: bool = True
+    need_translate: bool = False
+    need_optimize: bool = False
     result_subtitle_save_path: Optional[str] = None
     thread_num: int = 10
     batch_size: int = 10
@@ -117,3 +117,5 @@ class Task:
     # 视频生成
     video_save_path: Optional[str] = None
     soft_subtitle: bool = True
+    subtitle_style_srt: Optional[str] = None  
+    # TODO: 添加ass样式

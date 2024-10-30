@@ -9,6 +9,9 @@ from ...common.config import cfg
 
 from pathlib import Path
 
+current_dir = Path(__file__).parent.parent.parent
+SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
+
 class CreateTaskThread(QThread):
     finished = pyqtSignal(Task)
     progress = pyqtSignal(int, str)
@@ -49,6 +52,14 @@ class CreateTaskThread(QThread):
         original_subtitle_save_path = task_work_dir / "original_subtitle.srt"
         result_subtitle_save_path = task_work_dir  / "result_subtitle.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
+
+        ass_style_name = cfg.subtitle_style_name.value
+        ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
+        if ass_style_path.exists():
+            subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
+        else:
+            subtitle_style_srt = None
+
         # 创建 Task 对象
         task = Task(
             id=0,
@@ -62,7 +73,7 @@ class CreateTaskThread(QThread):
             url="",
             source=Task.Source.FILE_IMPORT,
             original_language=None,
-            target_language=cfg.target_language.value,
+            target_language=cfg.target_language.value.value,
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
@@ -76,7 +87,8 @@ class CreateTaskThread(QThread):
             need_optimize=cfg.need_optimize.value,
             result_subtitle_save_path=str(result_subtitle_save_path),
             video_save_path=str(video_save_path),
-            soft_subtitle=cfg.soft_subtitle.value
+            soft_subtitle=cfg.soft_subtitle.value,
+            subtitle_style_srt=subtitle_style_srt
         )
         self.finished.emit(task)
         self.progress.emit(100, "创建任务完成")
@@ -183,6 +195,13 @@ class CreateTaskThread(QThread):
         original_subtitle_save_path = task_work_dir / file_path
         result_subtitle_save_path = task_work_dir / f"result_subtitle_{cfg.model.value}.srt"
 
+        ass_style_name = cfg.subtitle_style_name.value
+        ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
+        if ass_style_path.exists():
+            subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
+        else:
+            subtitle_style_srt = None
+
         # 创建 Task 对象
         task = Task(
             id=0,
@@ -201,6 +220,7 @@ class CreateTaskThread(QThread):
             result_subtitle_save_path=str(result_subtitle_save_path),
             thread_num=cfg.thread_num.value,
             batch_size=cfg.batch_size.value,
+            subtitle_style_srt=subtitle_style_srt
         )
         return task
 

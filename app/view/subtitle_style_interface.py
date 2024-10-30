@@ -156,7 +156,7 @@ class SubtitleStyleInterface(QWidget):
         )
         
         self.mainSizeCard = SpinBoxSettingCard(
-            FIF.ZOOM,
+            FIF.FONT_SIZE,
             self.tr("主字幕字号"),
             self.tr("设置主字幕的大小"),
             minimum=8,
@@ -204,7 +204,7 @@ class SubtitleStyleInterface(QWidget):
         )
         
         self.subSizeCard = SpinBoxSettingCard(
-            FIF.ZOOM,
+            FIF.FONT_SIZE,
             self.tr("副字幕字号"),
             self.tr("设置副字幕的大小"),
             minimum=8,
@@ -310,6 +310,7 @@ class SubtitleStyleInterface(QWidget):
                 color: white;
             }
         """)
+        # TODO: QLabel
         
     def __setValues(self):
         """设置初始值"""

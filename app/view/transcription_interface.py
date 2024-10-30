@@ -10,8 +10,8 @@ from PyQt5.QtGui import QPixmap, QFont
 from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, CardWidget, ToolTipFilter, \
     ToolTipPosition, LineEdit, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     InfoBadge, IndeterminateProgressRing, ProgressRing, InfoBarPosition
-from app.core.thread.create_task_thread import CreateTaskThread
 
+from app.core.thread.create_task_thread import CreateTaskThread
 from ..core.entities import Task, VideoInfo
 from ..common.config import cfg
 from ..components.ImageLable import ImageLabel
@@ -142,9 +142,9 @@ class VideoInfoCard(CardWidget):
     def on_open_folder_clicked(self):
         """打开文件夹按钮点击事件"""
         if self.task and self.task.work_dir:
-            result_subtitle_file_path = Path(self.task.result_subtitle_save_path)
-            if os.path.exists(result_subtitle_file_path):
-                os.system(f'explorer /select,"{result_subtitle_file_path}"')
+            original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
+            if original_subtitle_save_path.exists():
+                os.system(f'explorer /select,"{str(original_subtitle_save_path)}"')
             else:
                 os.startfile(self.task.work_dir)
         else:

@@ -196,9 +196,7 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
             "-y",
             thumbnail_path
         ]
-        print(cmd)
         result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30, encoding='utf-8', errors='replace')
-        print(result)
         return result.returncode == 0
     except Exception as e:
         return False

@@ -24,7 +24,7 @@ class SubtitleOptimizationThread(QThread):
 
     def __init__(self, task: Task):
         super().__init__()
-        self.task = task
+        self.task: Task = task
         self.subtitle_length = 0
         self.finished_subtitle_length = 0
 
@@ -39,6 +39,7 @@ class SubtitleOptimizationThread(QThread):
             batch_size = self.task.batch_size
             target_language = self.task.target_language
             need_summarize = False
+            subtitle_style_srt = self.task.subtitle_style_srt
             # TODO: 开启字幕总结功能
 
             assert str_path is not None, "字幕文件路径为空"
@@ -59,8 +60,10 @@ class SubtitleOptimizationThread(QThread):
 
             # 检查是否需要合并重新断句
             if asr_data.is_word_timestamp():
-                self.progress.emit(5, "正在字幕断句...")
+                self.progress.emit(5, "字幕断句...")
                 asr_data = merge_segments(asr_data, model=llm_model, num_threads=thread_num)
+                split_path = str(Path(result_subtitle_save_path).parent / f"{Path(result_subtitle_save_path).stem}_split.srt")
+                asr_data.save(save_path=split_path)
                 self.update_all.emit(asr_data.to_json())
 
             # 制作成请求llm接口的格式 {"1": {"original_subtitle": "字幕内容"},...}
@@ -68,17 +71,17 @@ class SubtitleOptimizationThread(QThread):
             self.subtitle_length = len(subtitle_json)
             if need_translate or need_optimize:
                 summarize_result = ""
-                self.progress.emit(20, "正在总结字幕...")
+                self.progress.emit(20, "总结字幕...")
                 if need_summarize:
                     summarizer = SubtitleSummarizer(model=llm_model)
                     summarize_result = summarizer.summarize(asr_data.to_txt())
                 
                 if need_translate:
-                    self.progress.emit(30, "正在优化/翻译字幕...")
+                    self.progress.emit(30, "优化+翻译...")
                     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model)
                     optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, translate=True, callback=self.callback, target_language=target_language)
                 elif need_optimize:
-                    self.progress.emit(30, "正在优化字幕...")
+                    self.progress.emit(30, "优化字幕...")
                     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model)
                     optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, callback=self.callback)
 
@@ -86,23 +89,23 @@ class SubtitleOptimizationThread(QThread):
                 for i, subtitle_text in optimizer_result.items():
                     seg = asr_data.segments[int(i)-1]
                     seg.text = subtitle_text
-                print(f"[+] 将保存到 {result_subtitle_save_path}")
-                asr_data.save(save_path=result_subtitle_save_path)
+                asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt)
                 print(f"[+] 字幕优化完成，保存到 {result_subtitle_save_path}")
             else:
-                asr_data.save(save_path=result_subtitle_save_path)
-                print(f"[+] 字幕断句完成，无需优化翻译，直接保存 {result_subtitle_save_path}")
+                asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt)
+                print(f"[+] 无需优化翻译，直接保存 {result_subtitle_save_path}")
 
             self.progress.emit(100, "优化完成")
             self.finished.emit(self.task)
         except Exception as e:
+            print("subtitle_optimization_thread 字幕优化失败", e)
             self.error.emit(str(e))
             self.progress.emit(100, "优化失败")
 
     def callback(self, result: Dict):
         self.finished_subtitle_length += len(result)
-        progress = int((self.finished_subtitle_length / self.subtitle_length) * 70) + 30
-        self.progress.emit(progress, f"{progress}% 处理字幕")
+        progress_num = int((self.finished_subtitle_length / self.subtitle_length) * 70) + 30
+        self.progress.emit(progress_num, f"{progress_num}% 处理字幕")
         self.update.emit(result)
 
 

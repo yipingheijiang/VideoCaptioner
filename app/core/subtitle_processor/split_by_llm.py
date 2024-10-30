@@ -83,7 +83,7 @@ def split_by_llm(text: str, model: str = "gpt-4o-mini", use_cache: bool = False)
     if use_cache:
         cached_result = get_cache(text, model)
         if cached_result:
-            print(f"[+] 从缓存中获取结果: {cached_result}")
+            # print(f"[+] 从缓存中获取结果: {cached_result}")
             return cached_result
 
     prompt = f"请你对下面句子使用<br>进行分割：\n{text}"

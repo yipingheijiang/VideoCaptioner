@@ -55,7 +55,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     new_segments = []
 
     for sentence in sentences:
-        print(f"[+] 处理句子: {sentence}")
+        # print(f"[+] 处理句子: {sentence}")
         sentence_proc = preprocess_text(sentence)
         word_count = count_words(sentence_proc)
         best_ratio = 0.0
@@ -93,8 +93,8 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
             merged_end_time = asr_data.segments[end_seg_index].end_time
             merged_seg = ASRDataSeg(merged_text, merged_start_time, merged_end_time)
 
-            print(f"[+] 合并分段: {merged_seg.text}")
-            print("=============")
+            # print(f"[+] 合并分段: {merged_seg.text}")
+            # print("=============")
 
             # 拆分超过最大词数的分段
             if count_words(merged_text) > MAX_WORD_COUNT:
@@ -118,7 +118,7 @@ def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> Lis
     基于最大时间间隔拆分长分段，尽可能避免拆分英文单词
     """
     result_segs = []
-    print(f"[+] 正在拆分长分段: {merged_text}")
+    # print(f"[+] 正在拆分长分段: {merged_text}")
 
     # 基本情况：如果分段足够短或无法进一步拆分
     if count_words(merged_text) <= MAX_WORD_COUNT or len(segs_to_merge) == 1:
@@ -234,7 +234,6 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     # 获取连接后的文本
     txt = asr_data.to_txt().replace("\n", "")
     total_word_count = count_words(txt)
-    print(f"[+] 合并后的文本长度: {total_word_count} 字")
 
     # 确定分段数
     num_segments = determine_num_segments(total_word_count, threshold=SEGMENT_THRESHOLD)
@@ -244,7 +243,7 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     asr_data_segments = split_asr_data(asr_data, num_segments)
 
     # 多线程执行 split_by_llm 获取句子列表
-    print("[+] 正在并行请求LLM将每个分段的文本拆分为句子...")
+    # print("[+] 正在并行请求LLM将每个分段的文本拆分为句子...")
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         def process_segment(asr_data_part):
             txt = asr_data_part.to_txt().replace("\n", "")
@@ -254,10 +253,10 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
         all_sentences = list(executor.map(process_segment, asr_data_segments))
     all_sentences = [item for sublist in all_sentences for item in sublist]
     
-    print(f"[+] 总共提取到 {len(all_sentences)} 句")
+    # print(f"[+] 总共提取到 {len(all_sentences)} 句")
 
     # 基于LLM已经分段的句子，对ASR分段进行合并
-    print("[+] 正在合并ASR分段基于句子列表...")
+    # print("[+] 正在合并ASR分段基于句子列表...")
     merged_asr_data = merge_segments_based_on_sentences(asr_data, all_sentences)
 
     # 按开始时间排序合并后的分段(其实好像不需要)

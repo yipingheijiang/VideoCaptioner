@@ -30,7 +30,7 @@
         "ThemeMode": "Dark"
     },
     "Transcribe": {
-        "Transcribe_MODEL": "剪映",
+        "Transcribe_MODEL": "必剪",
         "Use_ASR_Cache": true
     },
     "Save": {

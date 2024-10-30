@@ -30,7 +30,7 @@ class SimpleSettingCard(CardWidget):
         self.layout.addStretch(1)
         
         self.setToolTip(self.content)
-        self.installEventFilter(ToolTipFilter(self, 300, ToolTipPosition.BOTTOM))
+        self.installEventFilter(ToolTipFilter(self, 100, ToolTipPosition.BOTTOM))
 
 class ComboBoxSimpleSettingCard(SimpleSettingCard):
     """下拉框设置卡片"""

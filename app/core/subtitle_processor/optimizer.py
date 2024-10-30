@@ -87,14 +87,12 @@ class SubtitleOptimizer:
     @retry.retry(tries=3)
     def translate(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
         """优化并翻译给定的字幕。"""
-        logger.info(f"[+]正在优化字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
-
+        logger.info(f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
         message = self._create_translate_message(original_subtitle)
         response = self.client.chat.completions.create(
             model=self.model,
             stream=False,
             messages=message)
-
         response_content = json_repair.loads(response.choices[0].message.content)
         # print(response_content)
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
@@ -112,15 +110,13 @@ class SubtitleOptimizer:
         input_content = f"Correct the original subtitles and translate them into {self.target_language}:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
             input_content += f"\nBelow is a summary of the subtitle content and related keywords:\n<summary>{self.summary_content}</summary>\n"
-
-        example_input = f'correct the original subtitles and translate them into {self.target_language}: {{"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE right now."}}'
+        example_input = f'correct the original subtitles and translate them into Chinese: {{"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE right now."}}'
         example_output = ('{"1": {"optimized_subtitle": "If you\'re a developer", "translate": "如果你是开发者", '
                           '"revise_suggestions": "the translation is accurate and fluent.", "revised_translate": '
                           '"如果你是开发者"}, "2": {"optimized_subtitle": "Then you probably cannot get around the Cursor IDE right '
                           'now.", "translate": "那么你现在可能无法绕开Cursor这款IDE。", "revise_suggestions": "The term \'绕开\' '
                           'feels awkward in this context. Consider using \'避开\' instead.", "revised_translate": '
                           '"那么你现在可能无法避开Cursor这款IDE。"}}')
-
         message = [{"role": "system", "content": REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)},
                 #    {"role": "user", "content": example_input},
                 #    {"role": "assistant", "content": example_output},
