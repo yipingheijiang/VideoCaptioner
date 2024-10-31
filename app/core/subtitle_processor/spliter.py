@@ -4,10 +4,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
-
 import difflib
 from typing import List
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .split_by_llm import split_by_llm

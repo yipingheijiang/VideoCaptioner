@@ -6,21 +6,20 @@ from typing import Dict
 import retry
 from openai import OpenAI
 
-from ..configs.subtitle_config import (
+from .subtitle_config import (
     TRANSLATE_PROMPT,
     OPTIMIZER_PROMPT,
-    REFLECT_TRANSLATE_PROMPT,
-    DEFAULT_MODEL,
-    SIMILARITY_THRESHOLD,
-    REPAIR_THRESHOLD,
-    BATCH_SIZE,
-    MAX_THREADS
+    REFLECT_TRANSLATE_PROMPT
 )
 from ..subtitle_processor.aligner import SubtitleAligner
 from ..utils import json_repair
 from ..utils.logger import setup_logger
 
 logger = setup_logger("subtitle_translate")
+
+BATCH_SIZE = 50
+MAX_THREADS = 10
+DEFAULT_MODEL = "gpt-4o-mini"
 
 
 class SubtitleOptimizer:

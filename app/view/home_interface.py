@@ -22,12 +22,9 @@ class HomeInterface(QWidget):
         self.setStyleSheet("""
             HomeInterface{background: white}
         """)
-        # self.resize(800, 600)
 
         self.pivot = SegmentedWidget(self)
         self.pivot.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        # self.pivot.setFixedWidth(1000)
-        # self.pivot.setFixedHeight(200)
 
         self.stackedWidget = QStackedWidget(self)
         self.vBoxLayout = QVBoxLayout(self)

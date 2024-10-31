@@ -1,11 +1,7 @@
-import os
 from pathlib import Path
 import re
 import subprocess
-import tempfile
 from typing import Literal
-
-import ffmpeg
 
 
 def video2audio(input_file: str, output:str="") -> bool:

@@ -1,10 +1,23 @@
 import difflib
 
-text1 = ['yep human hair be about that thick', "yep and that's a really really tiny LED", 'uvleds could be used to sterilize surfaces', 'like in hospitals or kitchens', 'just flick on the UV', 'lights and pathogens would be dead in seconds', 'copy 19 or you know', "UV LED companies stop pressing like it's kind of better because", "everything's very good in these UV LEDs", 'you can start at all the covid 19', 'for anything there we use aluminium gardenizer them', 'for UB we use aluminium gardenizer', 'okay the Bam Jap is much bigger', "do you think this is what's coming", "it's okay to work", 'but the problem the cost costs are too high changes', 'this is not thin passing', 'the cost is very high', 'okay if the infinishing program', 'on a shifty pass closely is almost comparable']
-text2 = ['Yep, human hair is about that thick', "Yep, and that's a really tiny LEDUV LEDs could be used to sterilize surface", 'Like in hospitals or kitchens', 'Just flick on the UV lights and pathogens would be dead in seconds', 'COVID-19 or you know', "UV LED companies are improving, it's kind of better because", "everything's very good in these UV LEDs", 'You can start with all the COVID-19 precautions', 'For everything, we use aluminum ganizers', 'For UV, we use aluminum ganizers', 'Okay, the bigger one is much better', "Do you think this is what's coming?", "It's okay to work", 'But the problem is the costs are too high', 'This is not a thin pass', 'The costs are very high', 'Okay, if the finishing program', 'on a shifty pass closely is almost comparable']
-
 
 class SubtitleAligner:
+    """
+    字幕文本对齐器，用于对齐两个文本序列,支持基于相似度的匹配。当目标文本缺少某项时,会使用其上一项进行填充。
+
+    使用示例:
+        # 输入文本
+        text1 = ['ab', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']  # 源文本
+        text2 = ['a',  'b', 'c', 'd', 'f', 'g', 'h', 'i']       # 目标文本
+
+        # 创建对齐器并执行对齐
+        text_aligner = SubtitleAligner()
+        aligned_source, aligned_target = text_aligner.align_texts(text1, text2)
+
+        # 对齐结果
+        aligned_source: ['ab', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']  # 源文本保持不变
+        aligned_target: ['a',  'b', 'c', 'd', 'd', 'f', 'g', 'h', 'i']  # 缺失的'e'由'd'填充
+    """
     def __init__(self):
         self.line_numbers = [0, 0]
 
@@ -152,6 +165,11 @@ class SubtitleAligner:
 
 
 if __name__ == '__main__':
+    
+    text1 = ['yep human hair be about that thick', "yep and that's a really really tiny LED", 'uvleds could be used to sterilize surfaces', 'like in hospitals or kitchens', 'just flick on the UV', 'lights and pathogens would be dead in seconds', 'copy 19 or you know', "UV LED companies stop pressing like it's kind of better because", "everything's very good in these UV LEDs", 'you can start at all the covid 19', 'for anything there we use aluminium gardenizer them', 'for UB we use aluminium gardenizer', 'okay the Bam Jap is much bigger', "do you think this is what's coming", "it's okay to work", 'but the problem the cost costs are too high changes', 'this is not thin passing', 'the cost is very high', 'okay if the infinishing program', 'on a shifty pass closely is almost comparable']
+    text2 = ['Yep, human hair is about that thick', "Yep, and that's a really tiny LEDUV LEDs could be used to sterilize surface", 'Like in hospitals or kitchens', 'Just flick on the UV lights and pathogens would be dead in seconds', 'COVID-19 or you know', "UV LED companies are improving, it's kind of better because", "everything's very good in these UV LEDs", 'You can start with all the COVID-19 precautions', 'For everything, we use aluminum ganizers', 'For UV, we use aluminum ganizers', 'Okay, the bigger one is much better', "Do you think this is what's coming?", "It's okay to work", 'But the problem is the costs are too high', 'This is not a thin pass', 'The costs are very high', 'Okay, if the finishing program', 'on a shifty pass closely is almost comparable']
+    text1 = ['ab', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
+    text2 = ['a', 'b', 'c', 'd', 'f', 'g', 'h', 'i']
     # # 使用示例
     text_aligner = SubtitleAligner()
 
@@ -159,6 +177,9 @@ if __name__ == '__main__':
 
     print("Aligned Source:", len(aligned_source))
     print("Aligned Target:", len(aligned_target))
+    print(aligned_source)
+    print(aligned_target)
+
     i = 1
     for l1, l2 in zip(aligned_source, aligned_target):
         print(f"行 {i}:")
@@ -167,7 +188,6 @@ if __name__ == '__main__':
         print(difflib.SequenceMatcher(None, l1, l2).ratio())
         print("----")
         i += 1
-
 
     d = difflib.HtmlDiff()
     html = d.make_file(text1, text2)

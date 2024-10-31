@@ -1,13 +1,13 @@
 import logging
 import os
 
-from configs.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
+from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
 from subtitle_processor import optimizer, summarizer, translator
 from subtitle_processor.optimizer import SubtitleOptimizer
 from subtitle_processor.summarizer import SubtitleSummarizer
 from subtitle_processor.translator import SubtitleTranslator
 
-from configs.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
+from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
 
 os.environ['OPENAI_BASE_URL'] = OPENAI_BASE_URL
 os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY

@@ -9,7 +9,7 @@ from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, Boo
 
 
 from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, OutputFormatEnum
-
+from app.config import WORK_PATH
 
 
 class SubtitleStyle(Enum):
@@ -89,7 +89,6 @@ VERSION = __version__
 HELP_URL = "https://www.bkfeng.top"
 
 REPO_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets"
-EXAMPLE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/tree/master/examples"
 FEEDBACK_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues"
 RELEASE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/releases/latest"
 SUPPORT_URL = "https://afdian.net/a/zhiyiYo"

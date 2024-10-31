@@ -12,8 +12,6 @@ from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, FolderListSetti
                             setTheme, setThemeColor, RangeSettingCard, SettingCard)
 
 from ..common.config import cfg, HELP_URL, FEEDBACK_URL, AUTHOR, VERSION, YEAR
-from ..common.signal_bus import signalBus
-from ..common.style_sheet import StyleSheet
 from ..components.LineEditSettingCard import LineEditSettingCard
 from ..core.utils.test_opanai import test_openai
 

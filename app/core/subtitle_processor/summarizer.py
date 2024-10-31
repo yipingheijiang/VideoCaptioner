@@ -3,7 +3,7 @@ import os
 from openai import OpenAI
 
 from ..utils import json_repair
-from ..configs.subtitle_config import SUMMARIZER_PROMPT
+from .subtitle_config import SUMMARIZER_PROMPT
 
 
 class SubtitleSummarizer:

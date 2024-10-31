@@ -17,7 +17,6 @@ from .batch_process_interface import BatchProcessInterface
 # from .view_interface import ViewInterface
 from ..common.config import SUPPORT_URL, cfg
 from ..common.icon import Icon
-from ..common.signal_bus import signalBus
 from ..common.translator import Translator
 from ..common import resource
 
@@ -33,10 +32,6 @@ class MainWindow(FluentWindow):
         self.settingInterface = SettingInterface(self)
         self.subtitleStyleInterface = SubtitleStyleInterface(self)
         self.batchProcessInterface = BatchProcessInterface(self)
-        # 启用亚克力效果
-        self.navigationInterface.setAcrylicEnabled(True)
-
-        self.connectSignalToSlot()
 
         # 向导航界面添加项目
         self.initNavigation()
@@ -48,8 +43,8 @@ class MainWindow(FluentWindow):
         t = Translator()
         
         self.addSubInterface(self.homeInterface, FIF.HOME, self.tr('主页'))
-        self.addSubInterface(self.subtitleStyleInterface, FIF.FONT, self.tr('字幕样式'))
         self.addSubInterface(self.batchProcessInterface, FIF.VIDEO, self.tr('批量处理'))
+        self.addSubInterface(self.subtitleStyleInterface, FIF.FONT, self.tr('字幕样式'))
         
         self.navigationInterface.addSeparator()
         pos = NavigationItemPosition.SCROLL
@@ -87,10 +82,6 @@ class MainWindow(FluentWindow):
 
         self.show()
         QApplication.processEvents()
-
-    def connectSignalToSlot(self):
-        """连接信号和槽"""
-        signalBus.micaEnableChanged.connect(self.setMicaEffectEnabled)
 
     def onSupport(self):
         """支持作者"""

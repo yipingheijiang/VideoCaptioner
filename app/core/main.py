@@ -3,13 +3,13 @@ import os
 
 from bk_asr import BcutASR, JianYingASR, KuaiShouASR
 from bk_asr.ASRData import ASRData
-from configs.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
+from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
 from subtitle_processor.optimizer import SubtitleOptimizer
 from subtitle_processor.summarizer import SubtitleSummarizer
 # from subtitle_processor.translator import SubtitleTranslator
 
 from utils.video_utils import add_subtitles, video2audio
-from configs.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
+from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
 from utils.optimize_subtitles import optimize_subtitles
 from utils.logger import setup_logger
 

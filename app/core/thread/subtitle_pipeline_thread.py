@@ -1,4 +1,3 @@
-import time
 from PyQt5.QtCore import QThread, pyqtSignal
 from ...core.thread.create_task_thread import CreateTaskThread
 from ...core.thread.transcript_thread import TranscriptThread
@@ -48,7 +47,7 @@ class SubtitlePipelineThread(QThread):
             self.task.status = Task.Status.OPTIMIZING
             self.progress.emit(40, "开始优化字幕")
             optimization_thread = SubtitleOptimizationThread(self.task)
-            optimization_thread.progress.connect(lambda value, msg: self.progress.emit(int(40 + value * 0.4), msg))
+            optimization_thread.progress.connect(lambda value, msg: self.progress.emit(int(40 + value * 0.2), msg))
             optimization_thread.error.connect(handle_error)
             optimization_thread.run()
 
@@ -60,7 +59,7 @@ class SubtitlePipelineThread(QThread):
             self.progress.emit(80, "开始合成视频")
             print(f"[+] 开始合成视频...")
             synthesis_thread = VideoSynthesisThread(self.task)
-            synthesis_thread.progress.connect(lambda value, msg: self.progress.emit(int(80 + value * 0.2), msg))
+            synthesis_thread.progress.connect(lambda value, msg: self.progress.emit(int(70 + value * 0.3), msg))
             synthesis_thread.error.connect(handle_error)
             synthesis_thread.run()
 
