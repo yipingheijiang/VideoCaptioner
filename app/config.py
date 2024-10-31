@@ -1,15 +1,27 @@
 import os
 from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "1.0.0"
+YEAR = 2024
 APP_NAME = "VideoCaptioner"
 AUTHOR = "Weifeng"
 
+HELP_URL = "https://www.bkfeng.top"
+REPO_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets"
+RELEASE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/releases/latest"
+FEEDBACK_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues"
+
 # 路径
 ROOT_PATH = Path(__file__).parent
-CACHE_PATH = ROOT_PATH.parent / "cache"
-LOG_PATH = ROOT_PATH.parent / "logs"
-WORK_PATH = ROOT_PATH.parent.parent / "work-dir"
+
+RESOURCE_PATH = ROOT_PATH / "resource"
+
+APPDATA_PATH = ROOT_PATH.parent / "AppData"
+
+CACHE_PATH = APPDATA_PATH / "cache"
+LOG_PATH = APPDATA_PATH / "logs"
+SETTINGS_PATH = APPDATA_PATH / "settings.json"
+WORK_PATH = APPDATA_PATH / "work-dir"
 
 # 日志配置
 LOG_LEVEL = "INFO"

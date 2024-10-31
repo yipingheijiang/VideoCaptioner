@@ -11,10 +11,10 @@ from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, FolderListSetti
                             ComboBoxSettingCard, ExpandLayout, CustomColorSettingCard,
                             setTheme, setThemeColor, RangeSettingCard, SettingCard)
 
-from ..common.config import cfg, HELP_URL, FEEDBACK_URL, AUTHOR, VERSION, YEAR
+from ..common.config import cfg
 from ..components.LineEditSettingCard import LineEditSettingCard
 from ..core.utils.test_opanai import test_openai
-
+from app.config import VERSION, YEAR, AUTHOR, HELP_URL, RELEASE_URL, FEEDBACK_URL
 
 class SettingInterface(ScrollArea):
     """ Setting interface """

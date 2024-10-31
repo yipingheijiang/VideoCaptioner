@@ -158,31 +158,26 @@ class TaskCreationInterface(QWidget):
 
     def on_subtitle_optimization_clicked(self, checked):
         if cfg.api_base.value == "" and checked:
-            InfoBar.error(
-                self.tr("错误"),
-                self.tr("请先到设置中配置API"),
-                duration=1500,
-                parent=self
+            InfoBar.warning(
+                self.tr("警告，将使用自带小模型API"),
+                self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
+                duration=5000,
+                parent=self,
+                position=InfoBarPosition.BOTTOM_RIGHT
             )
-            self.subtitle_optimization_card.setChecked(False)
-            return
-
         if checked and self.subtitle_translation_card.isChecked():
             self.subtitle_translation_card.setChecked(False)
-            
         cfg.set(cfg.need_optimize, checked)
         
     def on_subtitle_translation_clicked(self, checked):
         if cfg.api_base.value == "" and checked:
-            InfoBar.error(
-                self.tr("错误"),
-                self.tr("请先到设置中配置API"),
-                duration=1500,
-                parent=self
+            InfoBar.warning(
+                self.tr("警告，将使用自带小模型API"),
+                self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
+                duration=10000,
+                parent=self,
+                position=InfoBarPosition.BOTTOM_RIGHT
             )
-            self.subtitle_translation_card.setChecked(False)
-            return
-
         if checked and self.subtitle_optimization_card.isChecked():
             self.subtitle_optimization_card.setChecked(False)
 

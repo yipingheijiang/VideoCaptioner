@@ -1,10 +1,10 @@
 {
     "LLM": {
-        "API_BASE": "https://api.ephone.ai/v1",
-        "API_KEY": "sk-msuqsbr4Ano2cV1GDk0AIaUS1MXS3vukQF0eI7Cble8CgF7Q",
-        "BATCH_SIZE": 10,
-        "MODEL": "gpt-4o-mini",
-        "THREAD_NUM": 10
+        "API_BASE": "",
+        "API_KEY": "",
+        "BATCH_SIZE": 30,
+        "MODEL": "gpt-4o",
+        "THREAD_NUM": 15
     },
     "Update": {
         "CheckUpdateAtStartUp": true
@@ -17,20 +17,20 @@
     "Subtitle": {
         "Need_Optimize": false,
         "Need_Translate": true,
-        "Soft_Subtitle": false,
-        "TARGET_LANGUAGE": "English"
+        "Soft_Subtitle": true,
+        "TARGET_LANGUAGE": "简体中文"
     },
     "SubtitleStyle": {
-        "Layout": "译文在上",
-        "PreviewImage": "C:/Users/weifeng/Pictures/Anime_girl_in_grocery_store.jpg",
+        "Layout": "原文在上",
+        "PreviewImage": "",
         "StyleName": "default"
     },
     "QFluentWidgets": {
         "ThemeColor": "#ff009faa",
-        "ThemeMode": "Dark"
+        "ThemeMode": "Auto"
     },
     "Transcribe": {
-        "Transcribe_MODEL": "必剪",
+        "Transcribe_MODEL": "剪映",
         "Use_ASR_Cache": true
     },
     "Save": {

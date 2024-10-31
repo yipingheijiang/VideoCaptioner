@@ -63,10 +63,9 @@ class SubtitleStyleInterface(QWidget):
         # 添加一个标志位来控制是否触发onSettingChanged
         self._loading_style = False
         
+        # 设置初始值,加载样式
         self.__setValues()
 
-        self.updatePreview()
-        
         # 连接信号
         self.connectSignals()
         
@@ -377,8 +376,6 @@ class SubtitleStyleInterface(QWidget):
         # 如果正在加载样式，不触发更新
         if self._loading_style:
             return
-            
-        print("onSettingChanged")
         self.updatePreview()
         # 获取当前选择的样式名称
         current_style = self.styleNameComboBox.comboBox.currentText()

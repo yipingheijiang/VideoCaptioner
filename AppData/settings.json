@@ -1,0 +1,39 @@
+{
+    "LLM": {
+        "API_Base": "",
+        "API_Key": "",
+        "BatchSize": 25,
+        "Model": "gpt-4o-mini",
+        "ThreadNum": 12
+    },
+    "Update": {
+        "CheckUpdateAtStartUp": true
+    },
+    "MainWindow": {
+        "DpiScale": "Auto",
+        "Language": "Auto",
+        "MicaEnabled": false
+    },
+    "Subtitle": {
+        "NeedOptimize": true,
+        "NeedTranslate": false,
+        "SoftSubtitle": true,
+        "TargetLanguage": "简体中文"
+    },
+    "SubtitleStyle": {
+        "Layout": "仅译文",
+        "PreviewImage": "",
+        "StyleName": "default"
+    },
+    "QFluentWidgets": {
+        "ThemeColor": "#ff009faa",
+        "ThemeMode": "Dark"
+    },
+    "Transcribe": {
+        "TranscribeModel": "剪映",
+        "UseASRCache": true
+    },
+    "Save": {
+        "Work_Dir": "e:/GithubProject/VideoCaptioner/AppData/work-dir"
+    }
+}

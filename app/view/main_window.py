@@ -1,5 +1,5 @@
 # coding: utf-8
-from PyQt5.QtCore import QUrl, QSize
+from PyQt5.QtCore import QUrl, QSize, QThread
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QApplication
 
@@ -15,11 +15,11 @@ from .setting_interface import SettingInterface
 from .batch_process_interface import BatchProcessInterface
 # from .text_interface import TextInterface
 # from .view_interface import ViewInterface
-from ..common.config import SUPPORT_URL, cfg
+from ..common.config import cfg
 from ..common.icon import Icon
 from ..common.translator import Translator
-from ..common import resource
-
+from app.config import HELP_URL
+from app.core.thread.version_manager_thread import VersionManager
 
 class MainWindow(FluentWindow):
 
@@ -32,6 +32,16 @@ class MainWindow(FluentWindow):
         self.settingInterface = SettingInterface(self)
         self.subtitleStyleInterface = SubtitleStyleInterface(self)
         self.batchProcessInterface = BatchProcessInterface(self)
+
+        # 初始化版本管理器
+        self.versionManager = VersionManager()
+        self.versionManager.newVersionAvailable.connect(self.onNewVersion)
+        self.versionManager.announcementAvailable.connect(self.onAnnouncement)
+        # 创建版本检查线程
+        self.versionThread = QThread()
+        self.versionManager.moveToThread(self.versionThread)
+        self.versionThread.started.connect(self.versionManager.performCheck)
+        self.versionThread.start()
 
         # 向导航界面添加项目
         self.initNavigation()
@@ -90,10 +100,29 @@ class MainWindow(FluentWindow):
             '个人开发不易，如果这个项目帮助到了您，可以考虑请作者喝一瓶快乐水🥤。您的支持就是作者开发和维护项目的动力🚀',
             self
         )
-        w.yesButton.setText('来啦老弟')
-        w.cancelButton.setText('下次一定')
+        w.yesButton.setText('确定')
+        w.cancelButton.setText('取消')
         if w.exec():
-            QDesktopServices.openUrl(QUrl(SUPPORT_URL))
+            QDesktopServices.openUrl(QUrl(HELP_URL))
+
+    def onNewVersion(self, version, force_update, update_info, download_url):
+        """新版本提示"""
+        title = '发现新版本' if not force_update else '当前版本已停用'
+        content = f'发现新版本 {version}\n\n{update_info}'
+        w = MessageBox(title, content, self)
+        w.yesButton.setText('立即更新')
+        w.cancelButton.setText('稍后再说' if not force_update else '退出程序')
+        if w.exec():
+            QDesktopServices.openUrl(QUrl(download_url))
+        if force_update:
+            QApplication.quit()
+
+    def onAnnouncement(self, content):
+        """显示公告"""
+        w = MessageBox('公告', content, self)
+        w.yesButton.setText('我知道了')
+        w.cancelButton.hide()
+        w.exec()
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
