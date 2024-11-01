@@ -247,6 +247,42 @@ class ASRData:
     def __str__(self):
         return self.to_txt()
 
+def from_subtitle_file(file_path: str) -> 'ASRData':
+    """从文件路径加载ASRData实例
+    
+    Args:
+        file_path: 字幕文件路径，支持.srt、.vtt、.ass、.json格式
+        
+    Returns:
+        ASRData: 解析后的ASRData实例
+        
+    Raises:
+        ValueError: 不支持的文件格式或文件读取错误
+    """
+    file_path = Path(file_path)
+    if not file_path.exists():
+        raise FileNotFoundError(f"文件不存在: {file_path}")
+        
+    try:
+        content = file_path.read_text(encoding='utf-8')
+    except UnicodeDecodeError:
+        content = file_path.read_text(encoding='gbk')
+        
+    suffix = file_path.suffix.lower()
+    
+    if suffix == '.srt':
+        return from_srt(content)
+    elif suffix == '.vtt':
+        if '<c>' in content:  # YouTube VTT格式包含字级时间戳
+            return from_youtube_vtt(content)
+        return from_vtt(content)
+    elif suffix == '.ass':
+        return from_ass(content)
+    elif suffix == '.json':
+        return from_json(json.loads(content))
+    else:
+        raise ValueError(f"不支持的文件格式: {suffix}")
+
 def from_json(json_data: dict) -> 'ASRData':
     """从JSON数据创建ASRData实例"""
     segments = []
@@ -339,7 +375,7 @@ def from_vtt(vtt_str: str) -> 'ASRData':
         seconds, milliseconds = seconds.split('.')
         end_time = (int(hours) * 3600 + int(minutes) * 60 + int(seconds)) * 1000 + int(milliseconds)
         
-        # 提取并清理文本内容
+        # 提取并清文本内容
         if len(lines) > 1:
             text_line = lines[1]
             # 移除时间戳和样式标记
@@ -427,6 +463,45 @@ def from_youtube_vtt(vtt_str: str) -> 'ASRData':
             # 分离每个带时间戳的单词
             word_segments = split_timestamped_text(text)
             segments.extend(word_segments)
+    
+    return ASRData(segments)
+
+def from_ass(ass_str: str) -> 'ASRData':
+    """
+    从ASS格式的字符串创建ASRData实例。
+    
+    :param ass_str: 包含ASS格式字幕的字符串
+    :return: ASRData实例
+    """
+    segments = []
+    # ASS时间戳格式: H:MM:SS.cc
+    ass_time_pattern = re.compile(r'Dialogue: \d+,(\d+:\d{2}:\d{2}\.\d{2}),(\d+:\d{2}:\d{2}\.\d{2}),(.*?),.*?,\d+,\d+,\d+,.*?,(.*?)$')
+    
+    def parse_ass_time(time_str: str) -> int:
+        """将ASS时间戳转换为毫秒"""
+        hours, minutes, seconds = time_str.split(':')
+        seconds, centiseconds = seconds.split('.')
+        return (int(hours) * 3600000 + 
+                int(minutes) * 60000 + 
+                int(seconds) * 1000 + 
+                int(centiseconds) * 10)  # 厘秒转毫秒
+    
+    # 按行处理ASS文件
+    for line in ass_str.splitlines():
+        if line.startswith('Dialogue:'):
+            match = ass_time_pattern.match(line)
+            if match:
+                start_time = parse_ass_time(match.group(1))
+                end_time = parse_ass_time(match.group(2))
+                text = match.group(4)
+                
+                # 清理ASS格式标记
+                text = re.sub(r'\{[^}]*\}', '', text)  # 移除样式标记 {xxx}
+                text = text.replace('\\N', '\n')  # 处理换行符
+                text = text.strip()
+                
+                if text:  # 只有当文本不为空时才创建segment
+                    segments.append(ASRDataSeg(text, start_time, end_time))
     
     return ASRData(segments)
 

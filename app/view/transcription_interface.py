@@ -16,7 +16,7 @@ from ..core.entities import Task, VideoInfo
 from ..common.config import cfg
 from ..components.ImageLable import ImageLabel
 from ..core.thread.transcript_thread import TranscriptThread
-
+from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
 
 
 class VideoInfoCard(CardWidget):
@@ -242,12 +242,15 @@ class TranscriptionInterface(QWidget):
 
     def _on_file_select(self):
         """文件选择处理"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, 
-            "选择视频文件", 
-            QStandardPaths.writableLocation(QStandardPaths.DesktopLocation),
-            "视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)"
-        )
+        desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
+        file_dialog = QFileDialog()
+        
+        # 构建文件过滤器
+        video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
+        audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
+        filter_str = f"媒体文件 ({video_formats} {audio_formats});;视频文件 ({video_formats});;音频文件 ({audio_formats})"
+        
+        file_path, _ = file_dialog.getOpenFileName(self, "选择媒体文件", desktop_path, filter_str)
         if file_path:
             self.create_task(file_path)
 
@@ -276,17 +279,33 @@ class TranscriptionInterface(QWidget):
 
     def dropEvent(self, event):
         """拖拽放下事件处理"""
-        for url in event.mimeData().urls():
-            file_path = url.toLocalFile()
-            if os.path.isfile(file_path) and file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.mp3', '.wav')):
+        files = [u.toLocalFile() for u in event.mimeData().urls()]
+        for file_path in files:
+            if not os.path.isfile(file_path):
+                continue
+                
+            file_ext = os.path.splitext(file_path)[1][1:].lower()
+            
+            # 检查文件格式是否支持
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+            is_supported = file_ext in supported_formats
+                        
+            if is_supported:
                 self.create_task(file_path)
                 InfoBar.success(
-                    self.tr("导入成功"),
-                    self.tr("开始处理视频文件"),
+                    self.tr("导入成功"), 
+                    self.tr("开始语音转文字"),
                     duration=1500,
                     parent=self
                 )
                 break
+            else:
+                InfoBar.error(
+                    self.tr(f"格式错误{file_ext}"),
+                    self.tr(f"请拖入音频或视频文件"),
+                    duration=1500,
+                    parent=self
+                )
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

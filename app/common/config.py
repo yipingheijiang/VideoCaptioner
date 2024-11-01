@@ -7,7 +7,7 @@ from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, Boo
                             OptionsValidator, RangeConfigItem, RangeValidator,
                             FolderListValidator, Theme, FolderValidator, ConfigSerializer, EnumSerializer)
 
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, OutputFormatEnum
+from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, OutputSubtitleFormatEnum
 from app.config import WORK_PATH, SETTINGS_PATH
 
 

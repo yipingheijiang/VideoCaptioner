@@ -18,6 +18,7 @@ from ..common.config import cfg
 from ..components.ImageLable import ImageLabel
 from ..core.thread.transcript_thread import TranscriptThread
 from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
+from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
 
 class BatchProcessInterface(QWidget):
     """批量处理界面"""
@@ -312,8 +313,30 @@ class BatchProcessInterface(QWidget):
         """拖拽放下事件处理"""
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
-            if file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv')):
+            if not os.path.isfile(file_path):
+                continue
+                
+            file_ext = os.path.splitext(file_path)[1][1:].lower()
+            
+            # 检查文件格式是否支持
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+            is_supported = file_ext in supported_formats
+                        
+            if is_supported:
                 self.create_task(file_path)
+                InfoBar.success(
+                    self.tr("导入成功"), 
+                    self.tr("开始处理"),
+                    duration=1500,
+                    parent=self
+                )
+            else:
+                InfoBar.error(
+                    self.tr(f"格式错误{file_ext}"),
+                    self.tr(f"请拖入音频或视频文件"),
+                    duration=1500,
+                    parent=self
+                )
 
 
 class TaskInfoCard(CardWidget):

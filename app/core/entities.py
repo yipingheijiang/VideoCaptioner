@@ -8,9 +8,60 @@ from enum import Enum
 
 from .bk_asr.ASRData import ASRData
 
+class SupportedAudioFormats(Enum):
+    """ 支持的音频格式 """
+    AAC = "aac"
+    AC3 = "ac3"
+    AIFF = "aiff"
+    AMR = "amr"
+    APE = "ape"
+    AU = "au"
+    FLAC = "flac" 
+    M4A = "m4a"
+    MP2 = "mp2"
+    MP3 = "mp3"
+    MKA = "mka"
+    OGA = "oga"
+    OGG = "ogg"
+    OPUS = "opus"
+    RA = "ra"
+    WAV = "wav"
+    WMA = "wma"
 
-class OutputFormatEnum(Enum):
-    """ 输出格式 """
+class SupportedVideoFormats(Enum):
+    """ 支持的视频格式 """
+    MP4 = "mp4"
+    WEBM = "webm"
+    OGM = "ogm"
+    MOV = "mov"
+    MKV = "mkv"
+    AVI = "avi"
+    WMV = "wmv"
+    FLV = "flv"
+    M4V = "m4v"
+    TS = "ts"
+    MPG = "mpg"
+    MPEG = "mpeg"
+    VOB = "vob"
+    ASF = "asf"
+    RM = "rm"
+    RMVB = "rmvb"
+    M2TS = "m2ts"
+    MTS = "mts"
+    DV = "dv"
+    GXF = "gxf"
+    TOD = "tod"
+    MXF = "mxf"
+    F4V = "f4v"
+
+class SupportedSubtitleFormats(Enum):
+    """ 支持的字幕格式 """
+    SRT = "srt"
+    ASS = "ass"
+    VTT = "vtt"
+
+class OutputSubtitleFormatEnum(Enum):
+    """ 字幕输出格式 """
     SRT = "srt"
     ASS = "ass"
     VTT = "vtt"

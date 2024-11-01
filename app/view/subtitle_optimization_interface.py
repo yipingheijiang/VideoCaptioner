@@ -12,14 +12,14 @@ from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabe
     InfoBadge, ProgressRing, TableWidget, TableItemDelegate, TableView
 
 from app.core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
-from ..core.bk_asr.ASRData import ASRData, from_srt, from_vtt, from_youtube_vtt, from_json
+from ..core.bk_asr.ASRData import ASRData, from_subtitle_file,from_srt, from_vtt, from_youtube_vtt, from_json
 from ..core.thread.create_task_thread import CreateTaskThread
 from PyQt5.QtWidgets import QTableWidgetItem,QAbstractItemView
-from ..core.entities import Task, VideoInfo, OutputFormatEnum
+from ..core.entities import Task, VideoInfo, OutputSubtitleFormatEnum
 from ..common.config import cfg
 from ..components.ImageLable import ImageLabel
 from ..core.thread.transcript_thread import TranscriptThread
-
+from ..core.entities import OutputSubtitleFormatEnum, SupportedSubtitleFormats
 
 class SubtitleTableModel(QAbstractTableModel):
     def __init__(self, data):
@@ -131,7 +131,7 @@ class SubtitleOptimizationInterface(QWidget):
         # 左侧布局
         self.left_layout = QHBoxLayout()
         self.format_combobox = ComboBox(self)
-        self.format_combobox.addItems([format.value for format in OutputFormatEnum])
+        self.format_combobox.addItems([format.value for format in OutputSubtitleFormatEnum])
         self.save_button = PushButton("保存", self)
         self.left_layout.addWidget(self.format_combobox)
         self.left_layout.addWidget(self.save_button)
@@ -255,10 +255,14 @@ class SubtitleOptimizationInterface(QWidget):
         self.model.update_all(data)
 
     def on_file_select(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择SRT文件", "", "SRT文件 (*.srt)")
+        # 构建文件过滤器
+        subtitle_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedSubtitleFormats)
+        filter_str = f"字幕文件 ({subtitle_formats})"
+        
+        file_path, _ = QFileDialog.getOpenFileName(self, "选择字幕文件", "", filter_str)
         if file_path:
             self.file_select_button.setProperty("selected_file", file_path)
-            self.load_srt_file(file_path)
+            self.load_subtitle_file(file_path)
 
     def on_save_clicked(self):
         # 检查是否有任务
@@ -306,9 +310,9 @@ class SubtitleOptimizationInterface(QWidget):
             return
         os.startfile(os.path.dirname(self.task.original_subtitle_save_path))
 
-    def load_srt_file(self, file_path):
+    def load_subtitle_file(self, file_path):
         self.create_task(file_path)
-        asr_data = from_srt(Path(file_path).read_text(encoding="utf-8"))
+        asr_data = from_subtitle_file(file_path)
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(f"已加载文件")
@@ -317,13 +321,34 @@ class SubtitleOptimizationInterface(QWidget):
         event.accept() if event.mimeData().hasUrls() else event.ignore()
 
     def dropEvent(self, event: QDropEvent):
-        for file_path in [u.toLocalFile() for u in event.mimeData().urls()]:
-            if file_path.lower().endswith('.srt'):
+        files = [u.toLocalFile() for u in event.mimeData().urls()]
+        for file_path in files:
+            if not os.path.isfile(file_path):
+                continue
+                
+            file_ext = os.path.splitext(file_path)[1][1:].lower()
+            
+            # 检查文件格式是否支持
+            supported_formats = {fmt.value for fmt in SupportedSubtitleFormats}
+            is_supported = file_ext in supported_formats
+                        
+            if is_supported:
                 self.file_select_button.setProperty("selected_file", file_path)
-                self.load_srt_file(file_path)
-                InfoBar.success(self.tr("导入成功"), self.tr("成功导入SRT文件"), duration=2000, parent=self)
+                self.load_subtitle_file(file_path)
+                InfoBar.success(
+                    self.tr("导入成功"), 
+                    self.tr(f"成功导入{os.path.basename(file_path)}"),
+                    duration=2000,
+                    parent=self
+                )
                 break
-        # TODO: 添加对其他格式文件的支持
+            else:
+                InfoBar.error(
+                    self.tr(f"格式错误{file_ext}"),
+                    self.tr(f"支持的字幕格式: {supported_formats}"),
+                    duration=2000,
+                    parent=self
+                )
         event.accept()
 
 if __name__ == "__main__":

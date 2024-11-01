@@ -10,12 +10,11 @@ from PyQt5.sip import voidptr
 from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, CardWidget, ToolTipFilter, \
     ToolTipPosition, LineEdit, PrimaryPushButton, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel
 
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, OutputFormatEnum, Task, VideoInfo
+from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task, VideoInfo
 from ..common.config import cfg
-from ..core.utils.video_utils import get_video_info
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
-
+from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
 
 class TaskCreationInterface(QWidget):
     """
@@ -188,9 +187,15 @@ class TaskCreationInterface(QWidget):
         if self.start_button.text() == "选择文件":
             desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
             file_dialog = QFileDialog()
-            video_file, _ = file_dialog.getOpenFileName(self, "选择视频文件", desktop_path, "视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)")
-            if video_file:
-                self.search_input.setText(video_file)
+            
+            # 构建文件过滤器
+            video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
+            audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
+            filter_str = f"媒体文件 ({video_formats} {audio_formats});;视频文件 ({video_formats});;音频文件 ({audio_formats})"
+            
+            file_path, _ = file_dialog.getOpenFileName(self, "选择媒体文件", desktop_path, filter_str)
+            if file_path:
+                self.search_input.setText(file_path)
             return
         
         self.process()
@@ -238,16 +243,32 @@ class TaskCreationInterface(QWidget):
     def dropEvent(self, event):
         files = [u.toLocalFile() for u in event.mimeData().urls()]
         for file_path in files:
-            if os.path.isfile(file_path):
+            if not os.path.isfile(file_path):
+                continue
+                
+            file_ext = os.path.splitext(file_path)[1][1:].lower()
+            
+            # 检查文件格式是否支持
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+            is_supported = file_ext in supported_formats
+                        
+            if is_supported:
                 self.search_input.setText(file_path)
+                self.status_label.setText("导入成功")
+                InfoBar.success(
+                    self.tr("导入成功"), 
+                    self.tr("导入媒体文件成功"),
+                    duration=1500,
+                    parent=self
+                )
                 break
-        self.status_label.setText("导入成功")
-        InfoBar.success(
-            self.tr("导入成功"),
-            self.tr("导入视频文件成功"),
-            duration=1500,
-            parent=self
-        )
+            else:
+                InfoBar.error(
+                    self.tr("格式错误"),
+                    self.tr("不支持该文件格式"),
+                    duration=1500,
+                    parent=self
+                )
 
     def create_task(self):
         search_input = self.search_input.text()
@@ -326,7 +347,7 @@ class TaskCreationInterface(QWidget):
         else:
             InfoBar.error(
                 self.tr("错误"),
-                self.tr("请输入有效的文件路径或视频URL"),
+                self.tr("请输入音视频文件路径或URL"),
                 duration=1500,
                 parent=self
             )

@@ -16,7 +16,7 @@ from app.core.thread.video_synthesis_thread import VideoSynthesisThread
 from ..core.entities import Task
 from ..common.config import cfg, SubtitleLayoutEnum
 from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
-
+from ..core.entities import SupportedVideoFormats, SupportedSubtitleFormats
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
@@ -89,34 +89,6 @@ class VideoSynthesisInterface(QWidget):
         self.bottom_layout.addWidget(self.status_label)  # 状态标签使用固定宽度
         self.main_layout.addLayout(self.bottom_layout)
 
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event: QDropEvent):
-        urls = event.mimeData().urls()
-        if not urls:
-            return
-        
-        file_path = urls[0].toLocalFile()
-        if not os.path.exists(file_path):
-            return
-
-        # 判断文件类型并放入对应输入框
-        file_ext = os.path.splitext(file_path)[1].lower()
-        if file_ext in ['.srt', '.ass']:
-            self.subtitle_input.setText(file_path)
-        # TODO 添加更多视频格式
-        elif file_ext in ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm', '.m4v', '.3gp', '.ts', '.m3u8', '.ts']:
-            self.video_input.setText(file_path)
-        
-        InfoBar.success(
-            "成功",
-            "文件已成功放入输入框",
-            duration=2000,
-            position=InfoBarPosition.TOP,
-            parent=self
-        )
 
     def setup_signals(self):
         # 文件选择相关信号
@@ -132,12 +104,20 @@ class VideoSynthesisInterface(QWidget):
         self.video_input.setText("C:/Users/weifeng/Videos/佛山周末穷游好去处!.mp4")
 
     def choose_subtitle_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择字幕文件", "", "字幕文件 (*.srt)")
+        # 构建文件过滤器
+        subtitle_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedSubtitleFormats)
+        filter_str = f"字幕文件 ({subtitle_formats})"
+        
+        file_path, _ = QFileDialog.getOpenFileName(self, "选择字幕文件", "", filter_str)
         if file_path:
             self.subtitle_input.setText(file_path)
 
     def choose_video_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择视频文件", "", "视频文件 (*.mp4 *.avi *.mov)")
+        # 构建文件过滤器
+        video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
+        filter_str = f"视频文件 ({video_formats})"
+        
+        file_path, _ = QFileDialog.getOpenFileName(self, "选择视频文件", "", filter_str)
         if file_path:
             self.video_input.setText(file_path)
 
@@ -230,6 +210,46 @@ class VideoSynthesisInterface(QWidget):
                 position=InfoBarPosition.TOP,
                 parent=self
             )
+        
+    def dragEnterEvent(self, event):
+        """拖拽进入事件处理"""
+        event.accept() if event.mimeData().hasUrls() else event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        """拖拽放下事件处理"""
+        files = [u.toLocalFile() for u in event.mimeData().urls()]
+        for file_path in files:
+            if not os.path.isfile(file_path):
+                continue
+                
+            file_ext = os.path.splitext(file_path)[1][1:].lower()
+            
+            # 检查文件格式是否支持
+            if file_ext in {fmt.value for fmt in SupportedSubtitleFormats}:
+                self.subtitle_input.setText(file_path)
+                InfoBar.success(
+                    self.tr("导入成功"),
+                    self.tr("字幕文件已放入输入框"),
+                    duration=1500,
+                    parent=self
+                )
+                break
+            elif file_ext in {fmt.value for fmt in SupportedVideoFormats}:
+                self.video_input.setText(file_path)
+                InfoBar.success(
+                    self.tr("导入成功"),
+                    self.tr("视频文件已输入框"), 
+                    duration=1500,
+                    parent=self
+                )
+                break
+            else:
+                InfoBar.error(
+                    self.tr("格式错误"),
+                    self.tr("请拖入视频或者字幕文件"),
+                    duration=1500,
+                    parent=self
+                )
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
