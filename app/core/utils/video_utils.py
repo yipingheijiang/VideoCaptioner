@@ -53,6 +53,7 @@ def add_subtitles(
             '-y'
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        print(result)
     else:
         subtitle_file = Path(subtitle_file).as_posix().replace(':', r'\:')
         vf = f"subtitles='{subtitle_file}'"

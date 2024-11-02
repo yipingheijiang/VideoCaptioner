@@ -148,7 +148,7 @@ class TaskCreationInterface(QWidget):
         self.search_input.textChanged.connect(self.on_search_input_changed)
 
     def setup_values(self):
-        self.transcription_model_card.setValue(cfg.transcribe_model.value)
+        self.transcription_model_card.setValue(cfg.transcribe_model.value.value)
         self.target_language_card.setValue(cfg.target_language.value.value)
         self.subtitle_optimization_card.setChecked(cfg.need_optimize.value)
         self.subtitle_translation_card.setChecked(cfg.need_translate.value)

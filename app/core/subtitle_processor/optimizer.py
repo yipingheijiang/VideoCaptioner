@@ -39,7 +39,7 @@ class SubtitleOptimizer:
 
         self.target_language = target_language
 
-    @retry.retry(tries=3)
+    @retry.retry(tries=2)
     def optimize(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
         """ Optimize the given subtitle. """
         logger.info(f"[+]正在优化字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
@@ -51,8 +51,6 @@ class SubtitleOptimizer:
             stream=False,
             messages=message)
         
-        # print(response.choices[0].message.content)
-
         optimized_text = json_repair.loads(response.choices[0].message.content)
 
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
@@ -63,6 +61,7 @@ class SubtitleOptimizer:
                                batch_num=BATCH_SIZE, 
                                thread_num: int = MAX_THREADS, 
                                translate=False,
+                               reflect=False,
                                callback=None):
         items = list(subtitle_json.items())[:]
         chunks = [dict(items[i:i + batch_num]) for i in range(0, len(items), batch_num)]
@@ -71,7 +70,7 @@ class SubtitleOptimizer:
         def process_chunk(chunk):
             if translate:
                 try:
-                    result = self.translate(chunk)
+                    result = self.translate(chunk, reflect)
                 except Exception as e:
                     result = self.translate_single(chunk)
             else:
@@ -88,19 +87,20 @@ class SubtitleOptimizer:
         # print("合并结果", optimizer_result)
         return optimizer_result
 
-    @retry.retry(tries=3)
-    def translate(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
+    @retry.retry(tries=2)
+    def translate(self, original_subtitle: Dict[int, str], reflect=False) -> Dict[int, str]:
         """优化并翻译给定的字幕。"""
         logger.info(f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
-        message = self._create_translate_message(original_subtitle)
+        message = self._create_translate_message(original_subtitle, reflect)
         response = self.client.chat.completions.create(
             model=self.model,
             stream=False,
-            messages=message)
+            messages=message,
+            temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
-        # print(response_content)
+        print(response_content)
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
-
+        # print("optimized_text", optimized_text)
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
 
         # 在 translations 中查找对应的翻译  文本-翻译 映射
@@ -110,8 +110,8 @@ class SubtitleOptimizer:
 
         return translated_subtitle
 
-    def _create_translate_message(self, original_subtitle: Dict[int, str]):
-        input_content = f"Correct the original subtitles and translate them into {self.target_language}:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
+    def _create_translate_message(self, original_subtitle: Dict[int, str], reflect=False):
+        input_content = f"correct the original subtitles, and translate them into {self.target_language}:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
             input_content += f"\nBelow is a summary of the subtitle content and related keywords:\n<summary>{self.summary_content}</summary>\n"
         example_input = f'correct the original subtitles and translate them into Chinese: {{"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE right now."}}'
@@ -121,10 +121,16 @@ class SubtitleOptimizer:
                           'now.", "translate": "那么你现在可能无法绕开Cursor这款IDE。", "revise_suggestions": "The term \'绕开\' '
                           'feels awkward in this context. Consider using \'避开\' instead.", "revised_translate": '
                           '"那么你现在可能无法避开Cursor这款IDE。"}}')
-        message = [{"role": "system", "content": REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)},
+        if reflect:
+            prompt = REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
+        else:
+            prompt = TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
+        message = [{"role": "system", "content": prompt},
                    {"role": "user", "content": example_input},
                    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
+        print("input_content", input_content)
+        # print("prompt", prompt)
         return message
 
     def _create_optimizer_message(self, original_subtitle):

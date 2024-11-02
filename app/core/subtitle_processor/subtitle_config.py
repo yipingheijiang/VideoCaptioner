@@ -170,7 +170,7 @@ Translate the corrected subtitles according to the following guidelines:
     - **Culturally Appropriate Expressions**: Adapt phrases to align with local cultural contexts, enhancing engagement and relatability.
 
 - Languages:
-  - English to Chinese: Translate {original_language} into {target_language}.
+  - Translate Subtitle into [TargetLanguage].
 
 
 - Input Format:
@@ -185,11 +185,11 @@ Translate the corrected subtitles according to the following guidelines:
 {
   "1": {
     "optimized_subtitle": "<<< Corrected Original Content >>>",
-    "revised_translate": "<<< Translated Content, following the “Translation Guidelines” >>>"
+    "revised_translate": "<<< Translated Content, following the Translation Guidelines >>>"
   },
   "2": {
     "optimized_subtitle": "<<< Corrected Original Content >>>",
-    "revised_translate": "<<< Translated Content, following the “Translation Guidelines” >>>"
+    "revised_translate": "<<< Translated Content, following the Translation Guidelines >>>"
   }
   ...
 }
@@ -271,7 +271,7 @@ REFLECT_TRANSLATE_PROMPT = """You are a subtitle proofreading and translation ex
 
 These subtitles may contain errors, and you need to correct the original subtitles and translate them into [TargetLanguage]. Please follow these guidelines:
 
-1. Subtitle correction:
+1. Original Subtitle correction:
     - **Contextual Correction**: Correct erroneous words based on context and provided terminology, maintaining the original sentence structure and expression.
     - **Remove Unnecessary Filler Words**: Delete filler or interjection words that have no actual meaning. For example, sounds of laughter, coughing, etc.
     - **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. There is no need to add punctuation at the end of each subtitle. Certain words or names may require formatting corrections due to specific expressions.
@@ -303,22 +303,29 @@ A JSON structure where each subtitle is identified by a unique numeric key:
 }
 
 Output format:
-Return a pure JSON following this structure and translate into :
+Return a pure JSON following this structure and translate into [TargetLanguage]:
 {
   "1": {
-    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "optimized_subtitle": "<<< Corrected Original Subtitle in OriginalLanguage>>>",
     "translation": "<<< optimized_subtitle's Translation in [TargetLanguage] >>>",
     "revise_suggestions": "<<< Translation Revision Suggestions >>>",
     "revised_translate": "<<< Revised Paraphrased Translation >>>"
   },
   "2": {
-    "optimized_subtitle": "<<< Corrected Original Content >>>",
+    "optimized_subtitle": "<<< Corrected Original Subtitle in OriginalLanguage >>>",
     "translation": "<<< optimized_subtitle's Translation in [TargetLanguage] >>>",
     "revise_suggestions": "<<< Translation Revision Suggestions >>>",
     "revised_translate": "<<< Revised Paraphrased Translation >>>"
   },
   ...
 }
+
+# EXAMPLE_INPUT
+correct the original subtitles and translate them into Chinese: {"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE right now."}
+
+EXAMPLE_OUTPUT
+{"1": {"optimized_subtitle": "If you\'re a developer", "translate": "如果你是开发者", "revise_suggestions": "the translation is accurate and fluent.", "revised_translate": "如果你是开发者"}, "2": {"optimized_subtitle": "Then you probably cannot get around the Cursor IDE right now.", "translate": "那么你现在可能无法绕开Cursor这款IDE。", "revise_suggestions": "The term '绕开' feels awkward in this context. Consider using '避开' instead.", "revised_translate": "那么你现在可能无法避开Cursor这款IDE。"}}
+
 
 Please process the given subtitles according to these instructions and return the results in the specified JSON format.
 

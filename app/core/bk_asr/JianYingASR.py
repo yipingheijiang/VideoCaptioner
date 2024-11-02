@@ -14,10 +14,11 @@ import requests
 
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
-
+# from ASRData import ASRDataSeg
+# from BaseASR import BaseASR
 
 class JianYingASR(BaseASR):
-    def __init__(self, audio_path: Union[str, bytes], use_cache: bool = False, start_time: float = 0, end_time: float = 6000):
+    def __init__(self, audio_path: Union[str, bytes], use_cache: bool = False, need_word_time_stamp: bool = False, start_time: float = 0, end_time: float = 6000):
         super().__init__(audio_path, use_cache)
         self.audio_path = audio_path
         self.end_time = end_time
@@ -35,6 +36,7 @@ class JianYingASR(BaseASR):
         self.session_key = None
         self.upload_hosts = None
 
+        self.need_word_time_stamp = need_word_time_stamp
 
     def submit(self) -> str:
         """Submit the task"""
@@ -50,7 +52,7 @@ class JianYingASR(BaseASR):
         }
 
         sign, device_time = self._generate_sign_parameters(url='/lv/v1/audio_subtitle/submit', pf='4', appvr='4.0.0',
-                                                           tdid='3943278516897751')
+                                                           tdid='')
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, json=payload, headers=headers)
         query_id = response.json()['data']['id']
@@ -73,7 +75,7 @@ class JianYingASR(BaseASR):
             "pack_options": {"need_attribute": True}
         }
         sign, device_time = self._generate_sign_parameters(url='/lv/v1/audio_subtitle/query', pf='4', appvr='4.0.0',
-                                                           tdid='3943278516897751')
+                                                           tdid='')
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, json=payload, headers=headers)
         return response.json()
@@ -88,23 +90,27 @@ class JianYingASR(BaseASR):
         query_id = self.submit()
         if callback:
             callback(60, "获取结果...")
-        # logging.info(f"任务提交成功, 查询ID: {query_id}")
         resp_data = self.query(query_id)
         if callback:
             callback(100, "转录完成")
         return resp_data
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
-        return [ASRDataSeg(u['text'], u['start_time'], u['end_time']) for u in resp_data['data']['utterances']]
+        print(resp_data)
+        if self.need_word_time_stamp:
+            return [ASRDataSeg(w['text'].strip(), w['start_time'], w['end_time']) for u in resp_data['data']['utterances'] for w in u['words']]
+        else:
+            return [ASRDataSeg(u['text'], u['start_time'], u['end_time']) for u in resp_data['data']['utterances']]
 
     @staticmethod
-    def _generate_sign_parameters(url: str, pf: str = '4', appvr: str = '4.0.0', tdid: str = '3943278516897751') -> \
+    def _generate_sign_parameters(url: str, pf: str = '4', appvr: str = '4.0.0', tdid: str = '') -> \
     Tuple[str, str]:
         """Generate signature and timestamp"""
         current_time = str(int(time.time()))
         sign_str = f"9e2c|{url[-7:]}|{pf}|{appvr}|{current_time}|{tdid}|11ac"
         sign = hashlib.md5(sign_str.encode()).hexdigest()
         return sign.lower(), current_time
+        # TODO: 网络获取
 
     def _build_headers(self, device_time: str, sign: str) -> Dict[str, str]:
         """Build headers for requests"""
@@ -115,7 +121,7 @@ class JianYingASR(BaseASR):
             'pf': "4",
             'sign': sign,
             'sign-ver': "1",
-            'tdid': "3943278516897751",
+            'tdid': "",
         }
 
     def _uplosd_headers(self):
@@ -131,11 +137,9 @@ class JianYingASR(BaseASR):
         url = "https://lv-pc-api-sinfonlinec.ulikecam.com/lv/v1/upload_sign"
         payload = json.dumps({"biz": "pc-recognition"})
         sign, device_time = self._generate_sign_parameters(url='/lv/v1/upload_sign', pf='4', appvr='4.0.0',
-                                                           tdid='3943278516897751')
+                                                           tdid='')
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, data=payload, headers=headers)
-        print("resp=============")
-        print(response.text)
         response.raise_for_status()
         login_data = response.json()
         self.access_key = login_data['data']['access_key_id']
@@ -238,7 +242,7 @@ def aws_signature(secret_key: str, request_parameters: str, headers: Dict[str, s
 
 if __name__ == '__main__':
     # Example usage
-    audio_file = r"test.mp3"
-    asr = JianYingASR(audio_file)
+    audio_file = r"C:\Users\weifeng\Music\output_001.mp3"
+    asr = JianYingASR(audio_file, use_cache=True, need_word_time_stamp=True)
     asr_data = asr.run()
     print(asr_data)

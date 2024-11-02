@@ -46,7 +46,7 @@ class BaseASR:
             try:
                 with open(self.CACHE_FILE, 'w', encoding='utf-8') as f:
                     json.dump(self.cache, f, ensure_ascii=False, indent=2)
-                if os.path.exists(self.CACHE_FILE) and os.path.getsize(self.CACHE_FILE) > 10 * 1024 * 1024:
+                if os.path.exists(self.CACHE_FILE) and os.path.getsize(self.CACHE_FILE) > 20 * 1024 * 1024:
                     os.remove(self.CACHE_FILE)
             except IOError as e:
                 logging.error(f"Failed to save cache: {e}")

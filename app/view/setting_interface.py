@@ -13,7 +13,8 @@ from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, FolderListSetti
 
 from ..common.config import cfg
 from ..components.LineEditSettingCard import LineEditSettingCard
-from ..core.utils.test_opanai import test_openai
+from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
+from ..core.utils.test_opanai import test_openai, get_openai_models
 from app.config import VERSION, YEAR, AUTHOR, HELP_URL, RELEASE_URL, FEEDBACK_URL
 
 class SettingInterface(ScrollArea):
@@ -33,7 +34,7 @@ class SettingInterface(ScrollArea):
             cfg.transcribe_model,
             FIF.MICROPHONE,
             self.tr('转录模型'),
-            self.tr('语音转换文字要使用的转录模型'),
+            self.tr ('语音转换文字要使用的转录模型'),
             texts=[model.value for model in cfg.transcribe_model.validator.options],
             parent=self.transcribeGroup
         )
@@ -56,19 +57,19 @@ class SettingInterface(ScrollArea):
             "https://api.openai.com/v1",
             self.llmGroup
         )
-        self.modelCard = LineEditSettingCard(
+        self.modelCard = EditComboBoxSettingCard(
             cfg.model,
             FIF.ROBOT,
             self.tr("模型"),
             self.tr("输入您的模型"),
-            "gpt-4o",
+            ["gpt-4o", "gpt-4o-mini"],
             self.llmGroup
         )
         self.checkLLMConnectionCard = PushSettingCard(
-            self.tr("检查连接"),
+            self.tr("获取模型列表"),
             FIF.LINK,
             self.tr("检查 LLM 连接"),
-            self.tr("点击检查 API 连接是否正常"),
+            self.tr("点击检查 API 连接是否正常，并获取模型列表填充到上面"),
             self.llmGroup
         )
         self.batchSizeCard = RangeSettingCard(
@@ -335,7 +336,7 @@ class SettingInterface(ScrollArea):
         if not api_base.startswith("http"):
             InfoBar.error(
                 self.tr('错误'),
-                self.tr('请输入正确的 API Base'),
+                self.tr('请输入正确的 API Base, 含有 /v1'),
                 duration=1500,
                 parent=self
             )
@@ -349,34 +350,43 @@ class SettingInterface(ScrollArea):
         self.connection_thread = LLMConnectionThread(
             api_base, 
             self.apiKeyCard.lineEdit.text(), 
-            self.modelCard.lineEdit.text()
+            self.modelCard.comboBox.currentText()
         )
         self.connection_thread.finished.connect(self.onConnectionCheckFinished)
         self.connection_thread.start()
 
-    def onConnectionCheckFinished(self, result, message):
+    def onConnectionCheckFinished(self, is_success, message, models):
         # 恢复检查按钮状态
         self.checkLLMConnectionCard.button.setEnabled(True)
         self.checkLLMConnectionCard.button.setText(self.tr("检查连接"))
-        
-        if not result:
+        if models:
+            temp = self.modelCard.comboBox.currentText()
+            self.modelCard.setItems(models)
+            self.modelCard.comboBox.setCurrentText(temp)
+            InfoBar.success(
+                self.tr('获取模型列表成功'),
+                self.tr('模型列表已填充'),
+                duration=3000,
+                parent=self
+            )
+        if not is_success:
             InfoBar.error(
-                self.tr('测试错误'),
+                self.tr('LLM 连接测试错误'),
                 message,
-                duration=1500,
+                duration=3000,
                 parent=self
             )
         else:
             InfoBar.success(
-                self.tr('测试成功'),
+                self.tr('LLM 连接测试成功'),
                 message,
-                duration=1500,
+                duration=3000,
                 parent=self
             )
 
 
 class LLMConnectionThread(QThread):
-    finished = pyqtSignal(bool, str)
+    finished = pyqtSignal(bool, str, list)
 
     def __init__(self, api_base, api_key, model):
         super().__init__()
@@ -385,5 +395,6 @@ class LLMConnectionThread(QThread):
         self.model = model
 
     def run(self):
-        result, message = test_openai(self.api_base, self.api_key, self.model)
-        self.finished.emit(result, message)
+        is_success, message = test_openai(self.api_base, self.api_key, self.model)
+        models = get_openai_models(self.api_base, self.api_key)
+        self.finished.emit(is_success, message, models)

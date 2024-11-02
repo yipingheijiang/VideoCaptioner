@@ -48,7 +48,7 @@ class ComboBoxSimpleSettingCard(SimpleSettingCard):
         self.layout.addWidget(self.comboBox)
         
     def setValue(self, value):
-        self.comboBox.setCurrentText(value)
+        self.comboBox.setCurrentIndex(self.items.index(value))
         
     def value(self):
         return self.comboBox.currentText()

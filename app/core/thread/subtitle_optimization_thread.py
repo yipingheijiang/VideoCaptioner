@@ -42,13 +42,26 @@ class SubtitleOptimizationThread(QThread):
             subtitle_style_srt = self.task.subtitle_style_srt
             # TODO: 开启字幕总结功能
 
+            # 检查
             assert str_path is not None, "字幕文件路径为空"
             assert Path(str_path).exists(), "字幕文件路径不存在"
-            # 检查后缀名
             assert Path(str_path).suffix in ['.srt', '.vtt', '.ass'], "字幕文件格式不支持"
 
-            os.environ['OPENAI_BASE_URL'] = self.task.base_url
-            os.environ['OPENAI_API_KEY'] = self.task.api_key
+            # 设置环境变量
+            if self.task.base_url:
+                base_url = self.task.base_url
+                api_key = self.task.api_key
+            else:
+                # 使用智谱的API
+                base_url = "https://open.bigmodel.cn/api/paas/v4"
+                api_key = "c96c2f6ce767136cdddc3fef1692c1de.H27sLU4GwuUVqPn5"
+                llm_model = "glm-4-flash"
+                thread_num = 10
+                batch_size = 10
+                
+            os.environ['OPENAI_BASE_URL'] = base_url
+            os.environ['OPENAI_API_KEY'] = api_key
+
 
             if Path(str_path).suffix == '.srt':
                 asr_data = from_srt(Path(str_path).read_text(encoding="utf-8"))
@@ -78,8 +91,10 @@ class SubtitleOptimizationThread(QThread):
                 
                 if need_translate:
                     self.progress.emit(30, "优化+翻译...")
+                    print("target_language", target_language)
+                    need_reflect = False if "glm-4-flash" in llm_model.lower() else True
                     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, target_language=target_language)
-                    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, translate=True, callback=self.callback)
+                    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, translate=True, reflect=need_reflect, callback=self.callback)
                 elif need_optimize:
                     self.progress.emit(30, "优化字幕...")
                     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model)

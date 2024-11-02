@@ -85,7 +85,7 @@ class ASRData:
         for seg in self.segments:
             text = seg.text.strip()
             # 检查是否只包含一个英文单词或一个汉字
-            if (len(text.split()) == 1 and text.isascii()) or len(text.strip()) <= 1:
+            if (len(text.split()) == 1 and text.isascii()) or len(text.strip()) <= 2:
                 valid_segments += 1
         print(f"valid_segments: {valid_segments}, total_segments: {total_segments}")
         return (valid_segments / total_segments) >= 0.8

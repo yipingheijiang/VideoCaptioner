@@ -1,10 +1,10 @@
 {
     "LLM": {
-        "API_Base": "https://api.ephone.ai/v1",
-        "API_Key": "sk-msuqsbr4Ano2cV1GDk0AIaUS1MXS3vukQF0eI7Cble8CgF7Q",
-        "BatchSize": 13,
-        "Model": "gpt-4o-mini",
-        "ThreadNum": 13
+        "API_Base": "",
+        "API_Key": "",
+        "BatchSize": 10,
+        "Model": "GLM-4-Flash",
+        "ThreadNum": 30
     },
     "Update": {
         "CheckUpdateAtStartUp": true
@@ -18,7 +18,7 @@
         "NeedOptimize": false,
         "NeedTranslate": true,
         "SoftSubtitle": true,
-        "TargetLanguage": "English"
+        "TargetLanguage": "日本語"
     },
     "SubtitleStyle": {
         "Layout": "译文在上",
@@ -30,7 +30,7 @@
         "ThemeMode": "Dark"
     },
     "Transcribe": {
-        "TranscribeModel": "必剪",
+        "TranscribeModel": "剪映",
         "UseASRCache": true
     },
     "Save": {
