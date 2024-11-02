@@ -9,7 +9,8 @@ from openai import OpenAI
 from .subtitle_config import (
     TRANSLATE_PROMPT,
     OPTIMIZER_PROMPT,
-    REFLECT_TRANSLATE_PROMPT
+    REFLECT_TRANSLATE_PROMPT,
+    SINGLE_TRANSLATE_PROMPT
 )
 from ..subtitle_processor.aligner import SubtitleAligner
 from ..utils import json_repair
@@ -17,7 +18,7 @@ from ..utils.logger import setup_logger
 
 logger = setup_logger("subtitle_translate")
 
-BATCH_SIZE = 50
+BATCH_SIZE = 20
 MAX_THREADS = 10
 DEFAULT_MODEL = "gpt-4o-mini"
 
@@ -25,7 +26,7 @@ DEFAULT_MODEL = "gpt-4o-mini"
 class SubtitleOptimizer:
     """A class for optimize and translating subtitles using OpenAI's API."""
 
-    def __init__(self, model: str = DEFAULT_MODEL, summary_content="") -> None:
+    def __init__(self, model: str = DEFAULT_MODEL, summary_content="", target_language="Chinese") -> None:
         base_url = os.getenv('OPENAI_BASE_URL')
         api_key = os.getenv('OPENAI_API_KEY')
         assert base_url and api_key, "环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置"
@@ -36,7 +37,7 @@ class SubtitleOptimizer:
 
         self.prompt = TRANSLATE_PROMPT
 
-        self.target_language = "Chinese"
+        self.target_language = target_language
 
     @retry.retry(tries=3)
     def optimize(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
@@ -62,15 +63,19 @@ class SubtitleOptimizer:
                                batch_num=BATCH_SIZE, 
                                thread_num: int = MAX_THREADS, 
                                translate=False,
-                               target_language="Chinese",
                                callback=None):
-        self.target_language = target_language
         items = list(subtitle_json.items())[:]
         chunks = [dict(items[i:i + batch_num]) for i in range(0, len(items), batch_num)]
         logger.debug(chunks)
 
         def process_chunk(chunk):
-            result = self.translate(chunk) if translate else self.optimize(chunk)
+            if translate:
+                try:
+                    result = self.translate(chunk)
+                except Exception as e:
+                    result = self.translate_single(chunk)
+            else:
+                result = self.optimize(chunk)
             if callback:
                 callback(result)
             return result
@@ -117,8 +122,8 @@ class SubtitleOptimizer:
                           'feels awkward in this context. Consider using \'避开\' instead.", "revised_translate": '
                           '"那么你现在可能无法避开Cursor这款IDE。"}}')
         message = [{"role": "system", "content": REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)},
-                #    {"role": "user", "content": example_input},
-                #    {"role": "assistant", "content": example_output},
+                   {"role": "user", "content": example_input},
+                   {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
         return message
 
@@ -134,6 +139,24 @@ class SubtitleOptimizer:
                    {"role": "user", "content": input_content}]
         return message
 
+    def translate_single(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
+        """单条字幕翻译，用于在批量翻译失败时的备选方案"""
+        translate_result = {}
+        for key, value in original_subtitle.items():
+            try:
+                message = [{"role": "system", "content": SINGLE_TRANSLATE_PROMPT.replace("[target_language]", self.target_language)},
+                            {"role": "user", "content": value}]
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    stream=False,
+                    messages=message)
+                translate = response.choices[0].message.content.replace("\n", "")
+                translate_result[key] = f"{value}\n{translate}"
+                logger.info(f"单条翻译结果: {translate_result[key]}")
+            except Exception as e:
+                logger.error(f"单条翻译失败: {e}")
+                translate_result[key] = f"{value}\n "
+        return translate_result
 
 def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     list1 = list(dict1.values())
@@ -141,6 +164,7 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     text_aligner = SubtitleAligner()
     aligned_source, aligned_target = text_aligner.align_texts(list1, list2)
 
+    # 验证是否匹配
     similar_list = calculate_similarity_list(aligned_source, aligned_target)
     if similar_list.count(True) / len(similar_list) >= 0.8:
         # logger.info(f"修复成功！{similar_list.count(True) / len(similar_list)}:.2f")
@@ -148,8 +172,8 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
         modify_dict = {str(int(start_id) + i): value for i, value in enumerate(aligned_target)}
         return modify_dict
     else:
-        logger.info(f"修复失败！{similar_list.count(True) / len(similar_list):.2f}")
-        return dict1
+        logger.error(f"修复失败！相似度：{similar_list.count(True) / len(similar_list):.2f}")
+        raise ValueError("Fail to repair.")
 
 
 def is_similar(text1, text2, threshold=0.4):

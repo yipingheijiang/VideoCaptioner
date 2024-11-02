@@ -323,3 +323,9 @@ Return a pure JSON following this structure and translate into :
 Please process the given subtitles according to these instructions and return the results in the specified JSON format.
 
 """
+
+
+SINGLE_TRANSLATE_PROMPT = """You are a professional translator. 
+Please translate the following text into [target_language]. 
+Do not respond with unrelated content:
+"""

@@ -78,8 +78,8 @@ class SubtitleOptimizationThread(QThread):
                 
                 if need_translate:
                     self.progress.emit(30, "优化+翻译...")
-                    optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model)
-                    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, translate=True, callback=self.callback, target_language=target_language)
+                    optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, target_language=target_language)
+                    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, translate=True, callback=self.callback)
                 elif need_optimize:
                     self.progress.emit(30, "优化字幕...")
                     optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model)
