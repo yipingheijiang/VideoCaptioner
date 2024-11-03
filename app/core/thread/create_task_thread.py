@@ -3,7 +3,7 @@ import os
 import re
 from PyQt5.QtCore import QThread, pyqtSignal
 import yt_dlp
-from ..entities import Task, VideoInfo
+from ..entities import Task, TranscribeModelEnum, VideoInfo
 from ..utils.video_utils import get_video_info
 from ...common.config import cfg
 
@@ -60,6 +60,11 @@ class CreateTaskThread(QThread):
         else:
             subtitle_style_srt = None
 
+        if cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN]:
+            need_word_time_stamp = True
+        else:
+            need_word_time_stamp = False
+
         # 创建 Task 对象
         task = Task(
             id=0,
@@ -79,6 +84,7 @@ class CreateTaskThread(QThread):
             audio_save_path=str(audio_save_path),
             transcribe_model=cfg.transcribe_model.value,
             use_asr_cache=cfg.use_asr_cache.value,
+            need_word_time_stamp=need_word_time_stamp,
             original_subtitle_save_path=str(original_subtitle_save_path),
             base_url=cfg.api_base.value,
             api_key=cfg.api_key.value,
@@ -122,6 +128,11 @@ class CreateTaskThread(QThread):
         result_subtitle_save_path = task_work_dir / "subtitle" / "result_subtitle.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(video_file_path).name}"
 
+        if cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN]:
+            need_word_time_stamp = True
+        else:
+            need_word_time_stamp = False
+
         # 创建 Task 对象
         task = Task(
             id=0,
@@ -141,6 +152,7 @@ class CreateTaskThread(QThread):
             audio_save_path=str(audio_save_path),
             transcribe_model=cfg.transcribe_model.value,
             use_asr_cache=cfg.use_asr_cache.value,
+            need_word_time_stamp=need_word_time_stamp,
             original_subtitle_save_path=str(original_subtitle_save_path),
             base_url=cfg.api_base.value,
             api_key=cfg.api_key.value,

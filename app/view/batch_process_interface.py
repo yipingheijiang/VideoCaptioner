@@ -15,7 +15,6 @@ from qfluentwidgets import FluentIcon as FIF
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..core.entities import Task, VideoInfo
 from ..common.config import cfg
-from ..components.ImageLable import ImageLabel
 from ..core.thread.transcript_thread import TranscriptThread
 from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
@@ -380,12 +379,6 @@ class TaskInfoCard(CardWidget):
         self.video_thumbnail.setFixedSize(208, 117)
         self.video_thumbnail.setStyleSheet("background-color: #1E1F22;")
         self.video_thumbnail.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap(default_thumbnail_path).scaled(
-            self.video_thumbnail.size(),
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation
-        )
-        self.video_thumbnail.setPixmap(pixmap)
         self.layout.addWidget(self.video_thumbnail, 0, Qt.AlignLeft)
 
     def setup_info_layout(self):

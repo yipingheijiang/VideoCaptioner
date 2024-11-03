@@ -14,9 +14,12 @@ from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabe
 from app.core.thread.create_task_thread import CreateTaskThread
 from ..core.entities import Task, VideoInfo
 from ..common.config import cfg
-from ..components.ImageLable import ImageLabel
 from ..core.thread.transcript_thread import TranscriptThread
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
+from app.config import RESOURCE_PATH
+
+
+DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
 
 class VideoInfoCard(CardWidget):
@@ -40,7 +43,7 @@ class VideoInfoCard(CardWidget):
 
     def setup_thumbnail(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        default_thumbnail_path = os.path.join(current_dir, "..", "resource", "default_thumbnail.jpg")
+        default_thumbnail_path = os.path.join(DEFAULT_THUMBNAIL_PATH)
 
         self.video_thumbnail = QLabel(self)
         self.video_thumbnail.setFixedSize(208, 117)
@@ -109,7 +112,6 @@ class VideoInfoCard(CardWidget):
 
     def update_info(self, video_info: VideoInfo):
         """更新视频信息显示"""
-        print(video_info)
         self.video_title.setText(video_info.file_name.rsplit('.', 1)[0])
         self.resolution_info.setText(f"画质: {video_info.width}x{video_info.height}")
         file_size_mb = os.path.getsize(self.task.file_path) / 1024 / 1024

@@ -17,8 +17,6 @@ from ..core.thread.create_task_thread import CreateTaskThread
 from PyQt5.QtWidgets import QTableWidgetItem,QAbstractItemView
 from ..core.entities import Task, VideoInfo, OutputSubtitleFormatEnum
 from ..common.config import cfg
-from ..components.ImageLable import ImageLabel
-from ..core.thread.transcript_thread import TranscriptThread
 from ..core.entities import OutputSubtitleFormatEnum, SupportedSubtitleFormats
 
 class SubtitleTableModel(QAbstractTableModel):

@@ -314,11 +314,11 @@ def from_srt(srt_str: str) -> 'ASRData':
     for block in re.split(r'\n\s*\n', srt_str.strip()):
         lines = block.splitlines()
         if len(lines) < 3:
-            raise ValueError(f"无效的SRT块格式: {block}")
+            continue
 
         match = srt_time_pattern.match(lines[1])
         if not match:
-            raise ValueError(f"无效的时间戳格式: {lines[1]}")
+            continue
 
         time_parts = list(map(int, match.groups()))
         start_time = sum([

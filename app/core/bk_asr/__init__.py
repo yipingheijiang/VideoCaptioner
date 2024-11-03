@@ -1,9 +1,9 @@
 from .BcutASR import BcutASR
 from .JianYingASR import JianYingASR
 from .KuaiShouASR import KuaiShouASR
-# from .WhisperASR import WhisperASR
+from .WhisperASR import WhisperASR
 
-__all__ = ["BcutASR", "JianYingASR", "KuaiShouASR"]
+__all__ = ["BcutASR", "JianYingASR", "KuaiShouASR", "WhisperASR"]
 
 
 def transcribe(audio_file, platform):

@@ -96,11 +96,14 @@ class JianYingASR(BaseASR):
         return resp_data
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
-        print(resp_data)
         if self.need_word_time_stamp:
             return [ASRDataSeg(w['text'].strip(), w['start_time'], w['end_time']) for u in resp_data['data']['utterances'] for w in u['words']]
         else:
             return [ASRDataSeg(u['text'], u['start_time'], u['end_time']) for u in resp_data['data']['utterances']]
+
+    def _get_key(self):        
+        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}"
+
 
     @staticmethod
     def _generate_sign_parameters(url: str, pf: str = '4', appvr: str = '4.0.0', tdid: str = '') -> \

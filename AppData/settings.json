@@ -18,11 +18,11 @@
         "NeedOptimize": false,
         "NeedTranslate": true,
         "SoftSubtitle": true,
-        "TargetLanguage": "日本語"
+        "TargetLanguage": "简体中文"
     },
     "SubtitleStyle": {
         "Layout": "译文在上",
-        "PreviewImage": "C:/Users/weifeng/Pictures/Anime_character_with_a_sword.jpg",
+        "PreviewImage": "C:/Users/weifeng/Pictures/Character_with_bird_and_flower.png",
         "StyleName": "default"
     },
     "QFluentWidgets": {

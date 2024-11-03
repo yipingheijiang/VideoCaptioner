@@ -1,47 +1,112 @@
 import os
+from pathlib import Path
+import shutil
+import subprocess
 
 from openai import OpenAI
 
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
-
-
+from .ASRData import from_srt
 
 class WhisperASR(BaseASR):
-    def __init__(self, audio_path: [str, bytes], model: str = MODEL, use_cache: bool = False):
+    def __init__(self, audio_path, model_path = None, language: str = "en", whisper_cpp_path = "whisper-cpp", use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache)
-        self.base_url = os.getenv('OPENAI_BASE_URL')
-        self.api_key = os.getenv('OPENAI_API_KEY')
-        if not self.base_url or not self.api_key:
-            raise ValueError("环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置")
-        self.model = model
-        self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+        if model_path is None:
+            model_path = r"E:\GithubProject\VideoCaptioner\app\resource\models\ggml-medium.bin"
+        self.model_path = Path(model_path)
+        self.whisper_cpp_path = Path(whisper_cpp_path)
+        self.need_word_time_stamp = need_word_time_stamp
+        self.language = language
 
-    def _run(self) -> dict:
-        return self._submit()
+    def _make_segments(self, resp_data: str) -> list[ASRDataSeg]:
+        return from_srt(resp_data)
 
-    def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
-        return [ASRDataSeg(u['text'], u['start'], u['end']) for u in resp_data['segments']]
+    def _run(self, callback=None) -> str:
+        if callback is None:
+            callback = lambda x, y: None
 
-    def _get_key(self) -> str:
-        return f"{self.__class__.__name__}-{self.model}-{self.crc32_hex}-{self.model}"
+        """使用 whisper.cpp 生成 SRT 字幕文件"""
+        audio_path = Path(self.audio_path)
 
-    def _submit(self) -> dict:
-        completion = self.client.audio.transcriptions.create(
-            model=self.model,
-            temperature=0,
-            response_format="verbose_json",
-            file=("test.mp3", self.file_binary, "audio/mp3"),
-            prompt="",
-            language="zh"
-        )
-        return completion.to_dict()
+        temp_dir = Path(os.environ.get('TEMP')) / "bk_asr"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_audio = temp_dir / audio_path.name
+
+        if audio_path.exists():
+            shutil.copy(self.audio_path, temp_audio)
+        else:
+            raise FileNotFoundError(f"音频文件不存在: {self.audio_path}")
+        output_path = temp_dir / f"{audio_path.stem}.srt"
+            
+        cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt", "-ml", "20"]
+        try:
+            callback(5, "Whisper 转换")
+            process = subprocess.Popen(
+                cmd, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8',
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            total_duration = 200  # 设置固定值
+            
+            while True:
+                try:
+                    line = process.stdout.readline()
+                except UnicodeDecodeError:
+                    continue
+
+                if not line:
+                    break
+
+                # 解析时间戳
+                if '[' in line and ']' in line:
+                    time_str = line.split('[')[1].split(' -->')[0].strip()
+                    hours, minutes, seconds = map(float, time_str.split(':'))
+                    current_time = hours * 3600 + minutes * 60 + seconds
+                    
+                    if callback:
+                        progress = int(min(current_time / total_duration * 100, 95))
+                        # print(progress, "正在转换")
+                        callback(progress, f"{progress}% 正在转换")
+                        
+            callback(100, "转换完成")
+                
+            if process.wait() != 0:
+                raise RuntimeError(f"生成 SRT 文件失败: {process.stderr.read()}")
+                
+        except Exception as e:
+            raise e
+            # raise RuntimeError(f"生成 SRT 文件失败: {str(e)}")
+        
+        return output_path.read_text(encoding='utf-8')
+    
+    def detect_language(self, model_path: Path, whisper_cpp_path: Path) -> str:
+        cmd = [str(whisper_cpp_path), "-m", str(model_path), str(self.audio_path), "-dl"]
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return result.stderr.strip()
+
+    def _get_key(self):
+        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.language}-{self.model_path}"
 
 if __name__ == '__main__':
     # Example usage
-    audio_file = r"test.mp3"
-    asr = WhisperASR(audio_file)
-    asr_data = asr.run()
-    print(asr_data)
+    audio_file = r"E:\GithubProject\VideoCaptioner\AppData\work-dir\Speak_16x9_UHD_2997_pr422\audio.mp3"
+    model_path = r"E:\GithubProject\VideoCaptioner\app\resource\models\ggml-tiny.bin"
+    whisper_cpp_path = r"E:\GithubProject\VideoCaptioner\app\resource\bin\whisper-cpp.exe"
 
+    # 修改这行，使用命名参数或者按照正确的位置参数顺序
+    asr = WhisperASR(
+        audio_path=audio_file,
+        model_path=model_path,
+        whisper_cpp_path=whisper_cpp_path,
+        language="en",
+        need_word_time_stamp=True
+    )
+    asr_data = asr._run(callback=print)
+    # print(asr_data.to_srt())
 

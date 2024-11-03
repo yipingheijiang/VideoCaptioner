@@ -128,72 +128,62 @@ Based on the original text, perform the following corrections:
 """
 
 TRANSLATE_PROMPT = """
-You are a Subtitle Correction and Translation Expert tasked with processing subtitle texts generated through speech recognition. These subtitles may contain various errors, such as homophone mistakes and formatting issues.
+Translate the provided subtitles into the target language while adhering to specific guidelines for cultural and stylistic adaptation.
 
- Your Tasks
-
-## Correct Subtitle Errors
-
-Based on the original text, perform the following corrections:
-
-1. Contextual Correction:
-
-   - Use the surrounding context and provided nouns to correct incorrect words.
-   - Do not change the original sentence structure and expression.
-
-2. Remove Unnecessary Fillers:
-
-   - Eliminate filler words or interjections that do not add meaningful content to the subtitles.
-
-3. Ensure Proper Punctuation and Formatting:
-
-   - Verify and correct punctuation marks, English words, formulas, and code snippets within the subtitles.
-   - Not required to place punctuation at the end of every subtitle.
-
-4. Maintain Subtitle Structure:
-
-   - Ensure a strict one-to-one correspondence between each subtitle number and its text.
-   - Do not merge multiple subtitles into one
-   - Do not split a single subtitle into multiple parts. 
-
-## Provide Subtitle Translations
-
-Translate the corrected subtitles according to the following guidelines:
-
-- Translation Approach:
-  - **Meaning-Based**: Use a meaning-based (free) translation method to adapt the content to the cultural and stylistic norms of the target language.
-  - **Natural Translation**: Avoid translationese and ensure the translation conforms to Chinese grammatical and reading standards.
-  - Retaine key terms such as technical jargon, proper nouns, acronyms, and abbreviations.
-  - **Cultural Relevance (优先使用)**:
-    - **Idioms**: Utilize Chinese idioms (成语) to convey meanings succinctly and vividly.
+- **Translation Approach**:
+  - **Meaning-Based**: Use a free translation method to adapt the content to the cultural and stylistic norms of the target language.
+  - **Natural Translation**: Avoid translationese and ensure the translation conforms to the grammatical and reading standards of the target language.
+  - Retain key terms such as technical jargon, proper nouns, acronyms, and abbreviations.
+  - **Cultural Relevance**:
+    - **Idioms**: Utilize idioms from the target language to convey meanings succinctly and vividly.
     - **Internet Slang**: Incorporate contemporary internet slang to make translations more relatable to modern audiences.
     - **Culturally Appropriate Expressions**: Adapt phrases to align with local cultural contexts, enhancing engagement and relatability.
 
-- Languages:
-  - Translate Subtitle into [TargetLanguage].
+- **Languages**:
+  - Translate subtitles into [TargetLanguage].
 
+# Steps
 
-- Input Format:
-    {
-    "0": "Original Subtitle 1",
-    "1": "Original Subtitle 2",
+1. Review each subtitle for context and meaning.
+2. Translate each subtitle individually, ensuring no merging or splitting of subtitles.
+3. Apply cultural and stylistic adaptations as per the guidelines.
+4. Retain key terms and ensure the translation is natural and idiomatic.
+
+# Output Format
+
+- Maintain the original input format:
+  ```json
+  {
+    "0": "Translated Subtitle 1",
+    "1": "Translated Subtitle 2",
     ...
   }
+  ```
 
-- Output Format:
-  Return a pure JSON object containing both the original and translated texts.
+# Examples
+
+**Input**:
+```json
 {
-  "1": {
-    "optimized_subtitle": "<<< Corrected Original Content >>>",
-    "revised_translate": "<<< Translated Content, following the Translation Guidelines >>>"
-  },
-  "2": {
-    "optimized_subtitle": "<<< Corrected Original Content >>>",
-    "revised_translate": "<<< Translated Content, following the Translation Guidelines >>>"
-  }
-  ...
+  "0": "Original Subtitle 1",
+  "1": "Original Subtitle 2"
 }
+```
+
+**Output**:
+```json
+{
+  "0": "Translated Subtitle 1",
+  "1": "Translated Subtitle 2"
+}
+```
+
+# Notes
+
+- Ensure each subtitle is translated independently without altering the sequence or structure.
+- Pay special attention to cultural nuances and idiomatic expressions to enhance relatability and engagement.
 """
+
 
 REFLECT_TRANSLATE_PROMPT0 = """### Role Definition
 

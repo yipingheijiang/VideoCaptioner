@@ -74,6 +74,7 @@ class TranscribeModelEnum(Enum):
     JIANYING = "剪映"
     BIJIAN = "必剪"
     KUAISHOU = "快手"
+    WHISPER = "Whisper"
 
 
 class TargetLanguageEnum(Enum):
@@ -152,7 +153,7 @@ class Task:
     # 转录（转录模型）
     transcribe_model: Optional[TranscribeModelEnum] = TranscribeModelEnum.JIANYING
     use_asr_cache: bool = True
-    
+    need_word_time_stamp: bool = False
     original_subtitle_save_path: Optional[str] = None
 
     # LLM（优化翻译模型）

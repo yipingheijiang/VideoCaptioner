@@ -90,27 +90,51 @@ class SubtitleOptimizer:
     @retry.retry(tries=2)
     def translate(self, original_subtitle: Dict[int, str], reflect=False) -> Dict[int, str]:
         """优化并翻译给定的字幕。"""
-        logger.info(f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
-        message = self._create_translate_message(original_subtitle, reflect)
+        if reflect:
+            return self._reflect_translate(original_subtitle)
+        else:
+            return self._normal_translate(original_subtitle)
+    
+    def _reflect_translate(self, original_subtitle: Dict[int, str]):
+        logger.info(f"[+]正在反思翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
+        message = self._create_translate_message(original_subtitle)
         response = self.client.chat.completions.create(
             model=self.model,
             stream=False,
             messages=message,
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
-        print(response_content)
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
-        # print("optimized_text", optimized_text)
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
-
         # 在 translations 中查找对应的翻译  文本-翻译 映射
         translations = {item["optimized_subtitle"]: item["revised_translate"] for item in response_content.values()}
-
         translated_subtitle = {k: f"{v}\n{translations.get(v, ' ')}" for k, v in aligned_subtitle.items()}
 
         return translated_subtitle
 
-    def _create_translate_message(self, original_subtitle: Dict[int, str], reflect=False):
+
+    def _normal_translate(self, original_subtitle: Dict[int, str]):
+        logger.info(f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
+        prompt = TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
+        message = [{"role": "system", "content": prompt},
+                   {"role": "user", "content": f"Please translate the input into {self.target_language}:\n<input>{str(original_subtitle)}</input>"}]
+        response = self.client.chat.completions.create(
+            model=self.model,
+            stream=False,
+            messages=message,
+            temperature=0.7)
+        response_content = json_repair.loads(response.choices[0].message.content)
+        assert isinstance(response_content, dict) and len(response_content) == len(original_subtitle), "翻译结果错误"
+        print(f"{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}", len(response_content), len(original_subtitle))
+        translated_subtitle = {}
+        original_list = list(original_subtitle.values())
+        translated_list = list(response_content.values())
+        for i, key in enumerate(original_subtitle.keys()):
+            translated_subtitle[key] = f"{original_list[i]}\n{translated_list[i]}"
+
+        return translated_subtitle
+
+    def _create_translate_message(self, original_subtitle: Dict[int, str]):
         input_content = f"correct the original subtitles, and translate them into {self.target_language}:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
             input_content += f"\nBelow is a summary of the subtitle content and related keywords:\n<summary>{self.summary_content}</summary>\n"
@@ -121,15 +145,12 @@ class SubtitleOptimizer:
                           'now.", "translate": "那么你现在可能无法绕开Cursor这款IDE。", "revise_suggestions": "The term \'绕开\' '
                           'feels awkward in this context. Consider using \'避开\' instead.", "revised_translate": '
                           '"那么你现在可能无法避开Cursor这款IDE。"}}')
-        if reflect:
-            prompt = REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
-        else:
-            prompt = TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
+        prompt = REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
         message = [{"role": "system", "content": prompt},
                    {"role": "user", "content": example_input},
                    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
-        print("input_content", input_content)
+        # print("input_content", input_content)
         # print("prompt", prompt)
         return message
 

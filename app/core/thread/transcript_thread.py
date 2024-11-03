@@ -5,7 +5,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from ..entities import Task, TranscribeModelEnum
 from ..utils.video_utils import video2audio
-from ..bk_asr import JianYingASR, KuaiShouASR, BcutASR
+from ..bk_asr import JianYingASR, KuaiShouASR, BcutASR, WhisperASR
 from ..utils.optimize_subtitles import optimize_subtitles
 
 
@@ -18,6 +18,7 @@ class TranscriptThread(QThread):
         TranscribeModelEnum.JIANYING: JianYingASR,
         TranscribeModelEnum.KUAISHOU: KuaiShouASR,
         TranscribeModelEnum.BIJIAN: BcutASR,
+        TranscribeModelEnum.WHISPER: WhisperASR,
     }
 
     def __init__(self, task: Task):
@@ -51,9 +52,9 @@ class TranscriptThread(QThread):
             asr_class = self.ASR_MODELS.get(self.task.transcribe_model)
             if not asr_class:
                 raise ValueError(f"无效的转录模型: {self.task.transcribe_model}")  # 检查转录模型是否有效
-
+            print(self.task.need_word_time_stamp)
             # 执行转录
-            asr = asr_class(self.task.audio_save_path, use_cache=self.task.use_asr_cache, need_word_time_stamp=True)
+            asr = asr_class(self.task.audio_save_path, use_cache=self.task.use_asr_cache, need_word_time_stamp=self.task.need_word_time_stamp)
             asr_data = asr.run(callback=self.progress_callback)
             # optimize_subtitles(asr_data)
 

@@ -22,7 +22,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
 ASS_TEMP_FILENAME = CACHE_PATH / "preview.ass"  # 预览的临时 ASS 文件路径
 PREVIEW_IMAGE_FILENAME = CACHE_PATH / "preview.png"  # 预览的图片路径
-DEFAULT_BG_PATH = RESOURCE_PATH / "default_bg.png"
+DEFAULT_BG_PATH = RESOURCE_PATH / "assets" / "default_bg.png"
 
 
 def run_subprocess(command: list):
@@ -71,6 +71,9 @@ def ensure_background(bg_path: Path) -> Path:
         有效的背景图片路径
     """
     if not bg_path or not bg_path.exists():
+        if Path(DEFAULT_BG_PATH).exists():
+            bg_path = Path(DEFAULT_BG_PATH)
+            return bg_path
         bg_path.parent.mkdir(parents=True, exist_ok=True)
         run_subprocess([
             'ffmpeg', 
@@ -93,7 +96,7 @@ def generate_preview(style_str: str, preview_text: Tuple[str, Optional[str]], bg
         预览图片路径
     """
     ass_file = generate_ass_file(style_str, preview_text)
-    bg_path = Path(DEFAULT_BG_PATH)
+    bg_path = Path(bg_path)
     bg_path = ensure_background(bg_path)
 
     output_path = PREVIEW_IMAGE_FILENAME
