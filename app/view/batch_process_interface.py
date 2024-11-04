@@ -18,6 +18,7 @@ from ..common.config import cfg
 from ..core.thread.transcript_thread import TranscriptThread
 from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
+from app.config import RESOURCE_PATH
 
 class BatchProcessInterface(QWidget):
     """批量处理界面"""
@@ -464,7 +465,10 @@ class TaskInfoCard(CardWidget):
 
     def update_thumbnail(self, thumbnail_path):
         """更新视频缩略图"""
-        pixmap = QPixmap(thumbnail_path).scaled(
+        if not Path(thumbnail_path).exists():
+            thumbnail_path = RESOURCE_PATH / "assets" /  "audio-thumbnail.png"
+
+        pixmap = QPixmap(str(thumbnail_path)).scaled(
             self.video_thumbnail.size(),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation

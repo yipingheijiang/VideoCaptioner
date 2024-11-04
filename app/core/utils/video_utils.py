@@ -154,6 +154,8 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
             if thumbnail_path:
                 if extract_thumbnail(filepath, video_info['duration_seconds'] * 0.3, thumbnail_path):
                     video_info['thumbnail_path'] = thumbnail_path
+        else:
+            video_info['thumbnail_path'] = thumbnail_path
         
         # 提取音频流信息
         if audio_stream_match := re.search(r'Stream #\d+:\d+.*Audio: (\w+).* (\d+) Hz', info):
@@ -182,11 +184,18 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
     
     try:
         timestamp = f"{int(seek_time//3600):02}:{int((seek_time%3600)//60):02}:{seek_time%60:06.3f}"
+         # 确保输出目录存在
+        Path(thumbnail_path).parent.mkdir(parents=True, exist_ok=True)
         
+        # 转换路径为合适的格式
+        video_path = Path(video_path).as_posix()
+        thumbnail_path = Path(thumbnail_path).as_posix()
+
         cmd = [
             "ffmpeg",
             "-ss", timestamp,
-            "-i", video_path,
+            "-i", 
+            video_path,
             "-vframes", "1",
             "-q:v", "2",
             "-y",
@@ -194,15 +203,19 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
         ]
         result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30, encoding='utf-8', errors='replace')
         return result.returncode == 0
+
     except Exception as e:
+        raise e
         return False
 
 
 if __name__ == "__main__":
     # subtitle = "E:/GithubProject/VideoCaptioner/app/core/subtitles0.srt"
 
-    # video_path = "E:\\GithubProject\\VideoCaptioner\\app\\work_dir\\【卡卡】【语文大师】夜宿山寺——唐·李白\\audio.mp3"
+    video_path = r"C:\Users\weifeng\Videos\【卡卡】佛山周末穷游好去处!.mp4"
     # video2audio(video_path, r"E:\\GithubProject\\VideoCaptioner\\app\\work_dir\\【卡卡】【语文大师】夜宿山寺——唐·李白\\audio.mp3")
+
+    extract_thumbnail(video_path, 2, "e:/GithubProject/VideoCaptioner/AppData/work-dir/【卡卡】佛山周末穷游好去处!/thumbnail.jpg")
 
     # video_path = r"C:\Users\weifeng\Videos\xhs\08.mp4"
     # # info = get_video_info(video_path, need_thumbnail=True)
@@ -213,8 +226,8 @@ if __name__ == "__main__":
     # if not success:
     #     print("提取缩略图失败")
     # video_path = r"C:\Users\weifeng\Videos\xhs.mp4"
-    video_path = r"C:\Users\weifeng\Videos\【卡卡】N进制演示器.mp4"
-    srt_subtitle = r"E:\GithubProject\VideoCaptioner\app\work_dir\低视力音乐助人者_mp4\result_subtitle.srt"
-    ass_subtitle = r"E:\GithubProject\VideoCaptioner\app\work_dir\低视力音乐助人者_mp4\result_subtitle.ass"
-    # font_path = r"E:\GithubProject\VideoCaptioner\app\resource\AlibabaPuHuiTi-Medium.ttf"
-    add_subtitles(video_path, srt_subtitle, "output.mp4", progress_callback=print, soft_subtitle=False)
+    # video_path = r"C:\Users\weifeng\Videos\【卡卡】N进制演示器.mp4"
+    # srt_subtitle = r"E:\GithubProject\VideoCaptioner\app\work_dir\低视力音乐助人者_mp4\result_subtitle.srt"
+    # ass_subtitle = r"E:\GithubProject\VideoCaptioner\app\work_dir\低视力音乐助人者_mp4\result_subtitle.ass"
+    # # font_path = r"E:\GithubProject\VideoCaptioner\app\resource\AlibabaPuHuiTi-Medium.ttf"
+    # add_subtitles(video_path, srt_subtitle, "output.mp4", progress_callback=print, soft_subtitle=False)

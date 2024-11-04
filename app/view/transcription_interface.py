@@ -123,7 +123,10 @@ class VideoInfoCard(CardWidget):
 
     def update_thumbnail(self, thumbnail_path):
         """更新视频缩略图"""
-        pixmap = QPixmap(thumbnail_path).scaled(
+        if not Path(thumbnail_path).exists():
+            thumbnail_path = RESOURCE_PATH / "assets" /  "audio-thumbnail.png"
+
+        pixmap = QPixmap(str(thumbnail_path)).scaled(
             self.video_thumbnail.size(),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
