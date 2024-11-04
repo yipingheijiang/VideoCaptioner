@@ -49,8 +49,8 @@ class CreateTaskThread(QThread):
 
         # 定义各个路径
         audio_save_path = task_work_dir / "audio.mp3"
-        original_subtitle_save_path = task_work_dir / "original_subtitle.srt"
-        result_subtitle_save_path = task_work_dir  / "result_subtitle.ass"
+        original_subtitle_save_path = task_work_dir / "【原始字幕】original_subtitle.srt"
+        result_subtitle_save_path = task_work_dir  / "【优化字幕】result_subtitle.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 
         ass_style_name = cfg.subtitle_style_name.value
@@ -124,8 +124,8 @@ class CreateTaskThread(QThread):
 
         # 定义各个路径
         audio_save_path = task_work_dir / "audio.mp3"
-        original_subtitle_save_path = task_work_dir / "subtitle" / "original_subtitle.srt" if not subtitle_file_path else subtitle_file_path
-        result_subtitle_save_path = task_work_dir / "subtitle" / "result_subtitle.ass"
+        original_subtitle_save_path = task_work_dir / "subtitle" / "【原始字幕】original_subtitle.srt" if not subtitle_file_path else subtitle_file_path
+        result_subtitle_save_path = task_work_dir / "subtitle" / "【优化字幕】result_subtitle.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(video_file_path).name}"
 
         if cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN]:
@@ -184,7 +184,7 @@ class CreateTaskThread(QThread):
 
         # 定义各个路径
         audio_save_path = task_work_dir / "audio.mp3"
-        original_subtitle_save_path = task_work_dir / f"original_subtitle_{cfg.transcribe_model.value.value}.srt"
+        original_subtitle_save_path = task_work_dir / f"【原始字幕】original_subtitle_{cfg.transcribe_model.value.value}.srt"
 
         # 创建 Task 对象
         task = Task(
@@ -213,7 +213,7 @@ class CreateTaskThread(QThread):
         task_work_dir = Path(file_path.strip()).parent
         
         original_subtitle_save_path = task_work_dir / file_path
-        result_subtitle_save_path = task_work_dir / f"result_subtitle_{cfg.model.value}.srt"
+        result_subtitle_save_path = task_work_dir / f"【优化字幕】result_subtitle_{cfg.model.value}.srt"
 
         ass_style_name = cfg.subtitle_style_name.value
         ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
@@ -334,7 +334,7 @@ def download(url, work_dir, progress_hook):
     initial_ydl_opts = {
         'outtmpl': {
             'default': '%(title)s.%(ext)s',
-            'subtitle': 'original_subtitle.%(ext)s',
+            'subtitle': '【原始字幕】original_subtitle.%(ext)s',
             'thumbnail': 'thumbnail',
         },
         # 'format': 'worst',                   # 下载质量最差的视频和音频
@@ -380,7 +380,7 @@ def download(url, work_dir, progress_hook):
 
         # 字幕文件路径， video_work_dir 下遍历所有文件寻找字幕文件，包括子文件夹 original.*
         subtitle_file_path = None
-        for file in video_work_dir.glob("**/original_subtitle*"):
+        for file in video_work_dir.glob("**/【原始字幕】original_subtitle*"):
             subtitle_file_path = str(file)
             break
 

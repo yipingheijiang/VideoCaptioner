@@ -77,7 +77,7 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
             # print(f"[+] 从缓存中获取结果: {cached_result}")
             return cached_result
 
-    prompt = f"请你对下面句子使用<br>进行分割：\n{text}"
+    prompt = f"Please use multiple <br> tags to separate the following sentence:\n{text}"
     # 初始化OpenAI客户端
     client = openai.OpenAI()
     response = client.chat.completions.create(
@@ -92,11 +92,9 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
     # 清理结果中的多余换行符
     result = re.sub(r'\n+', '', result)
     split_result = [segment.strip() for segment in result.split("<br>") if segment.strip()]
-    # 判断<br>比率
+
     br_count = len(split_result)
-    print(f"[+] <br>个数: {br_count}")
-    print(f"[+] 阈值: {count_words(text) / MAX_WORD_COUNT * 0.7}")
-    if br_count < count_words(text) / MAX_WORD_COUNT * 0.7:
+    if br_count < count_words(text) / MAX_WORD_COUNT * 0.9:
         raise Exception("断句失败")
     set_cache(text, model, split_result)
     return split_result
