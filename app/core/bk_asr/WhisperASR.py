@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -39,7 +40,7 @@ class WhisperASR(BaseASR):
             raise FileNotFoundError(f"音频文件不存在: {self.audio_path}")
         output_path = temp_dir / f"{audio_path.stem}.srt"
             
-        cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt", "-ml", "20"]
+        cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt"]
         try:
             callback(5, "Whisper 转换")
             process = subprocess.Popen(
@@ -52,7 +53,7 @@ class WhisperASR(BaseASR):
                 universal_newlines=True
             )
             
-            total_duration = 200  # 设置固定值
+            total_duration = self.get_audio_duration(str(temp_audio))
             
             while True:
                 try:
@@ -70,8 +71,7 @@ class WhisperASR(BaseASR):
                     current_time = hours * 3600 + minutes * 60 + seconds
                     
                     if callback:
-                        progress = int(min(current_time / total_duration * 100, 95))
-                        # print(progress, "正在转换")
+                        progress = int(min(current_time / total_duration * 100, 98))
                         callback(progress, f"{progress}% 正在转换")
                         
             callback(100, "转换完成")
@@ -80,8 +80,8 @@ class WhisperASR(BaseASR):
                 raise RuntimeError(f"生成 SRT 文件失败: {process.stderr.read()}")
                 
         except Exception as e:
-            raise e
-            # raise RuntimeError(f"生成 SRT 文件失败: {str(e)}")
+            print(f"生成 SRT 文件失败: {str(e)}")
+            raise RuntimeError(f"生成 SRT 文件失败: {str(e)}")
         
         return output_path.read_text(encoding='utf-8')
     
@@ -93,6 +93,21 @@ class WhisperASR(BaseASR):
     def _get_key(self):
         return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.language}-{self.model_path}"
 
+    def get_audio_duration(self, filepath: str) -> int:
+        try:
+            cmd = ["ffmpeg", "-i", filepath]
+            print(" ".join(cmd))
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            info = result.stderr
+            # 提取时长
+            if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):
+                hours, minutes, seconds = map(float, duration_match.groups())
+                duration_seconds = hours * 3600 + minutes * 60 + seconds
+                return int(duration_seconds)
+        except Exception as e:
+            print(f"获取音频时长时出错: {str(e)}")
+            return 600
+            
 if __name__ == '__main__':
     # Example usage
     audio_file = r"E:\GithubProject\VideoCaptioner\AppData\work-dir\Speak_16x9_UHD_2997_pr422\audio.mp3"

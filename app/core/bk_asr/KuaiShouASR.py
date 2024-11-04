@@ -5,10 +5,11 @@ from .BaseASR import BaseASR
 
 
 class KuaiShouASR(BaseASR):
-    def __init__(self, audio_path: [str, bytes], use_cache: bool = False):
+    def __init__(self, audio_path, use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache)
+        self.need_word_time_stamp = need_word_time_stamp
 
-    def _run(self) -> dict:
+    def _run(self, callback = None) -> dict:
         return self._submit()
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:

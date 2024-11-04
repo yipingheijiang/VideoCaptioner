@@ -224,10 +224,17 @@ class BatchProcessInterface(QWidget):
 
     def on_add_file(self):
         """添加文件按钮点击事件"""
-        self.create_task(r"C:\Users\weifeng\Videos\【卡卡】N进制演示器.mp4")
-        # files, _ = QFileDialog.getOpenFileNames(self,"选择视频文件","","视频文件 (*.mp4 *.avi *.mov *.mkv *.flv *.wmv)")
-        # for file_path in files:
-        #     self.create_task(file_path)
+        # 构建文件过滤器字符串
+        video_formats = [f"*.{fmt.value}" for fmt in SupportedVideoFormats]
+        audio_formats = [f"*.{fmt.value}" for fmt in SupportedAudioFormats]
+        if self.task_type_combo.currentText() == "视频加字幕":
+            filter_str = f"视频文件 ({' '.join(video_formats)})"
+        else:
+            filter_str = f"音频文件或视频文件 ({' '.join(audio_formats+video_formats)})"
+        
+        files, _ = QFileDialog.getOpenFileNames(self, self.tr("选择文件"), "", filter_str)
+        for file_path in files:
+            self.create_task(file_path)
 
     def create_task(self, file_path):
         """创建新任务"""
@@ -264,7 +271,10 @@ class BatchProcessInterface(QWidget):
         self.task_cards.append(task_card)
         self.tasks.append(task)
         self.scroll_layout.addWidget(task_card)
-        
+
+        # 当有任务时禁用任务类型选择
+        self.task_type_combo.setEnabled(False)
+
         # 显示成功提示
         InfoBar.success(
             self.tr("添加成功"),
@@ -301,6 +311,11 @@ class BatchProcessInterface(QWidget):
                 position=InfoBarPosition.BOTTOM,
                 parent=self
             )
+
+            # 当没有任务时启用任务类型选择
+            if len(self.task_cards) == 0:  # 因为当前任务还未被移除
+                self.task_type_combo.setEnabled(True)
+
 
     def dragEnterEvent(self, event):
         """拖拽进入事件处理"""
@@ -456,7 +471,8 @@ class TaskInfoCard(CardWidget):
         if self.task.need_optimize:
             strategy_text = "字幕优化"
         elif self.task.need_translate:
-            strategy_text = f"字幕优化翻译 {self.task.target_language}"
+            strategy_text = f"字幕优化+翻译 {self.task.target_language}"
+
         tooltip = f"转录模型: {self.task.transcribe_model.value}\n"
         if self.task.status == Task.Status.PENDING:
             tooltip += f"字幕策略: {strategy_text}\n"

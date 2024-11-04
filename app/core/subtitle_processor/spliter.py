@@ -8,9 +8,8 @@ import difflib
 from typing import List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from .split_by_llm import split_by_llm
+from .split_by_llm import split_by_llm, MAX_WORD_COUNT
 
-MAX_WORD_COUNT = 16  # 英文单词或中文字符的最大数量
 SEGMENT_THRESHOLD = 1000  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
 SPLIT_RANGE = 30  # 在分割点前后寻找最大时间间隔的范围
@@ -113,7 +112,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
 
 def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> List[ASRDataSeg]:
     """
-    基于最大时间间隔拆分长分段，尽可能避免拆分英文单词
+    基于最大时间间隔拆分长分段，尽可能避免拆分语义连续的英文单词
     """
     result_segs = []
     # print(f"[+] 正在拆分长分段: {merged_text}")

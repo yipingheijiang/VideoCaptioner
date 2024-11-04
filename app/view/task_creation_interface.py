@@ -110,11 +110,11 @@ class TaskCreationInterface(QWidget):
         self.search_layout = QHBoxLayout()
         self.search_layout.setContentsMargins(80, 0, 80, 0)
         self.search_input = LineEdit(self)
-        self.search_input.setPlaceholderText("选择视频文件")
+        self.search_input.setPlaceholderText(self.tr("请拖拽文件或输入视频URL"))
         self.search_input.setFixedHeight(40)
         self.search_input.setClearButtonEnabled(True)
         self.search_input.focusOutEvent = lambda text: None
-        self.start_button = PushButton("选择文件", self)
+        self.start_button = PushButton(self.tr("选择文件"), self)
         self.start_button.setFixedSize(80, 40)
         self.search_layout.addWidget(self.search_input)
         self.search_layout.addWidget(self.start_button)

@@ -9,6 +9,18 @@ import retry
 from .subtitle_config import SPLIT_SYSTEM_PROMPT
 from app.config import CACHE_PATH
 
+MAX_WORD_COUNT = 16  # 英文单词或中文字符的最大数量
+
+
+
+def count_words(text: str) -> int:
+    """
+    统计混合文本中英文单词数和中文字符数的总和
+    """
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', text))
+    english_text = re.sub(r'[\u4e00-\u9fff]', ' ', text)
+    english_words = len(english_text.strip().split())
+    return english_words + chinese_chars
 
 def get_cache_key(text: str, model: str) -> str:
     """
@@ -43,9 +55,19 @@ def set_cache(text: str, model: str, result: List[str]) -> None:
     except IOError:
         pass
 
+def split_by_llm(*args, **kwargs) -> List[str]:
+    """
+    包装 split_by_llm_retry 函数，确保在重试全部失败后返回空列表
+    """
+    try:
+        return split_by_llm_retry(*args, **kwargs)
+    except Exception as e:
+        print(f"[!] 断句失败: {str(e)}")
+        return []
+
 # 设置次数
 @retry.retry(tries=3)
-def split_by_llm(text: str, model: str = "gpt-4o-mini", use_cache: bool = False) -> List[str]:
+def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = False) -> List[str]:
     """
     使用LLM进行文本断句
     """
@@ -56,28 +78,28 @@ def split_by_llm(text: str, model: str = "gpt-4o-mini", use_cache: bool = False)
             return cached_result
 
     prompt = f"请你对下面句子使用<br>进行分割：\n{text}"
-
-    try:
-        # 初始化OpenAI客户端
-        client = openai.OpenAI()
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": SPLIT_SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.1
-        )
-        result = response.choices[0].message.content
-        # 清理结果中的多余换行符
-        result = re.sub(r'\n+', '', result)
-        split_result = [segment.strip() for segment in result.split("<br>") if segment.strip()]
-        
-        set_cache(text, model, split_result)
-        return split_result
-    except Exception as e:
-        print(f"[!] 请求LLM失败: {e}")
-        return []
+    # 初始化OpenAI客户端
+    client = openai.OpenAI()
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": SPLIT_SYSTEM_PROMPT},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.1
+    )
+    result = response.choices[0].message.content
+    # 清理结果中的多余换行符
+    result = re.sub(r'\n+', '', result)
+    split_result = [segment.strip() for segment in result.split("<br>") if segment.strip()]
+    # 判断<br>比率
+    br_count = len(split_result)
+    print(f"[+] <br>个数: {br_count}")
+    print(f"[+] 阈值: {count_words(text) / MAX_WORD_COUNT * 0.7}")
+    if br_count < count_words(text) / MAX_WORD_COUNT * 0.7:
+        raise Exception("断句失败")
+    set_cache(text, model, split_result)
+    return split_result
 
 if __name__ == "__main__":
     sample_text = (

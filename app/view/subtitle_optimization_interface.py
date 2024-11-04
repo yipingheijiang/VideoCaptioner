@@ -169,7 +169,7 @@ class SubtitleOptimizationInterface(QWidget):
     def _setup_bottom_layout(self):
         self.bottom_layout = QHBoxLayout()
         self.progress_bar = ProgressBar(self)
-        self.status_label = BodyLabel("就绪", self)
+        self.status_label = BodyLabel(self.tr("请拖入字幕文件"), self)
         self.status_label.setMinimumWidth(100)
         self.status_label.setAlignment(Qt.AlignCenter)
         self.bottom_layout.addWidget(self.progress_bar, 1)
@@ -287,7 +287,12 @@ class SubtitleOptimizationInterface(QWidget):
         try:
             # 转换并保存字幕
             asr_data = from_json(self.model._data)
-            asr_data.save(file_path)
+            if file_path.endswith(".ass"):
+                style_str = self.task.subtitle_style_srt
+                layout = cfg.subtitle_layout.value
+                asr_data.to_ass(style_str, layout, file_path)
+            else:
+                asr_data.save(file_path)
             InfoBar.success(
                 self.tr("保存成功"), 
                 self.tr(f"字幕已保存至: {file_path}"), 

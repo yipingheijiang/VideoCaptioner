@@ -35,7 +35,7 @@ class TranscriptThread(QThread):
 
             video_path = Path(self.task.file_path)
             if not video_path:
-                raise ValueError("视频路径不能为空")  # 检查视频路径是否为空
+                raise ValueError("视频路径不能为空")
 
             self.progress.emit(5, "转换音频中")
 
@@ -52,11 +52,9 @@ class TranscriptThread(QThread):
             asr_class = self.ASR_MODELS.get(self.task.transcribe_model)
             if not asr_class:
                 raise ValueError(f"无效的转录模型: {self.task.transcribe_model}")  # 检查转录模型是否有效
-            print(self.task.need_word_time_stamp)
             # 执行转录
             asr = asr_class(self.task.audio_save_path, use_cache=self.task.use_asr_cache, need_word_time_stamp=self.task.need_word_time_stamp)
             asr_data = asr.run(callback=self.progress_callback)
-            # optimize_subtitles(asr_data)
 
             # 保存字幕文件
             original_subtitle_path = Path(self.task.original_subtitle_save_path)

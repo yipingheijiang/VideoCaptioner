@@ -7,11 +7,11 @@ import threading
 from typing import Optional, Union
 
 from .ASRData import ASRDataSeg, ASRData
-
+from app.config import CACHE_PATH
 
 class BaseASR:
     SUPPORTED_SOUND_FORMAT = ["flac", "m4a", "mp3", "wav"]
-    CACHE_FILE = os.path.join(tempfile.gettempdir(), "bk_asr", "asr_cache.json")
+    CACHE_FILE = CACHE_PATH / "bk_asr" / "asr_cache.json"
     _lock = threading.Lock()
 
     def __init__(self, audio_path: Optional[Union[str, bytes]] = None, use_cache: bool = False, need_word_time_stamp: bool = False):
@@ -27,11 +27,11 @@ class BaseASR:
     def _load_cache(self):
         if not self.use_cache:
             return {}
-        os.makedirs(os.path.dirname(self.CACHE_FILE), exist_ok=True)
+        self.CACHE_FILE.parent.mkdir(exist_ok=True)
         with self._lock:
-            if os.path.exists(self.CACHE_FILE):
+            if self.CACHE_FILE.exists():
                 try:
-                    with open(self.CACHE_FILE, 'r', encoding='utf-8') as f:
+                    with open(str(self.CACHE_FILE), 'r', encoding='utf-8') as f:
                         cache = json.load(f)
                         if isinstance(cache, dict):
                             return cache

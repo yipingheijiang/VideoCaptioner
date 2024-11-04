@@ -1,10 +1,10 @@
 {
     "LLM": {
-        "API_Base": "",
-        "API_Key": "",
+        "API_Base": "https://api.ephone.ai/v1",
+        "API_Key": "sk-msuqsbr4Ano2cV1GDk0AIaUS1MXS3vukQF0eI7Cble8CgF7Q",
         "BatchSize": 10,
-        "Model": "GLM-4-Flash",
-        "ThreadNum": 30
+        "Model": "gpt-4o-mini",
+        "ThreadNum": 12
     },
     "Update": {
         "CheckUpdateAtStartUp": true
@@ -30,7 +30,7 @@
         "ThemeMode": "Dark"
     },
     "Transcribe": {
-        "TranscribeModel": "剪映",
+        "TranscribeModel": "快手",
         "UseASRCache": true
     },
     "Save": {

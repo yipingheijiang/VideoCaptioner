@@ -62,7 +62,7 @@ class VideoInfoCard(CardWidget):
         self.info_layout.setContentsMargins(3, 8, 3, 8)
         self.info_layout.setSpacing(10)
         
-        self.video_title = BodyLabel("未选择视频", self)
+        self.video_title = BodyLabel(self.tr("请拖入音频或视频文件"), self)
         self.video_title.setFont(QFont("Microsoft YaHei", 14, QFont.Bold))
         self.video_title.setWordWrap(True)
         self.info_layout.addWidget(self.video_title, alignment=Qt.AlignTop)
@@ -226,7 +226,7 @@ class TranscriptionInterface(QWidget):
         self.video_info_card = VideoInfoCard(self)
         self.main_layout.addWidget(self.video_info_card)
 
-        self.file_select_button = PushButton("选择视频文件", self)
+        self.file_select_button = PushButton(self.tr("选择视频文件"), self)
         self.main_layout.addWidget(self.file_select_button, alignment=Qt.AlignCenter)
 
     def _setup_signals(self):

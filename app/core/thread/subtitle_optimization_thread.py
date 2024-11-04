@@ -9,7 +9,7 @@ from app.core.subtitle_processor.optimizer import SubtitleOptimizer
 from app.core.subtitle_processor.summarizer import SubtitleSummarizer
 from app.core.utils import optimize_subtitles
 
-from ..bk_asr.ASRData import ASRData, from_srt, from_vtt, from_youtube_vtt
+from ..bk_asr.ASRData import ASRData, from_srt, from_vtt, from_youtube_vtt, from_subtitle_file
 from ..entities import Task, TranscribeModelEnum
 from ..utils.video_utils import video2audio
 from ..utils.optimize_subtitles import optimize_subtitles
@@ -63,13 +63,7 @@ class SubtitleOptimizationThread(QThread):
             os.environ['OPENAI_API_KEY'] = api_key
 
 
-            if Path(str_path).suffix == '.srt':
-                asr_data = from_srt(Path(str_path).read_text(encoding="utf-8"))
-            elif Path(str_path).suffix == '.vtt':
-                try:
-                    asr_data = from_youtube_vtt(Path(str_path).read_text(encoding="utf-8"))
-                except Exception as e:
-                    asr_data = from_vtt(Path(str_path).read_text(encoding="utf-8"))
+            asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
             if asr_data.is_word_timestamp():

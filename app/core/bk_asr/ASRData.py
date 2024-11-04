@@ -91,7 +91,7 @@ class ASRData:
         return (valid_segments / total_segments) >= 0.8
 
 
-    def save(self, save_path: str, ass_style: str = None) -> None:
+    def save(self, save_path: str, ass_style: str = None, layout: str = "原文在上") -> None:
         """Save the ASRData to a file"""
         # 根据文件后缀名选择保存格式
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
@@ -104,7 +104,7 @@ class ASRData:
             with open(save_path, 'w', encoding='utf-8') as f:
                 json.dump(self.to_json(), f, ensure_ascii=False)
         elif save_path.endswith('.ass'):
-            self.to_ass(save_path=save_path, style_str=ass_style)
+            self.to_ass(save_path=save_path, style_str=ass_style, layout=layout)
         else:
             raise ValueError(f"Unsupported file extension: {save_path}")
 

@@ -133,6 +133,13 @@ class CreateTaskThread(QThread):
         else:
             need_word_time_stamp = False
 
+        ass_style_name = cfg.subtitle_style_name.value
+        ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
+        if ass_style_path.exists():
+            subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
+        else:
+            subtitle_style_srt = None
+
         # 创建 Task 对象
         task = Task(
             id=0,
@@ -161,7 +168,8 @@ class CreateTaskThread(QThread):
             need_optimize=cfg.need_optimize.value,
             result_subtitle_save_path=str(result_subtitle_save_path),
             video_save_path=str(video_save_path),
-            soft_subtitle=cfg.soft_subtitle.value
+            soft_subtitle=cfg.soft_subtitle.value,
+            subtitle_style_srt=subtitle_style_srt
         )
         self.finished.emit(task)
 
