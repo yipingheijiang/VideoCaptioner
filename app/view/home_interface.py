@@ -84,6 +84,13 @@ class HomeInterface(QWidget):
         widget = self.stackedWidget.widget(index)
         if widget:
             self.pivot.setCurrentItem(widget.objectName())
+    
+    def closeEvent(self, event):
+        self.task_creation_interface.close()
+        self.transcription_interface.close()
+        self.subtitle_optimization_interface.close()
+        self.video_synthesis_interface.close()
+        super().closeEvent(event)
 
 
 if __name__ == '__main__':

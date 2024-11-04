@@ -87,12 +87,12 @@ class SubtitleOptimizationThread(QThread):
                     self.progress.emit(30, "优化+翻译...")
                     print("target_language", target_language)
                     need_reflect = False if "glm-4-flash" in llm_model.lower() else True
-                    optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, target_language=target_language)
-                    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, translate=True, reflect=need_reflect, callback=self.callback)
+                    self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, target_language=target_language, batch_num=batch_size, thread_num=thread_num)
+                    optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, translate=True, reflect=need_reflect, callback=self.callback)
                 elif need_optimize:
                     self.progress.emit(30, "优化字幕...")
-                    optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model)
-                    optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=batch_size, thread_num=thread_num, callback=self.callback)
+                    self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, batch_num=batch_size, thread_num=thread_num)
+                    optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, callback=self.callback)
 
                 # 保存字幕
                 for i, subtitle_text in optimizer_result.items():
@@ -116,5 +116,10 @@ class SubtitleOptimizationThread(QThread):
         progress_num = int((self.finished_subtitle_length / self.subtitle_length) * 70) + 30
         self.progress.emit(progress_num, f"{progress_num}% 处理字幕")
         self.update.emit(result)
+
+    def stop(self):
+        if hasattr(self, 'optimizer'):
+            self.optimizer.stop()
+        self.terminate()
 
 

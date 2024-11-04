@@ -128,3 +128,10 @@ class MainWindow(FluentWindow):
         super().resizeEvent(e)
         if hasattr(self, 'splashScreen'):
             self.splashScreen.resize(self.size())
+
+    def closeEvent(self, event):
+        self.homeInterface.close()
+        self.batchProcessInterface.close()
+        self.subtitleStyleInterface.close()
+        self.settingInterface.close()
+        super().closeEvent(event)

@@ -2,9 +2,9 @@
     "LLM": {
         "API_Base": "https://api.ephone.ai/v1",
         "API_Key": "sk-msuqsbr4Ano2cV1GDk0AIaUS1MXS3vukQF0eI7Cble8CgF7Q",
-        "BatchSize": 10,
+        "BatchSize": 20,
         "Model": "gpt-4o-mini",
-        "ThreadNum": 12
+        "ThreadNum": 2
     },
     "Update": {
         "CheckUpdateAtStartUp": true
@@ -18,7 +18,7 @@
         "NeedOptimize": false,
         "NeedTranslate": true,
         "SoftSubtitle": true,
-        "TargetLanguage": "简体中文"
+        "TargetLanguage": "English"
     },
     "SubtitleStyle": {
         "Layout": "译文在上",

@@ -111,6 +111,7 @@ class SubtitleOptimizationInterface(QWidget):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.task = None
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self._init_ui()
         self._setup_signals()
 
@@ -355,8 +356,8 @@ class SubtitleOptimizationInterface(QWidget):
         event.accept()
 
     def closeEvent(self, event):
-        self.subtitle_optimization_thread.terminate()
-        print("closeEvent")
+        if hasattr(self, 'subtitle_optimization_thread'):
+            self.subtitle_optimization_thread.stop()
         super().closeEvent(event)
 
 if __name__ == "__main__":

@@ -26,18 +26,23 @@ DEFAULT_MODEL = "gpt-4o-mini"
 class SubtitleOptimizer:
     """A class for optimize and translating subtitles using OpenAI's API."""
 
-    def __init__(self, model: str = DEFAULT_MODEL, summary_content="", target_language="Chinese") -> None:
+    def __init__(self, model: str = DEFAULT_MODEL, summary_content="", thread_num=MAX_THREADS, batch_num=BATCH_SIZE, target_language="Chinese") -> None:
         base_url = os.getenv('OPENAI_BASE_URL')
         api_key = os.getenv('OPENAI_API_KEY')
         assert base_url and api_key, "环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置"
 
         self.model = model
         self.client = OpenAI(base_url=base_url, api_key=api_key)
+
         self.summary_content = summary_content
-
         self.prompt = TRANSLATE_PROMPT
-
         self.target_language = target_language
+        self.batch_num = batch_num
+        self.thread_num = thread_num
+        self.executor = ThreadPoolExecutor(max_workers=thread_num)  # 创建类级别的线程池
+
+    def stop(self):
+        self.executor.shutdown(wait=False)  
 
     @retry.retry(tries=2)
     def optimize(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
@@ -58,11 +63,10 @@ class SubtitleOptimizer:
         return aligned_subtitle
 
     def optimizer_multi_thread(self, subtitle_json: Dict[int, str], 
-                               batch_num=BATCH_SIZE, 
-                               thread_num: int = MAX_THREADS, 
                                translate=False,
                                reflect=False,
                                callback=None):
+        batch_num = self.batch_num
         items = list(subtitle_json.items())[:]
         chunks = [dict(items[i:i + batch_num]) for i in range(0, len(items), batch_num)]
         logger.debug(chunks)
@@ -79,8 +83,7 @@ class SubtitleOptimizer:
                 callback(result)
             return result
 
-        with ThreadPoolExecutor(max_workers=thread_num) as executor:
-            results = list(executor.map(process_chunk, chunks))
+        results = list(self.executor.map(process_chunk, chunks))
 
         # 合并结果
         optimizer_result = {k: v for result in results for k, v in result.items()}
