@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import datetime
 import os
 from pathlib import Path
@@ -69,7 +68,7 @@ class SubtitleTableModel(QAbstractTableModel):
             self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole, Qt.EditRole])
 
     def update_all(self, data):
-        print("update all =====")
+        print(self.tr("update all ====="))
         self._data= data
         self.layoutChanged.emit()
 
@@ -98,7 +97,7 @@ class SubtitleTableModel(QAbstractTableModel):
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
-                headers = ["开始时间", "结束时间", "字幕内容", "翻译字幕" if cfg.need_translate.value else "优化字幕"]
+                headers = [self.tr("开始时间"), self.tr("结束时间"), self.tr("字幕内容"), self.tr("翻译字幕") if cfg.need_translate.value else self.tr("优化字幕")]
                 return headers[section]
             elif orientation == Qt.Vertical:
                 return str(section + 1)
@@ -131,15 +130,15 @@ class SubtitleOptimizationInterface(QWidget):
         self.left_layout = QHBoxLayout()
         self.format_combobox = ComboBox(self)
         self.format_combobox.addItems([format.value for format in OutputSubtitleFormatEnum])
-        self.save_button = PushButton("保存", self)
+        self.save_button = PushButton(self.tr("保存"), self)
         self.left_layout.addWidget(self.format_combobox)
         self.left_layout.addWidget(self.save_button)
         
         # 右侧布局
         self.right_layout = QHBoxLayout()
-        self.file_select_button = PushButton("选择SRT文件", self)
-        self.open_folder_button = PushButton("打开文件夹", self)
-        self.start_button = PrimaryPushButton("开始", self)
+        self.file_select_button = PushButton(self.tr("选择SRT文件"), self)
+        self.open_folder_button = PushButton(self.tr("打开文件夹"), self)
+        self.start_button = PrimaryPushButton(self.tr("开始"), self)
         self.right_layout.addWidget(self.file_select_button)
         self.right_layout.addWidget(self.open_folder_button)
         self.right_layout.addWidget(self.start_button)
@@ -204,7 +203,7 @@ class SubtitleOptimizationInterface(QWidget):
                 asr_data = from_vtt(Path(self.task.original_subtitle_save_path).read_text(encoding="utf-8"))
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
-        self.status_label.setText(f"已加载文件")
+        self.status_label.setText(self.tr("已加载文件"))
 
     def process(self):
         """主处理函数"""
@@ -256,9 +255,9 @@ class SubtitleOptimizationInterface(QWidget):
     def on_file_select(self):
         # 构建文件过滤器
         subtitle_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedSubtitleFormats)
-        filter_str = f"字幕文件 ({subtitle_formats})"
+        filter_str = f"{self.tr('字幕文件')} ({subtitle_formats})"
         
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择字幕文件", "", filter_str)
+        file_path, _ = QFileDialog.getOpenFileName(self, self.tr("选择字幕文件"), "", filter_str)
         if file_path:
             self.file_select_button.setProperty("selected_file", file_path)
             self.load_subtitle_file(file_path)
@@ -278,9 +277,9 @@ class SubtitleOptimizationInterface(QWidget):
         default_name = os.path.splitext(os.path.basename(self.task.original_subtitle_save_path))[0]
         file_path, _ = QFileDialog.getSaveFileName(
             self,
-            "保存字幕文件",
+            self.tr("保存字幕文件"),
             default_name,  # 使用原文件名作为默认名
-            f"字幕文件 (*.{self.format_combobox.currentText()})"
+            f"{self.tr('字幕文件')} (*.{self.format_combobox.currentText()})"
         )
         if not file_path:
             return
@@ -296,14 +295,14 @@ class SubtitleOptimizationInterface(QWidget):
                 asr_data.save(file_path)
             InfoBar.success(
                 self.tr("保存成功"), 
-                self.tr(f"字幕已保存至: {file_path}"), 
+                self.tr(f"字幕已保存至:") + file_path, 
                 duration=2000, 
                 parent=self
             )
         except Exception as e:
             InfoBar.error(
                 self.tr("保存失败"), 
-                self.tr(f"保存字幕文件失败: {str(e)}"), 
+                self.tr("保存字幕文件失败: ") + str(e), 
                 duration=3000, 
                 parent=self
             )
@@ -319,7 +318,7 @@ class SubtitleOptimizationInterface(QWidget):
         asr_data = from_subtitle_file(file_path)
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
-        self.status_label.setText(f"已加载文件")
+        self.status_label.setText(self.tr("已加载文件"))
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         event.accept() if event.mimeData().hasUrls() else event.ignore()
@@ -341,15 +340,15 @@ class SubtitleOptimizationInterface(QWidget):
                 self.load_subtitle_file(file_path)
                 InfoBar.success(
                     self.tr("导入成功"), 
-                    self.tr(f"成功导入{os.path.basename(file_path)}"),
+                    self.tr(f"成功导入") + os.path.basename(file_path),
                     duration=2000,
                     parent=self
                 )
                 break
             else:
                 InfoBar.error(
-                    self.tr(f"格式错误{file_ext}"),
-                    self.tr(f"支持的字幕格式: {supported_formats}"),
+                    self.tr(f"格式错误") + file_ext,
+                    self.tr(f"支持的字幕格式:") + supported_formats,
                     duration=2000,
                     parent=self
                 )

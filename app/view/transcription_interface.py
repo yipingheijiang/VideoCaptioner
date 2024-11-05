@@ -70,9 +70,9 @@ class VideoInfoCard(CardWidget):
         self.details_layout = QHBoxLayout()
         self.details_layout.setSpacing(15)
         
-        self.resolution_info = self.create_pill_button("画质", 110)
-        self.file_size_info = self.create_pill_button("文件大小", 110)
-        self.duration_info = self.create_pill_button("时长", 100)
+        self.resolution_info = self.create_pill_button(self.tr("画质"), 110)
+        self.file_size_info = self.create_pill_button(self.tr("文件大小"), 110)
+        self.duration_info = self.create_pill_button(self.tr("时长"), 100)
 
         self.progress_ring = ProgressRing(self)
         self.progress_ring.setFixedSize(20, 20)
@@ -96,10 +96,8 @@ class VideoInfoCard(CardWidget):
 
     def setup_button_layout(self):
         self.button_layout = QVBoxLayout()
-        # self.remove_button = PushButton("删除", self)
-        self.open_folder_button = PushButton("打开文件夹", self)
-        self.start_button = PrimaryPushButton("开始转录", self)
-        # self.button_layout.addWidget(self.remove_button)
+        self.open_folder_button = PushButton(self.tr("打开文件夹"), self)
+        self.start_button = PrimaryPushButton(self.tr("开始转录"), self)
         self.button_layout.addWidget(self.open_folder_button)
         self.button_layout.addWidget(self.start_button)
 
@@ -113,11 +111,11 @@ class VideoInfoCard(CardWidget):
     def update_info(self, video_info: VideoInfo):
         """更新视频信息显示"""
         self.video_title.setText(video_info.file_name.rsplit('.', 1)[0])
-        self.resolution_info.setText(f"画质: {video_info.width}x{video_info.height}")
+        self.resolution_info.setText(self.tr("画质: ") + f"{video_info.width}x{video_info.height}")
         file_size_mb = os.path.getsize(self.task.file_path) / 1024 / 1024
-        self.file_size_info.setText(f"大小: {file_size_mb:.1f} MB")
+        self.file_size_info.setText(self.tr("大小: ") + f"{file_size_mb:.1f} MB")
         duration = datetime.timedelta(seconds=int(video_info.duration_seconds))
-        self.duration_info.setText(f"时长: {duration}")
+        self.duration_info.setText(self.tr("时长: ") + f"{duration}")
         self.start_button.setDisabled(False)
         self.update_thumbnail(video_info.thumbnail_path)
 
@@ -176,7 +174,7 @@ class VideoInfoCard(CardWidget):
     def on_transcript_error(self, error):
         """处理转录错误"""
         self.start_button.setEnabled(True)
-        self.start_button.setText("重新转录")
+        self.start_button.setText(self.tr("重新转录"))
         InfoBar.error(
             self.tr("转录失败"),
             self.tr(error),
@@ -187,14 +185,14 @@ class VideoInfoCard(CardWidget):
     def on_transcript_finished(self, task):
         """转录完成处理"""
         self.start_button.setEnabled(True)
-        self.start_button.setText("转录完成")
+        self.start_button.setText(self.tr("转录完成"))
         if self.task.status == Task.Status.PENDING:
             self.finished.emit(task)
 
     def reset_ui(self):
         """重置UI状态"""
         self.start_button.setDisabled(False)
-        self.start_button.setText("开始转录")
+        self.start_button.setText(self.tr("开始转录"))
         self.progress_ring.setValue(100)
 
     def set_task(self, task):
@@ -253,9 +251,9 @@ class TranscriptionInterface(QWidget):
         # 构建文件过滤器
         video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
         audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
-        filter_str = f"媒体文件 ({video_formats} {audio_formats});;视频文件 ({video_formats});;音频文件 ({audio_formats})"
+        filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
         
-        file_path, _ = file_dialog.getOpenFileName(self, "选择媒体文件", desktop_path, filter_str)
+        file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
         if file_path:
             self.create_task(file_path)
 
@@ -306,7 +304,7 @@ class TranscriptionInterface(QWidget):
                 break
             else:
                 InfoBar.error(
-                    self.tr(f"格式错误{file_ext}"),
+                    self.tr(f"格式错误") + file_ext,
                     self.tr(f"请拖入音频或视频文件"),
                     duration=1500,
                     parent=self

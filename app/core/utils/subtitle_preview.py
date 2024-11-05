@@ -74,15 +74,16 @@ def ensure_background(bg_path: Path) -> Path:
         if Path(DEFAULT_BG_PATH).exists():
             bg_path = Path(DEFAULT_BG_PATH)
             return bg_path
-        bg_path.parent.mkdir(parents=True, exist_ok=True)
-        run_subprocess([
-            'ffmpeg', 
-            '-f', 'lavfi', 
-            '-i', 'color=c=black:s=1920x1080', 
-            '-frames:v', '1', 
-            str(bg_path)
-        ])
-    return bg_path
+        else:
+            DEFAULT_BG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            run_subprocess([
+                'ffmpeg', 
+                '-f', 'lavfi', 
+                '-i', 'color=c=black:s=1920x1080', 
+                '-frames:v', '1', 
+                str(DEFAULT_BG_PATH)
+            ])
+    return DEFAULT_BG_PATH
 
 def generate_preview(style_str: str, preview_text: Tuple[str, Optional[str]], bg_path: str) -> str:
     """生成预览图片
@@ -104,17 +105,16 @@ def generate_preview(style_str: str, preview_text: Tuple[str, Optional[str]], bg
 
     # 处理 ASS 文件路径
     ass_file_processed = ass_file.replace('\\', '/').replace(':', r'\\:')
-
-    # 使用 ffmpeg 生成预览图片
-    run_subprocess([
+    output_path = output_path.as_posix()
+    cmd = [
         'ffmpeg', 
         '-y',
         '-i', str(bg_path),
         '-vf', f"ass={ass_file_processed}",
         '-frames:v', '1',
         str(output_path)
-    ])
-
+    ]
+    run_subprocess(cmd)
     return str(output_path)
 
 if __name__ == "__main__":

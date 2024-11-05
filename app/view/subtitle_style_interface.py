@@ -151,7 +151,7 @@ class SubtitleStyleInterface(QWidget):
             FIF.FONT,
             self.tr("主字幕字体"),
             self.tr("设置主字幕的字体"),
-            texts=["微软雅黑", "Arial"]
+            texts=["Arial"]
         )
         
         self.mainSizeCard = SpinBoxSettingCard(
@@ -199,7 +199,7 @@ class SubtitleStyleInterface(QWidget):
             FIF.FONT,
             self.tr("副字幕字体"),
             self.tr("设置副字幕的字体"),
-            texts=["微软雅黑", "Arial"]
+            texts=["Arial"]
         )
         
         self.subSizeCard = SpinBoxSettingCard(
@@ -390,7 +390,7 @@ class SubtitleStyleInterface(QWidget):
             self,
             self.tr("选择背景图片"),
             "",
-            self.tr("图片文件 (*.png *.jpg *.jpeg)")
+            self.tr("图片文件") + " (*.png *.jpg *.jpeg)"
         )
         if file_path:
             cfg.set(cfg.subtitle_preview_image, file_path)
@@ -556,8 +556,8 @@ class SubtitleStyleInterface(QWidget):
                 
         # 显示加载成功提示
         InfoBar.success(
-            title='成功',
-            content=f'已加载样式 {style_name}',
+            title=self.tr('成功'),
+            content=self.tr('已加载样式 ') + style_name,
             orient=Qt.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
@@ -576,8 +576,8 @@ class SubtitleStyleInterface(QWidget):
             # 检查是否已存在同名样式
             if (SUBTITLE_STYLE_DIR / f"{style_name}.txt").exists():
                 InfoBar.warning(
-                    title='警告',
-                    content=f'样式 {style_name} 已存在',
+                    title=self.tr('警告'),
+                    content=self.tr('样式 ') + style_name + self.tr(' 已存在'),
                     orient=Qt.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
@@ -595,8 +595,8 @@ class SubtitleStyleInterface(QWidget):
             
             # 显示创建成功提示
             InfoBar.success(
-                title='成功',
-                content=f'已创建新样式 {style_name}',
+                title=self.tr('成功'),
+                content=self.tr('已创建新样式 ') + style_name,
                 orient=Qt.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -624,10 +624,10 @@ class StyleNameDialog(MessageBoxBase):
     """ 样式名称输入对话框 """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.titleLabel = BodyLabel('新建样式', self)
+        self.titleLabel = BodyLabel(self.tr('新建样式'), self)
         self.nameLineEdit = LineEdit(self)
 
-        self.nameLineEdit.setPlaceholderText('输入样式名称')
+        self.nameLineEdit.setPlaceholderText(self.tr('输入样式名称'))
         self.nameLineEdit.setClearButtonEnabled(True)
 
         # 添加控件到布局
@@ -635,8 +635,8 @@ class StyleNameDialog(MessageBoxBase):
         self.viewLayout.addWidget(self.nameLineEdit)
 
         # 设置按钮文本
-        self.yesButton.setText('确定')
-        self.cancelButton.setText('取消')
+        self.yesButton.setText(self.tr('确定'))
+        self.cancelButton.setText(self.tr('取消'))
 
         self.widget.setMinimumWidth(350)
         self.yesButton.setDisabled(True)

@@ -16,6 +16,7 @@ from ..core.thread.create_task_thread import CreateTaskThread
 from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
 from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
 
+
 class TaskCreationInterface(QWidget):
     """
     任务创建界面类，用于创建和配置任务。
@@ -24,6 +25,8 @@ class TaskCreationInterface(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.setObjectName("TaskCreationInterface")
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAcceptDrops(True)
         self.task = None
@@ -49,8 +52,8 @@ class TaskCreationInterface(QWidget):
 
         # 创建转录模型卡片
         self.transcription_model_card = ComboBoxSimpleSettingCard(
-            "转录模型",
-            "语音转换的模型",
+            self.tr("转录模型"),
+            self.tr("语音转换的模型"),
             [model.value for model in TranscribeModelEnum],
             self
         )
@@ -60,24 +63,24 @@ class TaskCreationInterface(QWidget):
 
         # 创建字幕修正卡片
         self.subtitle_optimization_card = SwitchButtonSimpleSettingCard(
-            "字幕修正",
-            "使用AI大模型进行字幕修正",
+            self.tr("字幕修正"),
+            self.tr("使用AI大模型进行字幕修正"),
             self
         )
         self.subtitle_optimization_card.checkedChanged.connect(self.on_subtitle_optimization_clicked)
 
         # 创建字幕翻译卡片
         self.subtitle_translation_card = SwitchButtonSimpleSettingCard(
-            "字幕翻译",
-            "使用AI大模型进行字幕修正和翻译",
+            self.tr("字幕翻译"),
+            self.tr("使用AI大模型进行字幕修正和翻译"),
             self
         )
         self.subtitle_translation_card.checkedChanged.connect(self.on_subtitle_translation_clicked)
 
         # 创建目标语言卡片
         self.target_language_card = ComboBoxSimpleSettingCard(
-            "目标语言",
-            "翻译的目标语言",
+            self.tr("目标语言"),
+            self.tr("翻译的目标语言"),
             [model.value for model in TargetLanguageEnum],
             self
         )
@@ -125,7 +128,7 @@ class TaskCreationInterface(QWidget):
         self.status_layout = QVBoxLayout()
         self.status_layout.setContentsMargins(50, 0, 30, 5)
         self.status_layout.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
-        self.status_label = BodyLabel("准备就绪", self)
+        self.status_label = BodyLabel(self.tr("准备就绪"), self)
         self.status_label.setStyleSheet("font-size: 14px; color: #888888;")
         self.status_layout.addWidget(self.status_label, 0, Qt.AlignCenter)
         self.progress_bar = ProgressBar(self)
@@ -137,7 +140,7 @@ class TaskCreationInterface(QWidget):
         self.main_layout.addSpacing(2)
 
     def setup_info_label(self):
-        self.info_label = QLabel("© 2023 VideoCaptioner. 使用前请阅读使用说明", self)
+        self.info_label = QLabel(self.tr("© 2023 VideoCaptioner. 使用前请阅读使用说明"), self)
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 12px; color: #888888;")
         self.main_layout.addStretch()
@@ -153,7 +156,7 @@ class TaskCreationInterface(QWidget):
         self.subtitle_optimization_card.setChecked(cfg.need_optimize.value)
         self.subtitle_translation_card.setChecked(cfg.need_translate.value)
         self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
-        self.search_input.setText("C:/Users/weifeng/Videos/N进制演示器.mp4")
+        self.search_input.setText("")
 
     def on_subtitle_optimization_clicked(self, checked):
         if cfg.api_base.value == "" and checked:
@@ -184,16 +187,16 @@ class TaskCreationInterface(QWidget):
         cfg.set(cfg.need_translate, checked)
 
     def on_start_clicked(self):
-        if self.start_button.text() == "选择文件":
+        if self.start_button.text() == self.tr("选择文件"):
             desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
             file_dialog = QFileDialog()
             
             # 构建文件过滤器
             video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
             audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
-            filter_str = f"媒体文件 ({video_formats} {audio_formats});;视频文件 ({video_formats});;音频文件 ({audio_formats})"
+            filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
             
-            file_path, _ = file_dialog.getOpenFileName(self, "选择媒体文件", desktop_path, filter_str)
+            file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
             if file_path:
                 self.search_input.setText(file_path)
             return
@@ -202,7 +205,7 @@ class TaskCreationInterface(QWidget):
 
     def on_search_input_changed(self):
         if self.search_input.text():
-            self.start_button.setText("开始")
+            self.start_button.setText(self.tr("开始"))
             self.start_button.setStyleSheet("""
                 QPushButton {
                     color: white;
@@ -220,7 +223,7 @@ class TaskCreationInterface(QWidget):
                 }
             """)
         else:
-            self.start_button.setText("选择文件")
+            self.start_button.setText(self.tr("选择文件"))
             self.start_button.setStyleSheet("""
                 QPushButton {
                     color: #333;
@@ -254,7 +257,7 @@ class TaskCreationInterface(QWidget):
                         
             if is_supported:
                 self.search_input.setText(file_path)
-                self.status_label.setText("导入成功")
+                self.status_label.setText(self.tr("导入成功"))
                 InfoBar.success(
                     self.tr("导入成功"), 
                     self.tr("导入媒体文件成功"),
@@ -264,7 +267,7 @@ class TaskCreationInterface(QWidget):
                 break
             else:
                 InfoBar.error(
-                    self.tr("格式错误"),
+                    self.tr(f"格式错误") + file_ext,
                     self.tr("不支持该文件格式"),
                     duration=1500,
                     parent=self

@@ -2,7 +2,7 @@
 import os
 import sys
 
-from PyQt5.QtCore import Qt, QTranslator
+from PyQt5.QtCore import Qt, QTranslator, QFile, QIODevice, QLocale
 from PyQt5.QtGui import QFont, QFontDatabase
 from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import FluentTranslator
@@ -40,14 +40,14 @@ app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
 #     print(font_family)
 #     app.setFont(QFont(font_family, 12))  # 字体大小为 12
 
-# internationalization
+# 国际化（多语言）
 locale = cfg.get(cfg.language).value
 translator = FluentTranslator(locale)
-galleryTranslator = QTranslator()
-galleryTranslator.load(locale, "gallery", ".", ":/gallery/i18n")
-
+myTranslator = QTranslator()
+myTranslator.load(locale, "translations\VideoCaptioner_{locale}.qm")
 app.installTranslator(translator)
-app.installTranslator(galleryTranslator)
+app.installTranslator(myTranslator)
+
 
 # create main window
 w = MainWindow()
