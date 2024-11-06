@@ -182,7 +182,6 @@ class VideoSynthesisInterface(QWidget):
         )
     
     def on_video_synthesis_progress(self, progress, message):
-        print(f"{progress} {message}")
         self.progress_bar.setValue(progress)
         self.status_label.setText(message)
 

@@ -7,7 +7,7 @@ from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, Boo
                             OptionsValidator, RangeConfigItem, RangeValidator,
                             FolderListValidator, Theme, FolderValidator, ConfigSerializer, EnumSerializer)
 
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, OutputSubtitleFormatEnum
+from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, TranscribeLanguageEnum, OutputSubtitleFormatEnum
 from app.config import WORK_PATH, SETTINGS_PATH
 
 
@@ -49,7 +49,8 @@ class Config(QConfig):
     transcribe_model = OptionsConfigItem("Transcribe", "TranscribeModel", TranscribeModelEnum.JIANYING.value,
                                          OptionsValidator(TranscribeModelEnum), EnumSerializer(TranscribeModelEnum))
     use_asr_cache = ConfigItem("Transcribe", "UseASRCache", True, BoolValidator())
-
+    transcribe_language = OptionsConfigItem("Transcribe", "TranscribeLanguage", TranscribeLanguageEnum.ENGLISH.value,
+                                            OptionsValidator(TranscribeLanguageEnum), EnumSerializer(TranscribeLanguageEnum))
     # 字幕配置
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())

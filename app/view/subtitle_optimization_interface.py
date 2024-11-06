@@ -9,6 +9,7 @@ from PyQt5.QtGui import QPixmap, QFont, QStandardItemModel, QDragEnterEvent, QDr
 from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, CardWidget, ToolTipFilter, \
     ToolTipPosition, LineEdit, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     InfoBadge, ProgressRing, TableWidget, TableItemDelegate, TableView
+from qfluentwidgets import FluentIcon as FIF
 
 from app.core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
 from ..core.bk_asr.ASRData import ASRData, from_subtitle_file,from_srt, from_vtt, from_youtube_vtt, from_json
@@ -130,15 +131,15 @@ class SubtitleOptimizationInterface(QWidget):
         self.left_layout = QHBoxLayout()
         self.format_combobox = ComboBox(self)
         self.format_combobox.addItems([format.value for format in OutputSubtitleFormatEnum])
-        self.save_button = PushButton(self.tr("保存"), self)
+        self.save_button = PushButton(self.tr("保存"), self, icon=FIF.SAVE)
         self.left_layout.addWidget(self.format_combobox)
         self.left_layout.addWidget(self.save_button)
         
         # 右侧布局
         self.right_layout = QHBoxLayout()
-        self.file_select_button = PushButton(self.tr("选择SRT文件"), self)
-        self.open_folder_button = PushButton(self.tr("打开文件夹"), self)
-        self.start_button = PrimaryPushButton(self.tr("开始"), self)
+        self.file_select_button = PushButton(self.tr("选择SRT文件"), self, icon=FIF.FOLDER_ADD)
+        self.open_folder_button = PushButton(self.tr("打开文件夹"), self, icon=FIF.FOLDER)
+        self.start_button = PrimaryPushButton(self.tr("开始"), self, icon=FIF.PLAY)
         self.right_layout.addWidget(self.file_select_button)
         self.right_layout.addWidget(self.open_folder_button)
         self.right_layout.addWidget(self.start_button)
@@ -188,6 +189,10 @@ class SubtitleOptimizationInterface(QWidget):
 
     def set_task(self, task: Task):
         """设置任务并更新UI"""
+        if hasattr(self, 'subtitle_optimization_thread'):
+            self.subtitle_optimization_thread.stop()
+        self.start_button.setEnabled(True)
+        self.file_select_button.setEnabled(True)
         self.task = task
         self.update_info(task)
 
@@ -229,7 +234,8 @@ class SubtitleOptimizationInterface(QWidget):
         self.task.batch_size = cfg.batch_size.value
         self.task.thread_num = cfg.thread_num.value
         self.task.target_language = cfg.target_language.value.value
-
+        self.task.subtitle_layout = cfg.subtitle_layout.value
+        
     def on_subtitle_optimization_finished(self, task: Task):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)

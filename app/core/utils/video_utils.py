@@ -27,6 +27,20 @@ def video2audio(input_file: str, output:str="") -> bool:
     else:
         return False
 
+def check_cuda_available() -> bool:
+    """检查CUDA是否可用"""
+    try:
+        # 检查ffmpeg是否支持cuda
+        result = subprocess.run(['ffmpeg', '-hwaccels'], capture_output=True, text=True)
+        if 'cuda' not in result.stdout.lower():
+            return False
+            
+        # 检查系统是否有NVIDIA GPU
+        nvidia_smi = subprocess.run(['nvidia-smi'], capture_output=True)
+        return nvidia_smi.returncode == 0
+    except:
+        return False
+
 
 def add_subtitles(
     input_file: str,
@@ -39,6 +53,10 @@ def add_subtitles(
 ) -> None:
     assert Path(input_file).is_file(), "输入文件不存在"
     assert Path(subtitle_file).is_file(), "字幕文件不存在"
+
+    # 如果是WebM格式，强制使用硬字幕
+    if Path(output).suffix.lower() == '.webm':
+        soft_subtitle = False
 
     if soft_subtitle:
         # 添加软字幕
@@ -65,20 +83,25 @@ def add_subtitles(
         #     font = Path(font).as_posix().replace(':', r'\:')
         #     force_style = f"FontName={font},FontSize={font_size},PrimaryColour={font_color_ass},Outline=1,Shadow=0,BackColour=&H009C9C9C&,Bold=-1,Alignment=2"
         #     vf = f"subtitles={subtitle_file}:force_style='{force_style}'"
-        cmd = [
-            'ffmpeg',
-            '-hwaccel', 'cuda',
+        if  Path(output).suffix.lower() == '.webm':
+            vcodec = 'libvpx-vp9'
+            
+        # 检查CUDA是否可用
+        use_cuda = check_cuda_available()
+        cmd = ['ffmpeg']
+        if use_cuda:
+            cmd.extend(['-hwaccel', 'cuda'])
+        cmd.extend([
             '-i', input_file,
             '-acodec', 'copy',
             '-preset', quality,
-            '-vcodec', vcodec,
             '-vf', vf,
             '-y',  # 覆盖输出文件
             output
-        ]
+        ])
+        
         cmd_str = subprocess.list2cmdline(cmd)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace')
-
         # 实时读取输出并调用回调函数
         total_duration = None
         current_time = 0
@@ -113,7 +136,6 @@ def add_subtitles(
         return_code = process.wait()
         if return_code != 0:
             raise Exception(return_code)
-
 
 def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
     try:

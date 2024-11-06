@@ -92,6 +92,31 @@ class TargetLanguageEnum(Enum):
     RUSSIAN = "Russian"
     TURKISH = "Turkish"
 
+class TranscribeLanguageEnum(Enum):
+    """ 转录语言 """
+    ENGLISH = "English" 
+    CHINESE = "Chinese"
+    JAPANESE = "Japanese"
+    KOREAN = "Korean"
+    SPANISH = "Spanish"
+    FRENCH = "French"
+    GERMAN = "German"
+
+LANGUAGES = {
+    "English": "en",
+    "Chinese": "zh", 
+    "Japanese": "ja",
+    "Korean": "ko",
+    "Spanish": "es",
+    "French": "fr",
+    "German": "de",
+}
+
+
+SUPPORTED_AUDIO_FORMATS = "Audio files (*.mp3 *.wav *.m4a *.ogg *.opus *.flac);;\
+Video files (*.mp4 *.webm *.ogm *.mov *.mkv *.avi *.wmv);;All files (*.*)"
+
+
 
 @dataclass
 class VideoInfo:
@@ -107,9 +132,6 @@ class VideoInfo:
     audio_sampling_rate: int
     thumbnail_path: str
 
-
-SUPPORTED_AUDIO_FORMATS = "Audio files (*.mp3 *.wav *.m4a *.ogg *.opus *.flac);;\
-Video files (*.mp4 *.webm *.ogm *.mov *.mkv *.avi *.wmv);;All files (*.*)"
 
 @dataclass
 class Task:
@@ -152,6 +174,7 @@ class Task:
 
     # 转录（转录模型）
     transcribe_model: Optional[TranscribeModelEnum] = TranscribeModelEnum.JIANYING
+    transcribe_language: Optional[TranscribeLanguageEnum] = LANGUAGES[TranscribeLanguageEnum.ENGLISH.value]
     use_asr_cache: bool = True
     need_word_time_stamp: bool = False
     original_subtitle_save_path: Optional[str] = None
@@ -165,6 +188,7 @@ class Task:
     result_subtitle_save_path: Optional[str] = None
     thread_num: int = 10
     batch_size: int = 10
+    subtitle_layout: Optional[str] = None
 
     # 视频生成
     video_save_path: Optional[str] = None

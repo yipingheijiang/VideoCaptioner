@@ -3,7 +3,7 @@ import os
 import re
 from PyQt5.QtCore import QThread, pyqtSignal
 import yt_dlp
-from ..entities import Task, TranscribeModelEnum, VideoInfo
+from ..entities import Task, TranscribeModelEnum, VideoInfo, LANGUAGES
 from ..utils.video_utils import get_video_info
 from ...common.config import cfg
 
@@ -35,7 +35,7 @@ class CreateTaskThread(QThread):
             elif self.task_type == 'synthesis':
                 self.create_video_synthesis_task()
         except Exception as e:
-            self.progress.emit(0, f"创建任务失败")
+            self.progress.emit(0, self.tr("创建任务失败"))
             self.error.emit(str(e))
 
     def create_file_task(self, file_path):
@@ -79,6 +79,7 @@ class CreateTaskThread(QThread):
             source=Task.Source.FILE_IMPORT,
             original_language=None,
             target_language=cfg.target_language.value.value,
+            transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
@@ -92,18 +93,19 @@ class CreateTaskThread(QThread):
             need_translate=cfg.need_translate.value,
             need_optimize=cfg.need_optimize.value,
             result_subtitle_save_path=str(result_subtitle_save_path),
+            subtitle_layout=cfg.subtitle_layout.value,
             video_save_path=str(video_save_path),
             soft_subtitle=cfg.soft_subtitle.value,
             subtitle_style_srt=subtitle_style_srt
         )
         self.finished.emit(task)
-        self.progress.emit(100, "创建任务完成")
+        self.progress.emit(100, self.tr("创建任务完成"))
 
     def create_url_task(self, url):
-        self.progress.emit(5, "正在获取视频信息")
+        self.progress.emit(5, self.tr("正在获取视频信息"))
         # 下载视频。保存到 cfg.work_dir.value 下
         video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value, self.progress_hook)
-        self.progress.emit(100, "下载视频完成")
+        self.progress.emit(100, self.tr("下载视频完成"))
 
         video_info = VideoInfo(
             file_name=Path(video_file_path).stem,
@@ -119,8 +121,7 @@ class CreateTaskThread(QThread):
         )
 
         # 使用 Path 对象处理路径
-        work_dir = Path(cfg.work_dir.value)
-        task_work_dir = work_dir / sanitize_filename(video_info.file_name)
+        task_work_dir = Path(video_file_path).parent
 
         # 定义各个路径
         audio_save_path = task_work_dir / "audio.mp3"
@@ -158,6 +159,7 @@ class CreateTaskThread(QThread):
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
             transcribe_model=cfg.transcribe_model.value,
+            transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             use_asr_cache=cfg.use_asr_cache.value,
             need_word_time_stamp=need_word_time_stamp,
             original_subtitle_save_path=str(original_subtitle_save_path),
@@ -167,6 +169,7 @@ class CreateTaskThread(QThread):
             need_translate=cfg.need_translate.value,
             need_optimize=cfg.need_optimize.value,
             result_subtitle_save_path=str(result_subtitle_save_path),
+            subtitle_layout=cfg.subtitle_layout.value,
             video_save_path=str(video_save_path),
             soft_subtitle=cfg.soft_subtitle.value,
             subtitle_style_srt=subtitle_style_srt
@@ -200,6 +203,7 @@ class CreateTaskThread(QThread):
             source=Task.Source.FILE_IMPORT,
             original_language=None,
             target_language=cfg.target_language.value.value,
+            transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
@@ -240,6 +244,7 @@ class CreateTaskThread(QThread):
             result_subtitle_save_path=str(result_subtitle_save_path),
             thread_num=cfg.thread_num.value,
             batch_size=cfg.batch_size.value,
+            subtitle_layout=cfg.subtitle_layout.value,
             subtitle_style_srt=subtitle_style_srt
         )
         return task
@@ -274,7 +279,7 @@ class CreateTaskThread(QThread):
             clean_percent = percent.replace('\x1b[0;94m', '').replace('\x1b[0m', '').strip().replace('%', '')
             clean_speed = speed.replace('\x1b[0;32m', '').replace('\x1b[0m', '').strip()
             
-            self.progress.emit(int(float(clean_percent)), f'下载进度: {clean_percent}%  速度: {clean_speed}')
+            self.progress.emit(int(float(clean_percent)), f'{self.tr("下载进度")}: {clean_percent}%  {self.tr("速度")}: {clean_speed}')
 
 
 def sanitize_filename(name, replacement="_"):

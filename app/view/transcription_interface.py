@@ -12,7 +12,7 @@ from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabe
     InfoBadge, IndeterminateProgressRing, ProgressRing, InfoBarPosition
 
 from app.core.thread.create_task_thread import CreateTaskThread
-from ..core.entities import Task, VideoInfo
+from ..core.entities import LANGUAGES, Task, VideoInfo
 from ..common.config import cfg
 from ..core.thread.transcript_thread import TranscriptThread
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
@@ -160,11 +160,16 @@ class VideoInfoCard(CardWidget):
 
     def start_transcription(self):
         """开始转录过程"""
+        self._update_task_config()
         self.transcript_thread = TranscriptThread(self.task)
         self.transcript_thread.finished.connect(self.on_transcript_finished)
         self.transcript_thread.progress.connect(self.on_transcript_progress)
         self.transcript_thread.error.connect(self.on_transcript_error)
         self.transcript_thread.start()
+
+    def _update_task_config(self):
+        self.task.transcribe_language = LANGUAGES[cfg.transcribe_language.value.value]
+        self.task.transcribe_model = cfg.transcribe_model.value
 
     def on_transcript_progress(self, value, message):
         """更新转录进度"""

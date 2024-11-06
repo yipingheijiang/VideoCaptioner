@@ -11,7 +11,7 @@ from .BaseASR import BaseASR
 from .ASRData import from_srt
 
 class WhisperASR(BaseASR):
-    def __init__(self, audio_path, model_path = None, language: str = "en", whisper_cpp_path = "whisper-cpp", use_cache: bool = False, need_word_time_stamp: bool = False):
+    def __init__(self, audio_path, model_path = None, language = "en", whisper_cpp_path = "whisper-cpp", use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache)
         if model_path is None:
             model_path = r"E:\GithubProject\VideoCaptioner\app\resource\models\ggml-medium.bin"
@@ -91,7 +91,7 @@ class WhisperASR(BaseASR):
         return result.stderr.strip()
 
     def _get_key(self):
-        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.language}-{self.model_path}"
+        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}"
 
     def get_audio_duration(self, filepath: str) -> int:
         try:

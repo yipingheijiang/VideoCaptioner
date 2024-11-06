@@ -14,6 +14,7 @@ from ..entities import Task, TranscribeModelEnum
 from ..utils.video_utils import video2audio
 from ..utils.optimize_subtitles import optimize_subtitles
 from ..subtitle_processor.spliter import merge_segments
+from ..utils.test_opanai import test_openai
 
 class SubtitleOptimizationThread(QThread):
     finished = pyqtSignal(Task)
@@ -40,17 +41,21 @@ class SubtitleOptimizationThread(QThread):
             target_language = self.task.target_language
             need_summarize = False
             subtitle_style_srt = self.task.subtitle_style_srt
+            subtitle_layout = self.task.subtitle_layout
             # TODO: 开启字幕总结功能
 
             # 检查
-            assert str_path is not None, "字幕文件路径为空"
-            assert Path(str_path).exists(), "字幕文件路径不存在"
-            assert Path(str_path).suffix in ['.srt', '.vtt', '.ass'], "字幕文件格式不支持"
+            assert str_path is not None, self.tr("字幕文件路径为空")
+            assert Path(str_path).exists(), self.tr("字幕文件路径不存在") 
+            assert Path(str_path).suffix in ['.srt', '.vtt', '.ass'], self.tr("字幕文件格式不支持")
 
+            self.progress.emit(2, self.tr("开始优化字幕..."))
             # 设置环境变量
             if self.task.base_url:
                 base_url = self.task.base_url
                 api_key = self.task.api_key
+                if not test_openai(base_url, api_key, llm_model)[0]:
+                    raise Exception(self.tr("OpenAI API 测试失败, 请检查设置"))
             else:
                 # 使用智谱的API
                 base_url = "https://open.bigmodel.cn/api/paas/v4"
@@ -62,12 +67,11 @@ class SubtitleOptimizationThread(QThread):
             os.environ['OPENAI_BASE_URL'] = base_url
             os.environ['OPENAI_API_KEY'] = api_key
 
-
             asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
             if asr_data.is_word_timestamp():
-                self.progress.emit(5, "字幕断句...")
+                self.progress.emit(5, self.tr("字幕断句..."))
                 asr_data = merge_segments(asr_data, model=llm_model, num_threads=thread_num)
                 split_path = str(Path(result_subtitle_save_path).parent / f"{Path(result_subtitle_save_path).stem}_split.srt")
                 asr_data.save(save_path=split_path)
@@ -78,19 +82,19 @@ class SubtitleOptimizationThread(QThread):
             self.subtitle_length = len(subtitle_json)
             if need_translate or need_optimize:
                 summarize_result = ""
-                self.progress.emit(20, "总结字幕...")
+                self.progress.emit(20, self.tr("总结字幕..."))
                 if need_summarize:
                     summarizer = SubtitleSummarizer(model=llm_model)
                     summarize_result = summarizer.summarize(asr_data.to_txt())
                 
                 if need_translate:
-                    self.progress.emit(30, "优化+翻译...")
+                    self.progress.emit(30, self.tr("优化+翻译..."))
                     print("target_language", target_language)
                     need_reflect = False if "glm-4-flash" in llm_model.lower() else True
                     self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, target_language=target_language, batch_num=batch_size, thread_num=thread_num)
                     optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, translate=True, reflect=need_reflect, callback=self.callback)
                 elif need_optimize:
-                    self.progress.emit(30, "优化字幕...")
+                    self.progress.emit(30, self.tr("优化字幕..."))
                     self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model, batch_num=batch_size, thread_num=thread_num)
                     optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, callback=self.callback)
 
@@ -98,23 +102,30 @@ class SubtitleOptimizationThread(QThread):
                 for i, subtitle_text in optimizer_result.items():
                     seg = asr_data.segments[int(i)-1]
                     seg.text = subtitle_text
-                asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt)
-                print(f"[+] 字幕优化完成，保存到 {result_subtitle_save_path}")
-            else:
-                asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt)
-                print(f"[+] 无需优化翻译，直接保存 {result_subtitle_save_path}")
+                print(subtitle_layout, "subtitle_layout")
 
-            self.progress.emit(100, "优化完成")
+                if result_subtitle_save_path.endswith(".ass"):
+                    asr_data.to_ass(subtitle_style_srt, subtitle_layout, result_subtitle_save_path)
+                else:
+                    asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt, layout=subtitle_layout)
+                print("[+] 字幕优化完成，保存到 {0}".format(result_subtitle_save_path))
+            else:
+                if result_subtitle_save_path.endswith(".ass"):
+                    asr_data.to_ass(subtitle_style_srt, subtitle_layout, result_subtitle_save_path)
+                else:
+                    asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt, layout=subtitle_layout)
+                print("[+] 无需优化翻译，直接保存 {0}".format(result_subtitle_save_path))
+
+            self.progress.emit(100, self.tr("优化完成"))
             self.finished.emit(self.task)
         except Exception as e:
-            print("subtitle_optimization_thread 字幕优化失败", e)
             self.error.emit(str(e))
-            self.progress.emit(100, "优化失败")
+            self.progress.emit(100, self.tr("优化失败"))
 
     def callback(self, result: Dict):
         self.finished_subtitle_length += len(result)
         progress_num = int((self.finished_subtitle_length / self.subtitle_length) * 70) + 30
-        self.progress.emit(progress_num, f"{progress_num}% 处理字幕")
+        self.progress.emit(progress_num, self.tr("{0}% 处理字幕").format(progress_num))
         self.update.emit(result)
 
     def stop(self):

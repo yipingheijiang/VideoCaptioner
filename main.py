@@ -39,12 +39,12 @@ app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
 #     font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
 #     print(font_family)
 #     app.setFont(QFont(font_family, 12))  # 字体大小为 12
-
 # 国际化（多语言）
 locale = cfg.get(cfg.language).value
+
 translator = FluentTranslator(locale)
 myTranslator = QTranslator()
-myTranslator.load(locale, "translations\VideoCaptioner_{locale}.qm")
+myTranslator.load(f"translations/VideoCaptioner_{locale.name()}.qm")
 app.installTranslator(translator)
 app.installTranslator(myTranslator)
 

@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import time
+import uuid
 from typing import Dict, Tuple, Literal, Union
 
 # import ffmpeg
@@ -37,6 +38,7 @@ class JianYingASR(BaseASR):
         self.upload_hosts = None
 
         self.need_word_time_stamp = need_word_time_stamp
+        self.tdid = f"{uuid.getnode():012d}"
 
     def submit(self) -> str:
         """Submit the task"""
@@ -52,7 +54,7 @@ class JianYingASR(BaseASR):
         }
 
         sign, device_time = self._generate_sign_parameters(url='/lv/v1/audio_subtitle/submit', pf='4', appvr='4.0.0',
-                                                           tdid='')
+                                                           tdid=self.tdid)
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, json=payload, headers=headers)
         query_id = response.json()['data']['id']
@@ -75,7 +77,7 @@ class JianYingASR(BaseASR):
             "pack_options": {"need_attribute": True}
         }
         sign, device_time = self._generate_sign_parameters(url='/lv/v1/audio_subtitle/query', pf='4', appvr='4.0.0',
-                                                           tdid='')
+                                                           tdid=self.tdid)
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, json=payload, headers=headers)
         return response.json()
@@ -103,17 +105,32 @@ class JianYingASR(BaseASR):
 
     def _get_key(self):        
         return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}"
-
-
-    @staticmethod
-    def _generate_sign_parameters(url: str, pf: str = '4', appvr: str = '4.0.0', tdid: str = '') -> \
+    
+    def _generate_sign_parameters(self, url: str, pf: str = '4', appvr: str = '4.0.0', tdid='') -> \
     Tuple[str, str]:
-        """Generate signature and timestamp"""
+        """Generate signature and timestamp via an HTTP request"""
         current_time = str(int(time.time()))
-        sign_str = f"9e2c|{url[-7:]}|{pf}|{appvr}|{current_time}|{tdid}|11ac"
-        sign = hashlib.md5(sign_str.encode()).hexdigest()
+        data = {
+            'url': url,
+            'current_time': current_time,
+            'pf': pf,
+            'appvr': appvr,
+            'tdid': self.tdid
+        }
+        # Replace with your actual endpoint URL
+        get_sign_url = 'https://asrtools-update.bkfeng.top/sign'
+        try:
+            response = requests.post(get_sign_url, json=data)
+            response.raise_for_status()
+            response_data = response.json()
+            sign = response_data.get('sign')
+            if not sign:
+                raise ValueError("No 'sign' in response")
+        except requests.exceptions.RequestException as e:
+            raise SystemExit(f"HTTP Request failed: {e}")
+        except ValueError as ve:
+            raise SystemExit(f"Invalid response: {ve}")
         return sign.lower(), current_time
-        # TODO: 网络获取
 
     def _build_headers(self, device_time: str, sign: str) -> Dict[str, str]:
         """Build headers for requests"""
@@ -124,7 +141,7 @@ class JianYingASR(BaseASR):
             'pf': "4",
             'sign': sign,
             'sign-ver': "1",
-            'tdid': "",
+            'tdid': self.tdid,
         }
 
     def _uplosd_headers(self):
@@ -140,7 +157,7 @@ class JianYingASR(BaseASR):
         url = "https://lv-pc-api-sinfonlinec.ulikecam.com/lv/v1/upload_sign"
         payload = json.dumps({"biz": "pc-recognition"})
         sign, device_time = self._generate_sign_parameters(url='/lv/v1/upload_sign', pf='4', appvr='4.0.0',
-                                                           tdid='')
+                                                           tdid=self.tdid)
         headers = self._build_headers(device_time, sign)
         response = requests.post(url, data=payload, headers=headers)
         response.raise_for_status()

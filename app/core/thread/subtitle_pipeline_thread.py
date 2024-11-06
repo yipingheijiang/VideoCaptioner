@@ -28,13 +28,13 @@ class SubtitlePipelineThread(QThread):
     def run(self):
         try:
             def handle_error(error_msg):
-                print(f"[-]pipeline 发生错误: {error_msg}")
+                print("[-]pipeline 发生错误: " + error_msg)
                 self.has_error = True
                 self.error.emit(error_msg)
 
             # 1. 转录生成字幕
             self.task.status = Task.Status.TRANSCRIBING
-            self.progress.emit(0, "开始转录")
+            self.progress.emit(0, self.tr("开始转录"))
             transcript_thread = TranscriptThread(self.task)
             transcript_thread.progress.connect(lambda value, msg: self.progress.emit(int(value * 0.4), msg))
             transcript_thread.error.connect(handle_error)
@@ -45,7 +45,7 @@ class SubtitlePipelineThread(QThread):
             
             # 2. 字幕优化/翻译
             self.task.status = Task.Status.OPTIMIZING
-            self.progress.emit(40, "开始优化字幕")
+            self.progress.emit(40, self.tr("开始优化字幕"))
             optimization_thread = SubtitleOptimizationThread(self.task)
             optimization_thread.progress.connect(lambda value, msg: self.progress.emit(int(40 + value * 0.2), msg))
             optimization_thread.error.connect(handle_error)
@@ -56,8 +56,8 @@ class SubtitlePipelineThread(QThread):
 
             # 3. 视频合成
             self.task.status = Task.Status.GENERATING
-            self.progress.emit(80, "开始合成视频")
-            print(f"[+] 开始合成视频...")
+            self.progress.emit(80, self.tr("开始合成视频"))
+            print("[+] 开始合成视频...")
             synthesis_thread = VideoSynthesisThread(self.task)
             synthesis_thread.progress.connect(lambda value, msg: self.progress.emit(int(70 + value * 0.3), msg))
             synthesis_thread.error.connect(handle_error)
@@ -67,7 +67,7 @@ class SubtitlePipelineThread(QThread):
                 return
 
             self.task.status = Task.Status.COMPLETED
-            self.progress.emit(100, "处理完成")
+            self.progress.emit(100, self.tr("处理完成"))
             self.finished.emit(self.task)
             
         except Exception as e:

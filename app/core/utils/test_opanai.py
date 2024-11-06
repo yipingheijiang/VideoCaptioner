@@ -9,10 +9,11 @@ def test_openai(base_url, api_key, model):
     user_message (str): 用户输入的消息
 
     返回:
-    str: AI助手的回复
+    bool: 是否成功
+    str: 错误信息或者AI助手的回复
     """
     # 创建OpenAI客户端
-    client = openai.OpenAI(base_url=base_url, api_key=api_key)
+    client = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=15)
 
     try:
         # 发送请求到OpenAI API
@@ -21,7 +22,8 @@ def test_openai(base_url, api_key, model):
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": "Hello!"}
-            ]
+            ],
+            max_tokens=100
         )
         # 返回AI的回复
         return True, str(response.choices[0].message.content)
@@ -30,7 +32,7 @@ def test_openai(base_url, api_key, model):
     
 def get_openai_models(base_url, api_key):
     try:
-        client = openai.OpenAI(base_url=base_url, api_key=api_key)
+        client = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=10)
         models = client.models.list()
         # 根据不同模型设置权重进行排序
         def get_model_weight(model_name):

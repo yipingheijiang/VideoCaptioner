@@ -38,6 +38,14 @@ class SettingInterface(ScrollArea):
             texts=[model.value for model in cfg.transcribe_model.validator.options],
             parent=self.transcribeGroup
         )
+        self.transcribeLanguageCard = ComboBoxSettingCard(
+            cfg.transcribe_language,
+            FIF.LANGUAGE,
+            self.tr('Whisper 转录语言'),
+            self.tr('选择语音转成文字的语言(仅针对Whisper模型)'),
+            texts=[lang.value for lang in cfg.transcribe_language.validator.options],
+            parent=self.transcribeGroup
+        )
 
         # LLM 配置
         self.llmGroup = SettingCardGroup(self.tr("LLM 配置"), self.scrollWidget)
@@ -254,6 +262,7 @@ class SettingInterface(ScrollArea):
 
         # 添加卡片到组
         self.transcribeGroup.addSettingCard(self.transcribeModelCard)
+        self.transcribeGroup.addSettingCard(self.transcribeLanguageCard)
 
         self.llmGroup.addSettingCard(self.apiKeyCard)
         self.llmGroup.addSettingCard(self.apiBaseCard)
