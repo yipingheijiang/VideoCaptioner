@@ -68,7 +68,6 @@ class TranscriptThread(QThread):
             self.progress.emit(100, self.tr("转录完成"))
             self.finished.emit(self.task)
         except Exception as e:
-            raise e
             self.error.emit(str(e))
             self.progress.emit(100, self.tr("转录失败"))
 

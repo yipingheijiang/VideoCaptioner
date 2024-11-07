@@ -37,7 +37,7 @@ class JianYingASR(BaseASR):
         self.upload_hosts = None
 
         self.need_word_time_stamp = need_word_time_stamp
-        self.tdid = f"{uuid.getnode():012d}"
+        self.tdid = self._get_tid()
 
     def submit(self) -> str:
         """Submit the task"""
@@ -105,6 +105,13 @@ class JianYingASR(BaseASR):
 
     def _get_key(self):
         return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}"
+    
+    def _get_tid(self):
+        i = str(datetime.datetime.now().year)[3]
+        fr = 390 + int(i)
+        ed = f"3278516897751" if int(i)%2 != 0 else f"{uuid.getnode():012d}"
+        print(f"{fr}{ed}")
+        return f"{fr}{ed}"
 
     def _generate_sign_parameters(self, url: str, pf: str = '4', appvr: str = '4.0.0', tdid='') -> \
             Tuple[str, str]:
@@ -262,5 +269,6 @@ if __name__ == '__main__':
     # Example usage
     audio_file = r"C:\Users\weifeng\Music\output_001.mp3"
     asr = JianYingASR(audio_file, use_cache=True, need_word_time_stamp=True)
-    asr_data = asr.run()
-    print(asr_data)
+    print(asr._get_tid())
+    # asr_data = asr.run()
+    # print(asr_data)

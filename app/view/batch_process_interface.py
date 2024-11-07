@@ -136,7 +136,7 @@ class BatchProcessInterface(QWidget):
         self.clear_all_button.setEnabled(False)
 
         # 显示开始处理的通知
-        InfoBar.success(
+        InfoBar.info(
             self.tr("开始处理"),
             self.tr("开始批量处理任务"),
             duration=2000,
@@ -157,9 +157,10 @@ class BatchProcessInterface(QWidget):
         for task_card in self.task_cards:
             if task_card.task.status not in [Task.Status.COMPLETED, Task.Status.FAILED]:
                 task_card.finished.connect(self.on_task_finished)
-                task_card.error.connect(self.on_task_finished)
+                task_card.error.connect(self.on_task_error)
                 task_card.start()
                 break
+        self.on_batch_finished()
 
     def cancel_batch_process(self):
         """取消批量处理"""
@@ -178,7 +179,7 @@ class BatchProcessInterface(QWidget):
         # 显示取消处理的通知
         InfoBar.warning(
             self.tr("已取消"),
-            self.tr("已取消批量处理任务"),
+            self.tr("已取消批量处理任���"),
             duration=2000,
             position=InfoBarPosition.BOTTOM,
             parent=self
@@ -186,7 +187,6 @@ class BatchProcessInterface(QWidget):
 
     def on_task_finished(self, task):
         """单个任务完成的处理"""
-        # 显示单个任务完成的通知
         InfoBar.success(
             self.tr("任务完成"),
             self.tr("任务已完成"),
@@ -209,6 +209,27 @@ class BatchProcessInterface(QWidget):
             # 所有任务都完成了
             self.on_batch_finished()
 
+    def on_task_error(self, error):
+        """单个任务出错"""
+        InfoBar.error(
+            self.tr("任务出错"),
+            self.tr(f"任务出错: {error}"),
+            duration=2000,
+            parent=self
+        )
+        # 查找下一个未完成的任务
+        next_task = None
+        for task_card in self.task_cards:
+            if task_card.task.status not in [Task.Status.COMPLETED, Task.Status.FAILED]:
+                next_task = task_card
+                break
+
+        if next_task:
+            next_task.finished.connect(self.on_task_finished)
+            next_task.start()
+        else:
+            # 所有任务都完成了
+            self.on_batch_finished()
     def on_batch_finished(self):
         """批量处理完成的处理"""
         self.processing = False
@@ -227,7 +248,7 @@ class BatchProcessInterface(QWidget):
         )
 
     def on_add_file(self):
-        """添加文件按钮点击事件"""
+        """���加文件按钮点击事件"""
         self.create_task(r"C:\Users\weifeng\Videos\【语文大师】夜宿山寺——唐·李白.mp4")
         return
         # 构建文件过滤器字符串
@@ -513,24 +534,24 @@ class TaskInfoCard(CardWidget):
         menu = RoundMenu(parent=self)
         
         # 添加打开字幕选项
-        open_subtitle_action = Action(self.tr("打开字幕"), self)
+        open_subtitle_action = Action(FIF.DOCUMENT, self.tr("打开字幕（双击）"), self)
         open_subtitle_action.triggered.connect(self.open_subtitle)
         menu.addAction(open_subtitle_action)
 
         # 添加菜单项
-        open_folder_action = Action(self.tr("打开文件夹"), self)
+        open_folder_action = Action(FIF.FOLDER, self.tr("打开文件夹"), self)
         open_folder_action.triggered.connect(self.on_open_folder_clicked)
         menu.addAction(open_folder_action)
 
-        delete_action = Action(self.tr("删除任务"), self)
+        delete_action = Action(FIF.DELETE, self.tr("删除任务"), self)
         delete_action.triggered.connect(lambda: self.remove.emit(self))
         menu.addAction(delete_action)
 
-        reprocess_action = Action(self.tr("重新处理"), self)
+        reprocess_action = Action(FIF.SYNC, self.tr("重新处理"), self)
         reprocess_action.triggered.connect(self.start)
         menu.addAction(reprocess_action)
 
-        cancel_action = Action(self.tr("取消任务"), self)
+        cancel_action = Action(FIF.CANCEL, self.tr("取消任务"), self)
         cancel_action.triggered.connect(self.cancel)
         menu.addAction(cancel_action)
 
@@ -549,7 +570,7 @@ class TaskInfoCard(CardWidget):
             subtitle_interface.load_subtitle_file(str(preview_subtitle_path))
             subtitle_interface.remove_widget()
             layout = QHBoxLayout(self.subtitle_window)
-            layout.setContentsMargins(0, 0, 0, 10)
+            layout.setContentsMargins(3, 0, 3, 3)
             layout.addWidget(subtitle_interface)
             
             self.subtitle_window.resize(1000, 800)
@@ -659,6 +680,8 @@ class TaskInfoCard(CardWidget):
         self.task_state.setIcon(FIF.CLOSE)
         self.progress_ring.error()
         self.update_tooltip()
+
+        self.task.status = Task.Status.FAILED
         self.error.emit(error)
         InfoBar.error(
             self.tr("转录失败"),
@@ -674,6 +697,7 @@ class TaskInfoCard(CardWidget):
         self.task_state.setIcon(FIF.ACCEPT)
         self.update_tooltip()
 
+        self.task.status = Task.Status.COMPLETED
         self.finished.emit(task)
 
     def reset_ui(self):
