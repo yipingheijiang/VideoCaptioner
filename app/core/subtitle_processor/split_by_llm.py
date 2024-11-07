@@ -3,14 +3,14 @@ import json
 import os
 import re
 from typing import List, Optional
+
 import openai
 import retry
 
-from .subtitle_config import SPLIT_SYSTEM_PROMPT
 from app.config import CACHE_PATH
+from .subtitle_config import SPLIT_SYSTEM_PROMPT
 
-MAX_WORD_COUNT = 16  # 英文单词或中文字符的最大数量
-
+MAX_WORD_COUNT = 20  # 英文单词或中文字符的最大数量
 
 
 def count_words(text: str) -> int:
@@ -22,11 +22,13 @@ def count_words(text: str) -> int:
     english_words = len(english_text.strip().split())
     return english_words + chinese_chars
 
+
 def get_cache_key(text: str, model: str) -> str:
     """
     生成缓存键值
     """
     return hashlib.md5(f"{text}_{model}".encode()).hexdigest()
+
 
 def get_cache(text: str, model: str) -> Optional[List[str]]:
     """
@@ -42,6 +44,7 @@ def get_cache(text: str, model: str) -> Optional[List[str]]:
             return None
     return None
 
+
 def set_cache(text: str, model: str, result: List[str]) -> None:
     """
     将断句结果设置到缓存中
@@ -55,6 +58,7 @@ def set_cache(text: str, model: str, result: List[str]) -> None:
     except IOError:
         pass
 
+
 def split_by_llm(*args, **kwargs) -> List[str]:
     """
     包装 split_by_llm_retry 函数，确保在重试全部失败后返回空列表
@@ -64,6 +68,7 @@ def split_by_llm(*args, **kwargs) -> List[str]:
     except Exception as e:
         print(f"[!] 断句失败: {str(e)}")
         return []
+
 
 # 设置次数
 @retry.retry(tries=3)
@@ -98,6 +103,7 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
         raise Exception("断句失败")
     set_cache(text, model, split_result)
     return split_result
+
 
 if __name__ == "__main__":
     sample_text = (

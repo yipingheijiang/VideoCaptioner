@@ -2,24 +2,23 @@ import datetime
 import hashlib
 import hmac
 import json
-# import logging
 import os
-import re
-import subprocess
 import time
 import uuid
-from typing import Dict, Tuple, Literal, Union
+from typing import Dict, Tuple, Union
 
-# import ffmpeg
 import requests
 
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
+
+
 # from ASRData import ASRDataSeg
 # from BaseASR import BaseASR
 
 class JianYingASR(BaseASR):
-    def __init__(self, audio_path: Union[str, bytes], use_cache: bool = False, need_word_time_stamp: bool = False, start_time: float = 0, end_time: float = 6000):
+    def __init__(self, audio_path: Union[str, bytes], use_cache: bool = False, need_word_time_stamp: bool = False,
+                 start_time: float = 0, end_time: float = 6000):
         super().__init__(audio_path, use_cache)
         self.audio_path = audio_path
         self.end_time = end_time
@@ -85,7 +84,7 @@ class JianYingASR(BaseASR):
     def _run(self, callback=None):
         # logging.info("正在上传文件...")
         if callback:
-            callback(20, "正在上传...")  
+            callback(20, "正在上传...")
         self.upload()
         if callback:
             callback(50, "提交任务...")
@@ -99,15 +98,16 @@ class JianYingASR(BaseASR):
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
         if self.need_word_time_stamp:
-            return [ASRDataSeg(w['text'].strip(), w['start_time'], w['end_time']) for u in resp_data['data']['utterances'] for w in u['words']]
+            return [ASRDataSeg(w['text'].strip(), w['start_time'], w['end_time']) for u in
+                    resp_data['data']['utterances'] for w in u['words']]
         else:
             return [ASRDataSeg(u['text'], u['start_time'], u['end_time']) for u in resp_data['data']['utterances']]
 
-    def _get_key(self):        
+    def _get_key(self):
         return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}"
-    
+
     def _generate_sign_parameters(self, url: str, pf: str = '4', appvr: str = '4.0.0', tdid='') -> \
-    Tuple[str, str]:
+            Tuple[str, str]:
         """Generate signature and timestamp via an HTTP request"""
         current_time = str(int(time.time()))
         data = {
@@ -256,8 +256,6 @@ def aws_signature(secret_key: str, request_parameters: str, headers: Dict[str, s
     signing_key = get_signature_key(secret_key, datestamp, region, service)
     signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
     return signature
-
-
 
 
 if __name__ == '__main__':

@@ -1,16 +1,14 @@
-# coding:utf-8
-from asyncio import Task
-import sys
-
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QStackedWidget, QVBoxLayout, QLabel, QSizePolicy
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QSizePolicy
 from qfluentwidgets import SegmentedWidget
 
+from ..core.entities import Task
+from .subtitle_optimization_interface import SubtitleOptimizationInterface
 from .task_creation_interface import TaskCreationInterface
 from .transcription_interface import TranscriptionInterface
-from .subtitle_optimization_interface import SubtitleOptimizationInterface
 from .video_synthesis_interface import VideoSynthesisInterface
-from ..core.entities import Task
+
+
 
 class HomeInterface(QWidget):
     finished = pyqtSignal(Task)
@@ -37,7 +35,8 @@ class HomeInterface(QWidget):
         # 添加子界面
         self.addSubInterface(self.task_creation_interface, 'TaskCreationInterface', self.tr('任务创建'))
         self.addSubInterface(self.transcription_interface, 'TranscriptionInterface', self.tr('语音转录'))
-        self.addSubInterface(self.subtitle_optimization_interface, 'SubtitleOptimizationInterface', self.tr('字幕优化与翻译'))
+        self.addSubInterface(self.subtitle_optimization_interface, 'SubtitleOptimizationInterface',
+                             self.tr('字幕优化与翻译'))
         self.addSubInterface(self.video_synthesis_interface, 'VideoSynthesisInterface', self.tr('字幕视频合成'))
 
         self.vBoxLayout.addWidget(self.pivot)
@@ -51,13 +50,13 @@ class HomeInterface(QWidget):
         self.task_creation_interface.finished.connect(self.switch_to_transcription)
         self.transcription_interface.finished.connect(self.switch_to_subtitle_optimization)
         self.subtitle_optimization_interface.finished.connect(self.switch_to_video_synthesis)
-    
+
     def switch_to_transcription(self, task):
         # 切换到转录界面
         self.transcription_interface.set_task(task)
         self.stackedWidget.setCurrentWidget(self.transcription_interface)
         self.pivot.setCurrentItem('TranscriptionInterface')
-    
+
     def switch_to_subtitle_optimization(self, task):
         # 切换到字幕优化界面
         self.subtitle_optimization_interface.set_task(task)
@@ -84,7 +83,7 @@ class HomeInterface(QWidget):
         widget = self.stackedWidget.widget(index)
         if widget:
             self.pivot.setCurrentItem(widget.objectName())
-    
+
     def closeEvent(self, event):
         self.task_creation_interface.close()
         self.transcription_interface.close()

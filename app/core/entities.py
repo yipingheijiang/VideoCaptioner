@@ -1,12 +1,10 @@
-
-import uuid
 from dataclasses import dataclass, field
-from typing import List, Optional, Set
 import datetime
-from random import randint
+from dataclasses import dataclass, field
 from enum import Enum
+from random import randint
+from typing import Optional
 
-from .bk_asr.ASRData import ASRData
 
 class SupportedAudioFormats(Enum):
     """ 支持的音频格式 """
@@ -16,7 +14,7 @@ class SupportedAudioFormats(Enum):
     AMR = "amr"
     APE = "ape"
     AU = "au"
-    FLAC = "flac" 
+    FLAC = "flac"
     M4A = "m4a"
     MP2 = "mp2"
     MP3 = "mp3"
@@ -27,6 +25,7 @@ class SupportedAudioFormats(Enum):
     RA = "ra"
     WAV = "wav"
     WMA = "wma"
+
 
 class SupportedVideoFormats(Enum):
     """ 支持的视频格式 """
@@ -54,11 +53,13 @@ class SupportedVideoFormats(Enum):
     MXF = "mxf"
     F4V = "f4v"
 
+
 class SupportedSubtitleFormats(Enum):
     """ 支持的字幕格式 """
     SRT = "srt"
     ASS = "ass"
     VTT = "vtt"
+
 
 class OutputSubtitleFormatEnum(Enum):
     """ 字幕输出格式 """
@@ -80,11 +81,11 @@ class TranscribeModelEnum(Enum):
 class TargetLanguageEnum(Enum):
     """ 目标语言 """
     CHINESE_SIMPLIFIED = "简体中文"
-    CHINESE_TRADITIONAL = "繁体中文" 
+    CHINESE_TRADITIONAL = "繁体中文"
     ENGLISH = "English"
     JAPANESE = "日本語"
     KOREAN = "Korean"
-    FRENCH = "French" 
+    FRENCH = "French"
     GERMAN = "German"
     SPANISH = "Spanish"
     ITALIAN = "Italian"
@@ -92,9 +93,10 @@ class TargetLanguageEnum(Enum):
     RUSSIAN = "Russian"
     TURKISH = "Turkish"
 
+
 class TranscribeLanguageEnum(Enum):
     """ 转录语言 """
-    ENGLISH = "English" 
+    ENGLISH = "English"
     CHINESE = "Chinese"
     JAPANESE = "Japanese"
     KOREAN = "Korean"
@@ -102,9 +104,10 @@ class TranscribeLanguageEnum(Enum):
     FRENCH = "French"
     GERMAN = "German"
 
+
 LANGUAGES = {
     "English": "en",
-    "Chinese": "zh", 
+    "Chinese": "zh",
     "Japanese": "ja",
     "Korean": "ko",
     "Spanish": "es",
@@ -112,10 +115,8 @@ LANGUAGES = {
     "German": "de",
 }
 
-
 SUPPORTED_AUDIO_FORMATS = "Audio files (*.mp3 *.wav *.m4a *.ogg *.opus *.flac);;\
 Video files (*.mp4 *.webm *.ogm *.mov *.mkv *.avi *.wmv);;All files (*.*)"
-
 
 
 @dataclass
@@ -150,7 +151,7 @@ class Task:
     class Source(Enum):
         FILE_IMPORT = "文件导入"
         URL_IMPORT = "URL导入"
-    
+
     # 任务信息
     id: int = field(default_factory=lambda: randint(0, 100_000_000))
     queued_at: Optional[datetime.datetime] = None
@@ -193,5 +194,5 @@ class Task:
     # 视频生成
     video_save_path: Optional[str] = None
     soft_subtitle: bool = True
-    subtitle_style_srt: Optional[str] = None  
+    subtitle_style_srt: Optional[str] = None
     # TODO: 添加ass样式

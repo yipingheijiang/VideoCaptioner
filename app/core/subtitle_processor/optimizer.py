@@ -26,7 +26,8 @@ DEFAULT_MODEL = "gpt-4o-mini"
 class SubtitleOptimizer:
     """A class for optimize and translating subtitles using OpenAI's API."""
 
-    def __init__(self, model: str = DEFAULT_MODEL, summary_content="", thread_num=MAX_THREADS, batch_num=BATCH_SIZE, target_language="Chinese") -> None:
+    def __init__(self, model: str = DEFAULT_MODEL, summary_content="", thread_num=MAX_THREADS, batch_num=BATCH_SIZE,
+                 target_language="Chinese") -> None:
         base_url = os.getenv('OPENAI_BASE_URL')
         api_key = os.getenv('OPENAI_API_KEY')
         assert base_url and api_key, "环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置"
@@ -42,7 +43,7 @@ class SubtitleOptimizer:
         self.executor = ThreadPoolExecutor(max_workers=thread_num)  # 创建类级别的线程池
 
     def stop(self):
-        self.executor.shutdown(wait=False)  
+        self.executor.shutdown(wait=False)
 
     @retry.retry(tries=2)
     def optimize(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
@@ -55,14 +56,14 @@ class SubtitleOptimizer:
             model=self.model,
             stream=False,
             messages=message)
-        
+
         optimized_text = json_repair.loads(response.choices[0].message.content)
 
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
 
         return aligned_subtitle
 
-    def optimizer_multi_thread(self, subtitle_json: Dict[int, str], 
+    def optimizer_multi_thread(self, subtitle_json: Dict[int, str],
                                translate=False,
                                reflect=False,
                                callback=None):
@@ -97,7 +98,7 @@ class SubtitleOptimizer:
             return self._reflect_translate(original_subtitle)
         else:
             return self._normal_translate(original_subtitle)
-    
+
     def _reflect_translate(self, original_subtitle: Dict[int, str]):
         logger.info(f"[+]正在反思翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
         message = self._create_translate_message(original_subtitle)
@@ -115,12 +116,12 @@ class SubtitleOptimizer:
 
         return translated_subtitle
 
-
     def _normal_translate(self, original_subtitle: Dict[int, str]):
         logger.info(f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
         prompt = TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
         message = [{"role": "system", "content": prompt},
-                   {"role": "user", "content": f"Please translate the input into {self.target_language}:\n<input>{str(original_subtitle)}</input>"}]
+                   {"role": "user",
+                    "content": f"Please translate the input into {self.target_language}:\n<input>{str(original_subtitle)}</input>"}]
         response = self.client.chat.completions.create(
             model=self.model,
             stream=False,
@@ -128,7 +129,8 @@ class SubtitleOptimizer:
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
         assert isinstance(response_content, dict) and len(response_content) == len(original_subtitle), "翻译结果错误"
-        print(f"{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}", len(response_content), len(original_subtitle))
+        print(f"{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}", len(response_content),
+              len(original_subtitle))
         translated_subtitle = {}
         original_list = list(original_subtitle.values())
         translated_list = list(response_content.values())
@@ -174,8 +176,9 @@ class SubtitleOptimizer:
         translate_result = {}
         for key, value in original_subtitle.items():
             try:
-                message = [{"role": "system", "content": SINGLE_TRANSLATE_PROMPT.replace("[target_language]", self.target_language)},
-                            {"role": "user", "content": value}]
+                message = [{"role": "system",
+                            "content": SINGLE_TRANSLATE_PROMPT.replace("[target_language]", self.target_language)},
+                           {"role": "user", "content": value}]
                 response = self.client.chat.completions.create(
                     model=self.model,
                     stream=False,
@@ -187,6 +190,7 @@ class SubtitleOptimizer:
                 logger.error(f"单条翻译失败: {e}")
                 translate_result[key] = f"{value}\n "
         return translate_result
+
 
 def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     list1 = list(dict1.values())

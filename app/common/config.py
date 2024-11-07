@@ -1,14 +1,13 @@
 # coding:utf-8
-import sys
 from enum import Enum
 
 from PyQt5.QtCore import QLocale
 from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
                             OptionsValidator, RangeConfigItem, RangeValidator,
-                            FolderListValidator, Theme, FolderValidator, ConfigSerializer, EnumSerializer)
+                            Theme, FolderValidator, ConfigSerializer, EnumSerializer)
 
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, TranscribeLanguageEnum, OutputSubtitleFormatEnum
 from app.config import WORK_PATH, SETTINGS_PATH
+from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, TranscribeLanguageEnum
 
 
 class Language(Enum):
@@ -17,6 +16,7 @@ class Language(Enum):
     CHINESE_TRADITIONAL = QLocale(QLocale.Chinese, QLocale.HongKong)
     ENGLISH = QLocale(QLocale.English)
     AUTO = QLocale()
+
 
 class SubtitleLayoutEnum(Enum):
     """ 字幕布局 ["译文在上", "原文在上", "仅原文", "仅译文"]"""
@@ -50,14 +50,15 @@ class Config(QConfig):
                                          OptionsValidator(TranscribeModelEnum), EnumSerializer(TranscribeModelEnum))
     use_asr_cache = ConfigItem("Transcribe", "UseASRCache", True, BoolValidator())
     transcribe_language = OptionsConfigItem("Transcribe", "TranscribeLanguage", TranscribeLanguageEnum.ENGLISH.value,
-                                            OptionsValidator(TranscribeLanguageEnum), EnumSerializer(TranscribeLanguageEnum))
+                                            OptionsValidator(TranscribeLanguageEnum),
+                                            EnumSerializer(TranscribeLanguageEnum))
     # 字幕配置
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
     target_language = OptionsConfigItem("Subtitle", "TargetLanguage", TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
                                         OptionsValidator(TargetLanguageEnum), EnumSerializer(TargetLanguageEnum))
     soft_subtitle = ConfigItem("Subtitle", "SoftSubtitle", False, BoolValidator())
-    
+
     # 字幕样式配置
     subtitle_style_name = ConfigItem("SubtitleStyle", "StyleName", "default")
     subtitle_layout = ConfigItem("SubtitleStyle", "Layout", "仅译文")
@@ -68,11 +69,14 @@ class Config(QConfig):
 
     # main window
     micaEnabled = ConfigItem("MainWindow", "MicaEnabled", False, BoolValidator())
-    dpiScale = OptionsConfigItem("MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]), restart=True)
-    language = OptionsConfigItem("MainWindow", "Language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart=True)
+    dpiScale = OptionsConfigItem("MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]),
+                                 restart=True)
+    language = OptionsConfigItem("MainWindow", "Language", Language.AUTO, OptionsValidator(Language),
+                                 LanguageSerializer(), restart=True)
 
     # software update
     checkUpdateAtStartUp = ConfigItem("Update", "CheckUpdateAtStartUp", True, BoolValidator())
+
 
 cfg = Config()
 cfg.themeMode.value = Theme.DARK

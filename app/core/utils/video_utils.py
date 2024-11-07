@@ -4,13 +4,13 @@ import subprocess
 from typing import Literal
 
 
-def video2audio(input_file: str, output:str="") -> bool:
+def video2audio(input_file: str, output: str = "") -> bool:
     """使用ffmpeg将视频转换为音频"""
     # 创建output目录
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output = str(output)
-    
+
     cmd = [
         'ffmpeg',
         '-i', input_file,
@@ -27,6 +27,7 @@ def video2audio(input_file: str, output:str="") -> bool:
     else:
         return False
 
+
 def check_cuda_available() -> bool:
     """检查CUDA是否可用"""
     try:
@@ -34,7 +35,7 @@ def check_cuda_available() -> bool:
         result = subprocess.run(['ffmpeg', '-hwaccels'], capture_output=True, text=True)
         if 'cuda' not in result.stdout.lower():
             return False
-            
+
         # 检查系统是否有NVIDIA GPU
         nvidia_smi = subprocess.run(['nvidia-smi'], capture_output=True)
         return nvidia_smi.returncode == 0
@@ -43,13 +44,14 @@ def check_cuda_available() -> bool:
 
 
 def add_subtitles(
-    input_file: str,
-    subtitle_file: str,
-    output: str,
-    quality: Literal['ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'] = 'ultrafast',
-    vcodec: str = 'libx264',
-    soft_subtitle: bool = False,
-    progress_callback: callable = None
+        input_file: str,
+        subtitle_file: str,
+        output: str,
+        quality: Literal[
+            'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'] = 'ultrafast',
+        vcodec: str = 'libx264',
+        soft_subtitle: bool = False,
+        progress_callback: callable = None
 ) -> None:
     assert Path(input_file).is_file(), "输入文件不存在"
     assert Path(subtitle_file).is_file(), "字幕文件不存在"
@@ -65,7 +67,7 @@ def add_subtitles(
             '-i', input_file,
             '-i', subtitle_file,
             '-c:v', 'copy',
-            '-c:a', 'copy', 
+            '-c:a', 'copy',
             '-c:s', 'mov_text',
             output,
             '-y'
@@ -83,9 +85,9 @@ def add_subtitles(
         #     font = Path(font).as_posix().replace(':', r'\:')
         #     force_style = f"FontName={font},FontSize={font_size},PrimaryColour={font_color_ass},Outline=1,Shadow=0,BackColour=&H009C9C9C&,Bold=-1,Alignment=2"
         #     vf = f"subtitles={subtitle_file}:force_style='{force_style}'"
-        if  Path(output).suffix.lower() == '.webm':
+        if Path(output).suffix.lower() == '.webm':
             vcodec = 'libvpx-vp9'
-            
+
         # 检查CUDA是否可用
         use_cuda = check_cuda_available()
         cmd = ['ffmpeg']
@@ -99,13 +101,14 @@ def add_subtitles(
             '-y',  # 覆盖输出文件
             output
         ])
-        
+
         cmd_str = subprocess.list2cmdline(cmd)
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace')
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8',
+                                   errors='replace')
         # 实时读取输出并调用回调函数
         total_duration = None
         current_time = 0
-        
+
         while True:
             output_line = process.stderr.readline()
             if not output_line or (process.poll() is not None):
@@ -118,13 +121,13 @@ def add_subtitles(
                 if duration_match:
                     h, m, s = map(float, duration_match.groups())
                     total_duration = h * 3600 + m * 60 + s
-            
+
             # 解析当前处理时间
             time_match = re.search(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
             if time_match:
                 h, m, s = map(float, time_match.groups())
                 current_time = h * 3600 + m * 60 + s
-            
+
             # 计算进度百分比
             if total_duration:
                 progress = (current_time / total_duration) * 100
@@ -136,6 +139,7 @@ def add_subtitles(
         return_code = process.wait()
         if return_code != 0:
             raise Exception(return_code)
+
 
 def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
     try:
@@ -160,13 +164,14 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
         if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):
             hours, minutes, seconds = map(float, duration_match.groups())
             video_info['duration_seconds'] = hours * 3600 + minutes * 60 + seconds
-        
+
         # 提取比特率
         if bitrate_match := re.search(r'bitrate: (\d+) kb/s', info):
             video_info['bitrate_kbps'] = int(bitrate_match.group(1))
-        
+
         # 提取视频流信息
-        if video_stream_match := re.search(r'Stream #\d+:\d+.*Video: (\w+).*?, (\d+)x(\d+).*?, ([\d.]+) (?:fps|tb)', info, re.DOTALL):
+        if video_stream_match := re.search(r'Stream #\d+:\d+.*Video: (\w+).*?, (\d+)x(\d+).*?, ([\d.]+) (?:fps|tb)',
+                                           info, re.DOTALL):
             video_info.update({
                 'video_codec': video_stream_match.group(1),
                 'width': int(video_stream_match.group(2)),
@@ -178,18 +183,19 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
                     video_info['thumbnail_path'] = thumbnail_path
         else:
             video_info['thumbnail_path'] = thumbnail_path
-        
+
         # 提取音频流信息
         if audio_stream_match := re.search(r'Stream #\d+:\d+.*Audio: (\w+).* (\d+) Hz', info):
             video_info.update({
                 'audio_codec': audio_stream_match.group(1),
                 'audio_sampling_rate': int(audio_stream_match.group(2))
             })
-    
+
         return video_info
     except Exception as e:
         print(f"获取视频信息时出错: {str(e)}")
         return {k: '' if isinstance(v, str) else 0 for k, v in video_info.items()}
+
 
 def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) -> bool:
     """
@@ -203,12 +209,12 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
     if not Path(video_path).is_file():
         print(f"视频文件不存在: {video_path}")
         return False
-    
+
     try:
-        timestamp = f"{int(seek_time//3600):02}:{int((seek_time%3600)//60):02}:{seek_time%60:06.3f}"
-         # 确保输出目录存在
+        timestamp = f"{int(seek_time // 3600):02}:{int((seek_time % 3600) // 60):02}:{seek_time % 60:06.3f}"
+        # 确保输出目录存在
         Path(thumbnail_path).parent.mkdir(parents=True, exist_ok=True)
-        
+
         # 转换路径为合适的格式
         video_path = Path(video_path).as_posix()
         thumbnail_path = Path(thumbnail_path).as_posix()
@@ -216,14 +222,15 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
         cmd = [
             "ffmpeg",
             "-ss", timestamp,
-            "-i", 
+            "-i",
             video_path,
             "-vframes", "1",
             "-q:v", "2",
             "-y",
             thumbnail_path
         ]
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30, encoding='utf-8', errors='replace')
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30, encoding='utf-8',
+                                errors='replace')
         return result.returncode == 0
 
     except Exception as e:
@@ -237,7 +244,8 @@ if __name__ == "__main__":
     video_path = r"C:\Users\weifeng\Videos\【卡卡】佛山周末穷游好去处!.mp4"
     # video2audio(video_path, r"E:\\GithubProject\\VideoCaptioner\\app\\work_dir\\【卡卡】【语文大师】夜宿山寺——唐·李白\\audio.mp3")
 
-    extract_thumbnail(video_path, 2, "e:/GithubProject/VideoCaptioner/AppData/work-dir/【卡卡】佛山周末穷游好去处!/thumbnail.jpg")
+    extract_thumbnail(video_path, 2,
+                      "e:/GithubProject/VideoCaptioner/AppData/work-dir/【卡卡】佛山周末穷游好去处!/thumbnail.jpg")
 
     # video_path = r"C:\Users\weifeng\Videos\xhs\08.mp4"
     # # info = get_video_info(video_path, need_thumbnail=True)

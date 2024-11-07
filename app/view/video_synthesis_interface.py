@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import os
-from pathlib import Path
 import sys
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QApplication, 
-                             QFileDialog, QProgressBar, QStatusBar)
-from PyQt5.QtGui import QFont, QDragEnterEvent, QDropEvent
-from qfluentwidgets import (ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, 
-                            CardWidget, PrimaryPushButton, LineEdit, BodyLabel,
+from pathlib import Path
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QDropEvent
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QApplication,
+                             QFileDialog)
+from qfluentwidgets import (CardWidget, LineEdit, BodyLabel,
                             InfoBar, InfoBarPosition, ProgressBar, PushButton)
 
 from app.core.thread.create_task_thread import CreateTaskThread
 from app.core.thread.video_synthesis_thread import VideoSynthesisThread
-from ..core.entities import Task
-from ..common.config import cfg, SubtitleLayoutEnum
-from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
 from ..core.entities import SupportedVideoFormats, SupportedSubtitleFormats
+from ..core.entities import Task
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
@@ -49,7 +47,7 @@ class VideoSynthesisInterface(QWidget):
         self.subtitle_input = LineEdit(self)
         self.subtitle_input.setPlaceholderText(self.tr("选择或者拖拽字幕文件"))
         self.subtitle_input.setAcceptDrops(True)  # 启用拖放
-        self.subtitle_button = PushButton(self.tr("浏览"), self)
+        self.subtitle_button = PushButton(self.tr("浏览"))
         self.subtitle_layout.addWidget(self.subtitle_label)
         self.subtitle_layout.addWidget(self.subtitle_input)
         self.subtitle_layout.addWidget(self.subtitle_button)
@@ -62,7 +60,7 @@ class VideoSynthesisInterface(QWidget):
         self.video_input = LineEdit(self)
         self.video_input.setPlaceholderText(self.tr("选择或者拖拽视频文件"))
         self.video_input.setAcceptDrops(True)  # 启用拖放
-        self.video_button = PushButton(self.tr("浏览"), self)
+        self.video_button = PushButton(self.tr("浏览"))
         self.video_layout.addWidget(self.video_label)
         self.video_layout.addWidget(self.video_input)
         self.video_layout.addWidget(self.video_button)
@@ -90,12 +88,11 @@ class VideoSynthesisInterface(QWidget):
         self.bottom_layout.addWidget(self.status_label)  # 状态标签使用固定宽度
         self.main_layout.addLayout(self.bottom_layout)
 
-
     def setup_signals(self):
         # 文件选择相关信号
         self.subtitle_button.clicked.connect(self.choose_subtitle_file)
         self.video_button.clicked.connect(self.choose_video_file)
-        
+
         # 合成和文件夹相关信号
         self.synthesize_button.clicked.connect(self.process)
         self.open_folder_button.clicked.connect(self.open_video_folder)
@@ -108,7 +105,7 @@ class VideoSynthesisInterface(QWidget):
         # 构建文件过滤器
         subtitle_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedSubtitleFormats)
         filter_str = f"{self.tr('字幕文件')} ({subtitle_formats})"
-        
+
         file_path, _ = QFileDialog.getOpenFileName(self, self.tr("选择字幕文件"), "", filter_str)
         if file_path:
             self.subtitle_input.setText(file_path)
@@ -117,7 +114,7 @@ class VideoSynthesisInterface(QWidget):
         # 构建文件过滤器
         video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
         filter_str = f"{self.tr('视频文件')} ({video_formats})"
-        
+
         file_path, _ = QFileDialog.getOpenFileName(self, self.tr("选择视频文件"), "", filter_str)
         if file_path:
             self.video_input.setText(file_path)
@@ -134,7 +131,7 @@ class VideoSynthesisInterface(QWidget):
                 parent=self
             )
             return None
-        
+
         self.task = CreateTaskThread.create_video_synthesis_task(subtitle_file, video_file)
         return self.task
 
@@ -155,7 +152,7 @@ class VideoSynthesisInterface(QWidget):
         if self.task.file_path != self.video_input.text() or self.task.result_subtitle_save_path != self.subtitle_input.text():
             self.task = None
             self.create_task()
-        
+
         if self.task:
             self.video_synthesis_thread = VideoSynthesisThread(self.task)
             self.video_synthesis_thread.finished.connect(self.on_video_synthesis_finished)
@@ -180,7 +177,7 @@ class VideoSynthesisInterface(QWidget):
             position=InfoBarPosition.TOP,
             parent=self
         )
-    
+
     def on_video_synthesis_progress(self, progress, message):
         self.progress_bar.setValue(progress)
         self.status_label.setText(message)
@@ -210,7 +207,7 @@ class VideoSynthesisInterface(QWidget):
                 position=InfoBarPosition.TOP,
                 parent=self
             )
-        
+
     def dragEnterEvent(self, event):
         """拖拽进入事件处理"""
         event.accept() if event.mimeData().hasUrls() else event.ignore()
@@ -221,9 +218,9 @@ class VideoSynthesisInterface(QWidget):
         for file_path in files:
             if not os.path.isfile(file_path):
                 continue
-                
+
             file_ext = os.path.splitext(file_path)[1][1:].lower()
-            
+
             # 检查文件格式是否支持
             if file_ext in {fmt.value for fmt in SupportedSubtitleFormats}:
                 self.subtitle_input.setText(file_path)
@@ -238,7 +235,7 @@ class VideoSynthesisInterface(QWidget):
                 self.video_input.setText(file_path)
                 InfoBar.success(
                     self.tr("导入成功"),
-                    self.tr("视频文件已输入框"), 
+                    self.tr("视频文件已输入框"),
                     duration=1500,
                     parent=self
                 )
@@ -250,6 +247,7 @@ class VideoSynthesisInterface(QWidget):
                     duration=1500,
                     parent=self
                 )
+
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

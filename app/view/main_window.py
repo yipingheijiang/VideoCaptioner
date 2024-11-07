@@ -1,25 +1,19 @@
-# coding: utf-8
 from PyQt5.QtCore import QUrl, QSize, QThread
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QApplication
-
+from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
                             SplashScreen)
-from qfluentwidgets import FluentIcon as FIF
 
-from app.view.subtitle_style_interface import SubtitleStyleInterface
-
-# from .gallery_interface import GalleryInterface
+from ..config import HELP_URL
+from ..common.config import cfg
+from ..core.thread.version_manager_thread import VersionManager
+from .subtitle_style_interface import SubtitleStyleInterface
+from .batch_process_interface import BatchProcessInterface
 from .home_interface import HomeInterface
 from .setting_interface import SettingInterface
-from .batch_process_interface import BatchProcessInterface
-# from .text_interface import TextInterface
-# from .view_interface import ViewInterface
-from ..common.config import cfg
-from ..common.icon import Icon
-from ..common.translator import Translator
-from app.config import HELP_URL
-from app.core.thread.version_manager_thread import VersionManager
+
+
 
 class MainWindow(FluentWindow):
 
@@ -50,12 +44,10 @@ class MainWindow(FluentWindow):
     def initNavigation(self):
         """初始化导航栏"""
         # 添加导航项
-        t = Translator()
-        
         self.addSubInterface(self.homeInterface, FIF.HOME, self.tr('主页'))
         self.addSubInterface(self.batchProcessInterface, FIF.VIDEO, self.tr('批量处理'))
         self.addSubInterface(self.subtitleStyleInterface, FIF.FONT, self.tr('字幕样式'))
-        
+
         self.navigationInterface.addSeparator()
         pos = NavigationItemPosition.SCROLL
 
@@ -73,7 +65,7 @@ class MainWindow(FluentWindow):
 
     def initWindow(self):
         """初始化窗口"""
-        self.resize(1000, 800)
+        self.resize(1050, 800)
         self.setMinimumWidth(700)
         self.setWindowIcon(QIcon(':/gallery/images/logo.png'))
         self.setWindowTitle('VideoCaptioner')
@@ -88,7 +80,7 @@ class MainWindow(FluentWindow):
         desktop = QApplication.desktop().availableGeometry()
         # 设置窗口位置, 居中
         w, h = desktop.width(), desktop.height()
-        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
+        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
 
         self.show()
         QApplication.processEvents()

@@ -1,12 +1,8 @@
-import datetime
-import os
-from pathlib import Path
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from app.core.utils import optimize_subtitles
-
-from ..entities import Task, TranscribeModelEnum
+from ..entities import Task
 from ..utils.video_utils import add_subtitles
+
 
 class VideoSynthesisThread(QThread):
     finished = pyqtSignal(Task)
@@ -24,13 +20,14 @@ class VideoSynthesisThread(QThread):
             video_save_path = self.task.video_save_path
             soft_subtitle = self.task.soft_subtitle
             self.progress.emit(5, self.tr("正在合成"))
-            add_subtitles(video_file, result_subtitle_save_path, video_save_path, soft_subtitle=soft_subtitle, progress_callback=self.progress_callback)
+            add_subtitles(video_file, result_subtitle_save_path, video_save_path, soft_subtitle=soft_subtitle,
+                          progress_callback=self.progress_callback)
             self.progress.emit(100, self.tr("合成完成"))
             self.finished.emit(self.task)
         except Exception as e:
             self.error.emit(str(e))
             self.progress.emit(100, self.tr("视频合成失败"))
-    
+
     def progress_callback(self, value, message):
-        progress = int(5 + int(value)/100 * 95)
+        progress = int(5 + int(value) / 100 * 95)
         self.progress.emit(progress, str(progress) + "% " + message)

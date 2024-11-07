@@ -1,17 +1,16 @@
 import os
-from pathlib import Path
 import re
 import shutil
 import subprocess
-
-from openai import OpenAI
+from pathlib import Path
 
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
-from .ASRData import from_srt
+
 
 class WhisperASR(BaseASR):
-    def __init__(self, audio_path, model_path = None, language = "en", whisper_cpp_path = "whisper-cpp", use_cache: bool = False, need_word_time_stamp: bool = False):
+    def __init__(self, audio_path, model_path=None, language="en", whisper_cpp_path="whisper-cpp",
+                 use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache)
         if model_path is None:
             model_path = r"E:\GithubProject\VideoCaptioner\app\resource\models\ggml-medium.bin"
@@ -39,22 +38,22 @@ class WhisperASR(BaseASR):
         else:
             raise FileNotFoundError(f"音频文件不存在: {self.audio_path}")
         output_path = temp_dir / f"{audio_path.stem}.srt"
-            
+
         cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt"]
         try:
             callback(5, "Whisper 转换")
             process = subprocess.Popen(
-                cmd, 
-                stdout=subprocess.PIPE, 
+                cmd,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
                 encoding='utf-8',
                 bufsize=1,
                 universal_newlines=True
             )
-            
+
             total_duration = self.get_audio_duration(str(temp_audio))
-            
+
             while True:
                 try:
                     line = process.stdout.readline()
@@ -69,22 +68,22 @@ class WhisperASR(BaseASR):
                     time_str = line.split('[')[1].split(' -->')[0].strip()
                     hours, minutes, seconds = map(float, time_str.split(':'))
                     current_time = hours * 3600 + minutes * 60 + seconds
-                    
+
                     if callback:
                         progress = int(min(current_time / total_duration * 100, 98))
                         callback(progress, f"{progress}% 正在转换")
-                        
+
             callback(100, "转换完成")
-                
+
             if process.wait() != 0:
                 raise RuntimeError(f"生成 SRT 文件失败: {process.stderr.read()}")
-                
+
         except Exception as e:
             print(f"生成 SRT 文件失败: {str(e)}")
             raise RuntimeError(f"生成 SRT 文件失败: {str(e)}")
-        
+
         return output_path.read_text(encoding='utf-8')
-    
+
     def detect_language(self, model_path: Path, whisper_cpp_path: Path) -> str:
         cmd = [str(whisper_cpp_path), "-m", str(model_path), str(self.audio_path), "-dl"]
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -107,7 +106,8 @@ class WhisperASR(BaseASR):
         except Exception as e:
             print(f"获取音频时长时出错: {str(e)}")
             return 600
-            
+
+
 if __name__ == '__main__':
     # Example usage
     audio_file = r"E:\GithubProject\VideoCaptioner\AppData\work-dir\Speak_16x9_UHD_2997_pr422\audio.mp3"
@@ -124,4 +124,3 @@ if __name__ == '__main__':
     )
     asr_data = asr._run(callback=print)
     # print(asr_data.to_srt())
-

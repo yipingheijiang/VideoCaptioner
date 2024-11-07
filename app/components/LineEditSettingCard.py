@@ -1,9 +1,6 @@
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QHBoxLayout, QSizePolicy
-from PyQt5.QtGui import QIcon
 from qfluentwidgets import SettingCard, LineEdit
 from qfluentwidgets.common.config import ConfigItem, qconfig
-from typing import Union
 
 
 class LineEditSettingCard(SettingCard):
@@ -11,14 +8,15 @@ class LineEditSettingCard(SettingCard):
 
     textChanged = pyqtSignal(str)
 
-    def __init__(self, configItem: ConfigItem, icon, title: str, content: str = None, placeholder: str = "", parent=None):
+    def __init__(self, configItem: ConfigItem, icon, title: str, content: str = None, placeholder: str = "",
+                 parent=None):
         super().__init__(icon, title, content, parent)
-        
+
         self.configItem = configItem
-        
+
         self.lineEdit = LineEdit(self)
         self.lineEdit.setPlaceholderText(placeholder)
-        
+
         self.hBoxLayout.addWidget(self.lineEdit, 1, Qt.AlignRight)
         self.hBoxLayout.addSpacing(16)
 

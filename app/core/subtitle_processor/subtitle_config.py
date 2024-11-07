@@ -23,13 +23,12 @@ OPENAI_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4/'
 OPENAI_API_KEY = '2c5ea04d3b3bbc1b77c4be40728a0e55.4I2QsOArbptqgyfk'
 MODEL = "GLM-4-Plus"
 
-
 # 系统提示信息
 SPLIT_SYSTEM_PROMPT = """
 You are a subtitle segmentation expert, skilled in breaking down unsegmented text into individual segments, separated by <br>.
 Requirements:
 
-- For Chinese text, each segment should not exceed 12 characters. For English text, each segment should not exceed 12 words.
+- For Chinese text, each segment should not exceed 20 characters. For English text, each segment should not exceed 12 words.
 - Do not segment based on complete sentences; instead, segment based on semantics, such as after words like "而", "的", "在", "和", "so", "but", or interjections.
 - Do not modify or add any content to the original text; simply insert <br> between each segment.
 - Directly return the segmented text without any additional explanations.
@@ -46,7 +45,6 @@ the upgraded claude sonnet is now available for all users developers can build w
 Output:
 the upgraded claude sonnet is now available for all users<br>developers can build with the computer use beta<br>on the anthropic api amazon bedrock<br>and google cloud’s vertex ai<br>the new claude haiku will be released later this month
 """
-
 
 SUMMARIZER_PROMPT = """
 You are a **Professional Video Analyst** skilled in accurately extracting information from video subtitles, including main content and important terms.
@@ -185,7 +183,6 @@ Translate the provided subtitles into the target language while adhering to spec
 - Pay special attention to cultural nuances and idiomatic expressions to enhance relatability and engagement.
 """
 
-
 REFLECT_TRANSLATE_PROMPT0 = """### Role Definition
 
 You are a **Subtitle Proofreading and Translation Expert**, responsible for handling subtitles generated through speech recognition. These subtitles may contain homophone errors, formatting issues, and more. Your task is not only to proofread the subtitles but also to translate them into another language, ensuring that the subtitles are **accurate**, **fluent**, and align with the cultural and stylistic norms of the target language.
@@ -321,7 +318,6 @@ EXAMPLE_OUTPUT
 Please process the given subtitles according to these instructions and return the results in the specified JSON format.
 
 """
-
 
 SINGLE_TRANSLATE_PROMPT = """You are a professional translator. 
 Please translate the following text into [target_language]. 

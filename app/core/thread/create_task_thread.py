@@ -1,16 +1,18 @@
 import datetime
 import os
 import re
-from PyQt5.QtCore import QThread, pyqtSignal
+from pathlib import Path
+
 import yt_dlp
+from PyQt5.QtCore import QThread, pyqtSignal
+
 from ..entities import Task, TranscribeModelEnum, VideoInfo, LANGUAGES
 from ..utils.video_utils import get_video_info
 from ...common.config import cfg
 
-from pathlib import Path
-
 current_dir = Path(__file__).parent.parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
+
 
 class CreateTaskThread(QThread):
     finished = pyqtSignal(Task)
@@ -41,7 +43,7 @@ class CreateTaskThread(QThread):
     def create_file_task(self, file_path):
         # 使用 Path 对象处理路径
         task_work_dir = Path(cfg.work_dir.value) / Path(file_path).stem
-        
+
         # 获取 视频/音频 信息
         thumbnail_path = str(task_work_dir / "thumbnail.jpg")
         video_info = get_video_info(file_path, thumbnail_path=thumbnail_path)
@@ -50,7 +52,7 @@ class CreateTaskThread(QThread):
         # 定义各个路径
         audio_save_path = task_work_dir / "audio.mp3"
         original_subtitle_save_path = task_work_dir / "【原始字幕】original_subtitle.srt"
-        result_subtitle_save_path = task_work_dir  / "【优化字幕】result_subtitle.ass"
+        result_subtitle_save_path = task_work_dir / "【优化字幕】result_subtitle.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 
         ass_style_name = cfg.subtitle_style_name.value
@@ -104,7 +106,8 @@ class CreateTaskThread(QThread):
     def create_url_task(self, url):
         self.progress.emit(5, self.tr("正在获取视频信息"))
         # 下载视频。保存到 cfg.work_dir.value 下
-        video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value, self.progress_hook)
+        video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value,
+                                                                                       self.progress_hook)
         self.progress.emit(100, self.tr("下载视频完成"))
 
         video_info = VideoInfo(
@@ -181,7 +184,7 @@ class CreateTaskThread(QThread):
         task_work_dir = Path(file_path).parent
 
         thumbnail_path = task_work_dir / "thumbnail.jpg"
-        
+
         video_info = get_video_info(file_path, thumbnail_path=str(thumbnail_path))
         video_info = VideoInfo(**video_info)
 
@@ -215,7 +218,7 @@ class CreateTaskThread(QThread):
 
     def create_subtitle_optimization_task(file_path):
         task_work_dir = Path(file_path.strip()).parent
-        
+
         original_subtitle_save_path = task_work_dir / file_path
         result_subtitle_save_path = task_work_dir / f"【优化字幕】result_subtitle_{cfg.model.value}.srt"
 
@@ -269,17 +272,18 @@ class CreateTaskThread(QThread):
             soft_subtitle=cfg.soft_subtitle.value,
         )
         return task
-    
+
     def progress_hook(self, d):
         if d['status'] == 'downloading':
             percent = d['_percent_str']
             speed = d['_speed_str']
-            
+
             # 提取百分比和速度的纯文本
             clean_percent = percent.replace('\x1b[0;94m', '').replace('\x1b[0m', '').strip().replace('%', '')
             clean_speed = speed.replace('\x1b[0;32m', '').replace('\x1b[0m', '').strip()
-            
-            self.progress.emit(int(float(clean_percent)), f'{self.tr("下载进度")}: {clean_percent}%  {self.tr("速度")}: {clean_speed}')
+
+            self.progress.emit(int(float(clean_percent)),
+                               f'{self.tr("下载进度")}: {clean_percent}%  {self.tr("速度")}: {clean_speed}')
 
 
 def sanitize_filename(name, replacement="_"):
@@ -297,16 +301,16 @@ def sanitize_filename(name, replacement="_"):
     # 这些是Windows中常见的不允许字符，其他系统如Linux和macOS允许更多字符
     # 为了跨平台兼容，使用这些较严格的规则
     forbidden_chars = r'<>:"/\\|?*'
-    
+
     # 替换不允许的字符
     sanitized = re.sub(f"[{re.escape(forbidden_chars)}]", replacement, name)
-    
+
     # 移除控制字符（0-31）和非打印字符
     sanitized = re.sub(r'[\0-\31]', '', sanitized)
-    
+
     # 去除文件名末尾的空格和点（Windows 不允许）
     sanitized = sanitized.rstrip(' .')
-    
+
     # 限制文件名长度（例如，Windows最大255个字符）
     max_length = 255
     if len(sanitized) > max_length:
@@ -315,7 +319,7 @@ def sanitize_filename(name, replacement="_"):
         # 计算基名的最大长度
         base_max_length = max_length - len(ext)
         sanitized = base[:base_max_length] + ext
-    
+
     # 处理Windows的保留名称
     # 列表来自 https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
     windows_reserved_names = {
@@ -330,8 +334,9 @@ def sanitize_filename(name, replacement="_"):
     # 如果文件名为空，返回一个默认名称
     if not sanitized:
         sanitized = "default_filename"
-    
+
     return sanitized
+
 
 def download(url, work_dir, progress_hook):
     # 设置工作目录
@@ -343,14 +348,14 @@ def download(url, work_dir, progress_hook):
             'thumbnail': 'thumbnail',
         },
         # 'format': 'worst',                   # 下载质量最差的视频和音频
-        'progress_hooks': [progress_hook],    # 下载进度钩子
+        'progress_hooks': [progress_hook],  # 下载进度钩子
         # 'overwrites': True,                   # 覆盖已存在的文件
-        'quiet': True,                        # 禁用日志输出
-        'no_warnings': True,                  # 禁用警告信息
+        'quiet': True,  # 禁用日志输出
+        'no_warnings': True,  # 禁用警告信息
         'noprogress': True,
-        'writeautomaticsub': True,            # 下载自动生成的字幕
-        'writethumbnail': True,               # 下载缩略图
-        'thumbnail_format': 'jpg',            # 指定缩略图的格式
+        'writeautomaticsub': True,  # 下载自动生成的字幕
+        'writethumbnail': True,  # 下载缩略图
+        'thumbnail_format': 'jpg',  # 指定缩略图的格式
     }
 
     with yt_dlp.YoutubeDL(initial_ydl_opts) as ydl:
@@ -381,7 +386,6 @@ def download(url, work_dir, progress_hook):
             video_file_path = str(video_file_path)
         else:
             video_file_path = None
-        
 
         # 字幕文件路径， video_work_dir 下遍历所有文件寻找字幕文件，包括子文件夹 original.*
         subtitle_file_path = None
@@ -396,5 +400,3 @@ def download(url, work_dir, progress_hook):
             break
 
         return video_file_path, subtitle_file_path, thumbnail_file_path, info_dict
-
-

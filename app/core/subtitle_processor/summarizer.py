@@ -2,8 +2,8 @@ import os
 
 from openai import OpenAI
 
-from ..utils import json_repair
 from .subtitle_config import SUMMARIZER_PROMPT
+from ..utils import json_repair
 
 
 class SubtitleSummarizer:
@@ -18,6 +18,7 @@ class SubtitleSummarizer:
         self.client = OpenAI(base_url=base_url, api_key=api_key)
 
     def summarize(self, subtitle_content: str) -> str:
+        subtitle_content = subtitle_content[:3000]
         response = self.client.chat.completions.create(
             model=self.model,
             stream=False,
@@ -27,6 +28,7 @@ class SubtitleSummarizer:
             ]
         )
         return str(json_repair.loads(response.choices[0].message.content))
+
 
 if __name__ == "__main__":
     # os.environ['OPENAI_BASE_URL'] = 'https://api.gptgod.online/v1'

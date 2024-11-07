@@ -9,7 +9,7 @@ class KuaiShouASR(BaseASR):
         super().__init__(audio_path, use_cache)
         self.need_word_time_stamp = need_word_time_stamp
 
-    def _run(self, callback = None) -> dict:
+    def _run(self, callback=None) -> dict:
         return self._submit()
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:

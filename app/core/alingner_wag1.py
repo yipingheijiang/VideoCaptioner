@@ -1,5 +1,5 @@
-import rapidfuzz
 from rapidfuzz import fuzz
+
 
 def align_texts_sequence_alignment(text1, text2, gap_penalty=100):
     """
@@ -77,6 +77,7 @@ def align_texts_sequence_alignment(text1, text2, gap_penalty=100):
             break  # 回溯结束
 
     return aligned_source, aligned_target
+
 
 if __name__ == '__main__':
     text1 = ['yep human hair be about that thick', "yep and that's a really really tiny LED",

@@ -33,7 +33,8 @@ def optimize_subtitles(asr_data):
         prev_seg = asr_data.segments[i - 1]
 
         # 判断前一个段落的词数是否小于等于5且时间相邻
-        if count_words(prev_seg.text) <= 4 and abs(seg.start_time - prev_seg.end_time) < 100 and count_words(seg.text) <= 10:
+        if count_words(prev_seg.text) <= 4 and abs(seg.start_time - prev_seg.end_time) < 100 and count_words(
+                seg.text) <= 10:
             # print(prev_seg.end_time, seg.start_time)
             # print(f"[-]合并段落: 【{prev_seg.text}】 --- 【{seg.text}】")
             asr_data.merge_with_next_segment(i - 1)

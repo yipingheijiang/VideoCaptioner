@@ -1,14 +1,10 @@
-import os
-import re
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
 import difflib
+import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import List
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .split_by_llm import split_by_llm, MAX_WORD_COUNT
+from ..bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
 
 SEGMENT_THRESHOLD = 1000  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
@@ -47,7 +43,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     asr_len = len(asr_texts)
     asr_index = 0  # 当前分段索引位置
     threshold = 0.5  # 相似度阈值
-    max_shift = 10   # 滑动窗口的最大偏移量
+    max_shift = 10  # 滑动窗口的最大偏移量
 
     new_segments = []
 
@@ -126,7 +122,6 @@ def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> Lis
         )
         result_segs.append(merged_seg)
         return result_segs
-
 
     # 在分段中间2/3部分寻找最佳拆分点
     n = len(segs_to_merge)
@@ -247,9 +242,10 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
             sentences = split_by_llm(txt, model=model, use_cache=True)
             print(f"[+] 分段的句子提取完成，共 {len(sentences)} 句")
             return sentences
+
         all_sentences = list(executor.map(process_segment, asr_data_segments))
     all_sentences = [item for sublist in all_sentences for item in sublist]
-    
+
     # print(f"[+] 总共提取到 {len(all_sentences)} 句")
 
     # 基于LLM已经分段的句子，对ASR分段进行合并
@@ -261,7 +257,6 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     final_asr_data = ASRData(merged_asr_data.segments)
 
     return final_asr_data
-
 
 
 if __name__ == '__main__':
@@ -283,7 +278,7 @@ if __name__ == '__main__':
     # exit()
 
     final_asr_data = main(asr_data=asr_data, save_path=args.save_path, num_threads=args.num_threads)
-    
+
     # 保存到SRT文件
     final_asr_data.to_srt(save_path=args.save_path)
     print(f"[+] 已保存合并后的SRT文件: {args.save_path}")

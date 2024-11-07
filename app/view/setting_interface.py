@@ -1,21 +1,19 @@
-# coding:utf-8
-
-from PyQt5.QtCore import Qt, QUrl, QStandardPaths, pyqtSignal, QThread, QFile
+from PyQt5.QtCore import Qt, QUrl, pyqtSignal, QThread
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QWidget, QLabel, QFileDialog
 from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import InfoBar
-from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, FolderListSettingCard,
-                            OptionsSettingCard, PushSettingCard,
+from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, OptionsSettingCard, PushSettingCard,
                             HyperlinkCard, PrimaryPushSettingCard, ScrollArea,
                             ComboBoxSettingCard, ExpandLayout, CustomColorSettingCard,
-                            setTheme, setThemeColor, RangeSettingCard, SettingCard)
+                            setTheme, setThemeColor, RangeSettingCard)
 
+from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL
 from ..common.config import cfg
-from ..components.LineEditSettingCard import LineEditSettingCard
 from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
+from ..components.LineEditSettingCard import LineEditSettingCard
 from ..core.utils.test_opanai import test_openai, get_openai_models
-from app.config import VERSION, YEAR, AUTHOR, HELP_URL, RELEASE_URL, FEEDBACK_URL
+
 
 class SettingInterface(ScrollArea):
     """ Setting interface """
@@ -34,7 +32,7 @@ class SettingInterface(ScrollArea):
             cfg.transcribe_model,
             FIF.MICROPHONE,
             self.tr('转录模型'),
-            self.tr ('语音转换文字要使用的转录模型'),
+            self.tr('语音转换文字要使用的转录模型'),
             texts=[model.value for model in cfg.transcribe_model.validator.options],
             parent=self.transcribeGroup
         )
@@ -184,8 +182,8 @@ class SettingInterface(ScrollArea):
             self.tr("界面缩放"),
             self.tr("更改小部件和字体的大小"),
             texts=["100%", "125%", "150%", "175%", "200%",
-            self.tr("使用系统设置")
-            ],
+                   self.tr("使用系统设置")
+                   ],
             parent=self.personalGroup
         )
         self.languageCard = ComboBoxSettingCard(
@@ -311,16 +309,18 @@ class SettingInterface(ScrollArea):
         self.savePathCard.clicked.connect(self.__onsavePathCardClicked)
 
         # 字幕样式修改跳转
-        self.subtitleStyleCard.linkButton.clicked.connect(lambda: self.window().switchTo(self.window().subtitleStyleInterface))
-        self.subtitleLayoutCard.linkButton.clicked.connect(lambda: self.window().switchTo(self.window().subtitleStyleInterface))
-        
+        self.subtitleStyleCard.linkButton.clicked.connect(
+            lambda: self.window().switchTo(self.window().subtitleStyleInterface))
+        self.subtitleLayoutCard.linkButton.clicked.connect(
+            lambda: self.window().switchTo(self.window().subtitleStyleInterface))
+
         # 个性化
         self.themeCard.optionChanged.connect(lambda ci: setTheme(cfg.get(ci)))
         self.themeColorCard.colorChanged.connect(setThemeColor)
 
         # 关于
         self.feedbackCard.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(FEEDBACK_URL)))
-        
+
     def __showRestartTooltip(self):
         """ show restart tooltip """
         InfoBar.success(
@@ -350,15 +350,15 @@ class SettingInterface(ScrollArea):
                 parent=self
             )
             return
-        
+
         # 禁用检查按钮，显示加载状态
         self.checkLLMConnectionCard.button.setEnabled(False)
         self.checkLLMConnectionCard.button.setText(self.tr("正在检查..."))
-        
+
         # 创建并启动线程
         self.connection_thread = LLMConnectionThread(
-            api_base, 
-            self.apiKeyCard.lineEdit.text(), 
+            api_base,
+            self.apiKeyCard.lineEdit.text(),
             self.modelCard.comboBox.currentText()
         )
         self.connection_thread.finished.connect(self.onConnectionCheckFinished)

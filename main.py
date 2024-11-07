@@ -2,14 +2,12 @@
 import os
 import sys
 
-from PyQt5.QtCore import Qt, QTranslator, QFile, QIODevice, QLocale
-from PyQt5.QtGui import QFont, QFontDatabase
+from PyQt5.QtCore import Qt, QTranslator
 from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import FluentTranslator
 
 from app.common.config import cfg
 from app.view.main_window import MainWindow
-
 
 # enable dpi scale
 if cfg.get(cfg.dpiScale) == "Auto":
@@ -47,7 +45,6 @@ myTranslator = QTranslator()
 myTranslator.load(f"translations/VideoCaptioner_{locale.name()}.qm")
 app.installTranslator(translator)
 app.installTranslator(myTranslator)
-
 
 # create main window
 w = MainWindow()

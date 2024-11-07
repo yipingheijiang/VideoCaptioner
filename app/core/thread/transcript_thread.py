@@ -1,12 +1,10 @@
-import os
 from pathlib import Path
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
+from ..bk_asr import JianYingASR, KuaiShouASR, BcutASR, WhisperASR
 from ..entities import Task, TranscribeModelEnum
 from ..utils.video_utils import video2audio
-from ..bk_asr import JianYingASR, KuaiShouASR, BcutASR, WhisperASR
-from ..utils.optimize_subtitles import optimize_subtitles
 
 
 class TranscriptThread(QThread):
@@ -64,7 +62,7 @@ class TranscriptThread(QThread):
 
             # 保存字幕文件
             original_subtitle_path = Path(self.task.original_subtitle_save_path)
-            original_subtitle_path.parent.mkdir(parents=True, exist_ok=True) 
+            original_subtitle_path.parent.mkdir(parents=True, exist_ok=True)
             asr_data.to_srt(save_path=str(original_subtitle_path))
 
             self.progress.emit(100, self.tr("转录完成"))

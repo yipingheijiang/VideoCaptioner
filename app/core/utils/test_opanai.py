@@ -1,5 +1,6 @@
 import openai
 
+
 def test_openai(base_url, api_key, model):
     """
     这是一个测试OpenAI API的函数。
@@ -29,11 +30,13 @@ def test_openai(base_url, api_key, model):
         return True, str(response.choices[0].message.content)
     except Exception as e:
         return False, str(e)
-    
+
+
 def get_openai_models(base_url, api_key):
     try:
         client = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=10)
         models = client.models.list()
+
         # 根据不同模型设置权重进行排序
         def get_model_weight(model_name):
             model_name = model_name.lower()
@@ -48,7 +51,7 @@ def get_openai_models(base_url, api_key):
             elif model_name.startswith('glm'):
                 return 3
             return 0
-            
+
         sorted_models = sorted(
             [model.id for model in models],
             key=lambda x: (-get_model_weight(x), x)
@@ -56,5 +59,3 @@ def get_openai_models(base_url, api_key):
         return sorted_models
     except Exception as e:
         return []
-
-

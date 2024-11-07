@@ -6,7 +6,6 @@ from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
 
 
-
 class WhisperASR(BaseASR):
     def __init__(self, audio_path: [str, bytes], model: str = MODEL, use_cache: bool = False):
         super().__init__(audio_path, use_cache)
@@ -37,11 +36,10 @@ class WhisperASR(BaseASR):
         )
         return completion.to_dict()
 
+
 if __name__ == '__main__':
     # Example usage
     audio_file = r"test.mp3"
     asr = WhisperASR(audio_file)
     asr_data = asr.run()
     print(asr_data)
-
-

@@ -1,11 +1,10 @@
 # coding: utf-8
 import hashlib
 import re
-import requests
-import json
 from datetime import datetime
 
-from PyQt5.QtCore import QVersionNumber, QObject, pyqtSignal, QThread, QSettings
+import requests
+from PyQt5.QtCore import QVersionNumber, QObject, pyqtSignal, QSettings
 
 from app.config import VERSION
 
@@ -30,10 +29,8 @@ class VersionManager(QObject):
         self.history = []
 
         # 修改 QSettings 的初始化方式，指定完整的组织和应用名称，并设置为 IniFormat
-        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope, 
-                                'VideoCaptioner', 'VideoCaptioner')
-
-
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
+                                  'VideoCaptioner', 'VideoCaptioner')
 
     def getLatestVersionInfo(self):
         """获取最新版本信息"""
@@ -72,7 +69,7 @@ class VersionManager(QObject):
             if version_info['version'].lstrip('v') == self.currentVersion.lower():
                 current_version_available = version_info.get('available', True)
                 break
-        
+
         # 如果当前版本不可用，强制更新
         if not current_version_available:
             self.forceUpdate = True
@@ -96,7 +93,8 @@ class VersionManager(QObject):
         if ann.get('enabled', False):
             content = ann.get('content', '')
             # 获取公告ID（使用内容的哈希值作为ID+当前日期）
-            announcement_id = hashlib.md5(content.encode('utf-8')).hexdigest()[:10] + "_" + datetime.today().strftime("%Y-%m-%d")
+            announcement_id = hashlib.md5(content.encode('utf-8')).hexdigest()[:10] + "_" + datetime.today().strftime(
+                "%Y-%m-%d")
             # 检查是否已经显示过
             if self.settings.value(f'announcement/shown_announcement_{announcement_id}', False, type=bool):
                 return
@@ -106,7 +104,7 @@ class VersionManager(QObject):
             if start_date <= today <= end_date:
                 content = ann.get('content', '')
                 # 标记该公告已显示
-                self.settings.setValue(f'announcement/shown_announcement_{announcement_id}', True)            
+                self.settings.setValue(f'announcement/shown_announcement_{announcement_id}', True)
                 self.announcementAvailable.emit(content)
 
     def performCheck(self):

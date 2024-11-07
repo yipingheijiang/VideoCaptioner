@@ -1,27 +1,27 @@
 import datetime
 import os
 from pathlib import Path
-from queue import Queue
 from threading import Lock
 
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog, QMenu
 from PyQt5.QtGui import QPixmap, QFont
-from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, CardWidget, ToolTipFilter, \
-    ToolTipPosition, LineEdit, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
-    InfoBadge, InfoBadgePosition, ProgressRing, InfoBarPosition, ScrollArea, Action, RoundMenu, IconInfoBadge, InfoLevel
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog
+from qfluentwidgets import ComboBox, CardWidget, ToolTipFilter, \
+    ToolTipPosition, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
+    InfoBadgePosition, ProgressRing, InfoBarPosition, ScrollArea, Action, RoundMenu, IconInfoBadge, InfoLevel
 from qfluentwidgets import FluentIcon as FIF
 
-from ..core.thread.create_task_thread import CreateTaskThread
-from ..core.entities import Task, VideoInfo
-from ..common.config import cfg
-from ..core.thread.transcript_thread import TranscriptThread
-from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
+from ..config import RESOURCE_PATH
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
-from app.config import RESOURCE_PATH
+from ..core.entities import Task, VideoInfo
+from ..core.thread.create_task_thread import CreateTaskThread
+from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
+from ..core.thread.transcript_thread import TranscriptThread
+
 
 class BatchProcessInterface(QWidget):
     """批量处理界面"""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("BatchProcessInterface")
@@ -40,33 +40,33 @@ class BatchProcessInterface(QWidget):
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(20)
-        
+
         # 顶部操作布局
         self.top_layout = QHBoxLayout()
         self.top_layout.setSpacing(10)
-        
+
         # 添加文件按钮
-        self.add_file_button = PushButton(self.tr("添加视频文件"), self)
+        self.add_file_button = PushButton(self.tr("添加视频文件"), self, icon=FIF.ADD)
         self.top_layout.addWidget(self.add_file_button)
-        
+
         # 清空任务按钮
-        self.clear_all_button = PushButton(self.tr("清空任务"), self)
+        self.clear_all_button = PushButton(self.tr("清空任务"), self, icon=FIF.DELETE)
         self.top_layout.addWidget(self.clear_all_button)
-        
+
         # 任务类型选择
         self.task_type_combo = ComboBox(self)
         self.task_type_combo.addItems([self.tr("视频加字幕"), self.tr("音视频转录")])
         self.top_layout.addWidget(self.task_type_combo)
-        
+
         self.top_layout.addStretch(1)
 
         # 添加启动和取消按钮
-        self.start_all_button = PrimaryPushButton(self.tr("开始处理"), self)
-        self.cancel_button = PushButton(self.tr("取消"), self)
+        self.start_all_button = PrimaryPushButton(self.tr("开始处理"), self, icon=FIF.PLAY)
+        self.cancel_button = PushButton(self.tr("取消"), self, icon=FIF.CLOSE)
         self.cancel_button.setEnabled(False)
         self.top_layout.addWidget(self.start_all_button)
         self.top_layout.addWidget(self.cancel_button)
-        
+
         self.main_layout.addLayout(self.top_layout)
 
         # 创建滚动区域
@@ -111,11 +111,11 @@ class BatchProcessInterface(QWidget):
                 parent=self
             )
             return
-            
+
         # 清空所有任务卡片
         for task_card in self.task_cards[:]:
             self.remove_task_card(task_card)
-            
+
         InfoBar.success(
             self.tr("已清空"),
             self.tr("已清空所有任务"),
@@ -168,7 +168,8 @@ class BatchProcessInterface(QWidget):
 
         # 停止所有正在运行的任务
         for task_card in self.task_cards:
-            if task_card.task.status in [Task.Status.TRANSCRIBING, Task.Status.PENDING, Task.Status.OPTIMIZING, Task.Status.GENERATING]:
+            if task_card.task.status in [Task.Status.TRANSCRIBING, Task.Status.PENDING, Task.Status.OPTIMIZING,
+                                         Task.Status.GENERATING]:
                 task_card.stop()
 
         # 显示取消处理的通知
@@ -230,8 +231,8 @@ class BatchProcessInterface(QWidget):
         if self.task_type_combo.currentText() == self.tr("视频加字幕"):
             filter_str = f"{self.tr('视频文件')} ({' '.join(video_formats)})"
         else:
-            filter_str = f"{self.tr('音频文件或视频文件')} ({' '.join(audio_formats+video_formats)})"
-        
+            filter_str = f"{self.tr('音频文件或视频文件')} ({' '.join(audio_formats + video_formats)})"
+
         files, _ = QFileDialog.getOpenFileNames(self, self.tr("选择文件"), "", filter_str)
         for file_path in files:
             self.create_task(file_path)
@@ -249,7 +250,7 @@ class BatchProcessInterface(QWidget):
                     parent=self
                 )
                 return
-                
+
         task_type = 'transcription' if self.task_type_combo.currentText() == self.tr("音视频转录") else 'file'
         create_thread = CreateTaskThread(file_path, task_type)
         create_thread.finished.connect(self.add_task_card)
@@ -297,7 +298,7 @@ class BatchProcessInterface(QWidget):
                     parent=self
                 )
                 return
-                
+
             self.task_cards.remove(task_card)
             self.tasks.remove(task_card.task)
             self.scroll_layout.removeWidget(task_card)
@@ -316,7 +317,6 @@ class BatchProcessInterface(QWidget):
             if len(self.task_cards) == 0:  # 因为当前任务还未被移除
                 self.task_type_combo.setEnabled(True)
 
-
     def dragEnterEvent(self, event):
         """拖拽进入事件处理"""
         if event.mimeData().hasUrls():
@@ -330,17 +330,18 @@ class BatchProcessInterface(QWidget):
             file_path = url.toLocalFile()
             if not os.path.isfile(file_path):
                 continue
-                
+
             file_ext = os.path.splitext(file_path)[1][1:].lower()
-            
+
             # 检查文件格式是否支持
-            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in
+                                                                                SupportedAudioFormats}
             is_supported = file_ext in supported_formats
-                        
+
             if is_supported:
                 self.create_task(file_path)
                 InfoBar.success(
-                    self.tr("导入成功"), 
+                    self.tr("导入成功"),
                     self.tr("开始处理"),
                     duration=1500,
                     parent=self
@@ -358,7 +359,7 @@ class TaskInfoCard(CardWidget):
     finished = pyqtSignal(Task)
     remove = pyqtSignal(object)
     error = pyqtSignal(str)
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.task: Task = None
@@ -376,7 +377,7 @@ class TaskInfoCard(CardWidget):
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(20, 15, 20, 15)
         self.layout.setSpacing(20)
-        
+
         # 设置缩略图
         self.setup_thumbnail()
         # 设置视频信息
@@ -384,7 +385,8 @@ class TaskInfoCard(CardWidget):
         # 设置按钮
         self.setup_button_layout()
 
-        self.task_state = IconInfoBadge.info(FIF.REMOVE, self, target=self.video_title, position=InfoBadgePosition.TOP_RIGHT)
+        self.task_state = IconInfoBadge.info(FIF.REMOVE, self, target=self.video_title,
+                                             position=InfoBadgePosition.TOP_RIGHT)
 
     def setup_thumbnail(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -401,17 +403,17 @@ class TaskInfoCard(CardWidget):
         self.info_layout = QVBoxLayout()
         self.info_layout.setContentsMargins(3, 8, 3, 8)
         self.info_layout.setSpacing(10)
-        
+
         # 设置视频标题
         self.video_title = BodyLabel(self.tr("未选择视频"), self)
         self.video_title.setFont(QFont("Microsoft YaHei", 14, QFont.Bold))
         self.video_title.setWordWrap(True)
         self.info_layout.addWidget(self.video_title, alignment=Qt.AlignTop)
-        
+
         # 设置视频详细信息
         self.details_layout = QHBoxLayout()
         self.details_layout.setSpacing(15)
-        
+
         self.resolution_info = self.create_pill_button(self.tr("画质"), 110)
         self.file_size_info = self.create_pill_button(self.tr("文件大小"), 110)
         self.duration_info = self.create_pill_button(self.tr("时长"), 100)
@@ -463,7 +465,7 @@ class TaskInfoCard(CardWidget):
         self.start_button.setDisabled(False)
         self.update_thumbnail(video_info.thumbnail_path)
         self.update_tooltip()
-    
+
     def update_tooltip(self):
         """更新tooltip"""
         # 设置整体tooltip
@@ -482,7 +484,7 @@ class TaskInfoCard(CardWidget):
     def update_thumbnail(self, thumbnail_path):
         """更新视频缩略图"""
         if not Path(thumbnail_path).exists():
-            thumbnail_path = RESOURCE_PATH / "assets" /  "audio-thumbnail.png"
+            thumbnail_path = RESOURCE_PATH / "assets" / "audio-thumbnail.png"
 
         pixmap = QPixmap(str(thumbnail_path)).scaled(
             self.video_thumbnail.size(),
@@ -495,20 +497,20 @@ class TaskInfoCard(CardWidget):
         self.start_button.clicked.connect(self.start)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
         self.remove_button.clicked.connect(lambda: self.remove.emit(self))
-    
+
     def show_context_menu(self, pos):
         """显示右键菜单"""
         menu = RoundMenu(parent=self)
-        
+
         # 添加菜单项
         open_folder_action = Action(self.tr("打开文件夹"), self)
         open_folder_action.triggered.connect(self.on_open_folder_clicked)
         menu.addAction(open_folder_action)
-        
+
         delete_action = Action(self.tr("删除任务"), self)
         delete_action.triggered.connect(lambda: self.remove.emit(self))
         menu.addAction(delete_action)
-        
+
         reprocess_action = Action(self.tr("重新处理"), self)
         reprocess_action.triggered.connect(self.start)
         menu.addAction(reprocess_action)
@@ -516,7 +518,7 @@ class TaskInfoCard(CardWidget):
         cancel_action = Action(self.tr("取消任务"), self)
         cancel_action.triggered.connect(self.cancel)
         menu.addAction(cancel_action)
-        
+
         # 显示菜单
         menu.exec_(self.mapToGlobal(pos))
 
@@ -534,7 +536,7 @@ class TaskInfoCard(CardWidget):
         if self.subtitle_thread and self.subtitle_thread.isRunning():
             self.subtitle_thread.terminate()
         self.reset_ui()
-        
+
         InfoBar.success(
             self.tr("已取消"),
             self.tr("任务已取消"),
@@ -610,7 +612,7 @@ class TaskInfoCard(CardWidget):
         self.reset_ui()
         self.task_state.setLevel(InfoLevel.ERROR)
         self.task_state.setIcon(FIF.CLOSE)
-        
+
         self.update_tooltip()
         self.error.emit(error)
         InfoBar.error(
@@ -619,7 +621,7 @@ class TaskInfoCard(CardWidget):
             duration=1500,
             parent=self
         )
-    
+
     def on_finished(self, task):
         """转录完成处理"""
         self.reset_ui()

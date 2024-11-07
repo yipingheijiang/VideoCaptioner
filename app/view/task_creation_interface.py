@@ -2,19 +2,17 @@
 import os
 import sys
 from urllib.parse import urlparse
+
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QLineEdit, QPushButton, QProgressBar, QFileDialog
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
+from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel
 
-from PyQt5.sip import voidptr
-from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, CardWidget, ToolTipFilter, \
-    ToolTipPosition, LineEdit, PrimaryPushButton, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel
-
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task, VideoInfo
 from ..common.config import cfg
-from ..core.thread.create_task_thread import CreateTaskThread
 from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
 from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
+from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
+from ..core.thread.create_task_thread import CreateTaskThread
 
 
 class TaskCreationInterface(QWidget):
@@ -92,11 +90,11 @@ class TaskCreationInterface(QWidget):
         self.config_layout.addWidget(self.subtitle_optimization_card)
         self.config_layout.addWidget(self.subtitle_translation_card)
         self.config_layout.addWidget(self.target_language_card)
-        
+
         config_container = QWidget()
         config_container.setLayout(self.config_layout)
         config_container.setFixedHeight(70)
-        
+
         self.main_layout.addWidget(config_container)
 
     def setup_logo(self):
@@ -170,7 +168,7 @@ class TaskCreationInterface(QWidget):
         if checked and self.subtitle_translation_card.isChecked():
             self.subtitle_translation_card.setChecked(False)
         cfg.set(cfg.need_optimize, checked)
-        
+
     def on_subtitle_translation_clicked(self, checked):
         if cfg.api_base.value == "" and checked:
             InfoBar.warning(
@@ -190,17 +188,17 @@ class TaskCreationInterface(QWidget):
         if self.start_button.text() == self.tr("选择文件"):
             desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
             file_dialog = QFileDialog()
-            
+
             # 构建文件过滤器
             video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
             audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
             filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
-            
+
             file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
             if file_path:
                 self.search_input.setText(file_path)
             return
-        
+
         self.process()
 
     def on_search_input_changed(self):
@@ -248,18 +246,19 @@ class TaskCreationInterface(QWidget):
         for file_path in files:
             if not os.path.isfile(file_path):
                 continue
-                
+
             file_ext = os.path.splitext(file_path)[1][1:].lower()
-            
+
             # 检查文件格式是否支持
-            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in
+                                                                                SupportedAudioFormats}
             is_supported = file_ext in supported_formats
-                        
+
             if is_supported:
                 self.search_input.setText(file_path)
                 self.status_label.setText(self.tr("导入成功"))
                 InfoBar.success(
-                    self.tr("导入成功"), 
+                    self.tr("导入成功"),
                     self.tr("导入媒体文件成功"),
                     duration=1500,
                     parent=self

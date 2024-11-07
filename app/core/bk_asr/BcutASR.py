@@ -1,14 +1,12 @@
 import json
 import logging
 import time
-from os import PathLike
 from typing import Optional
 
 import requests
 
-from .ASRData import ASRData, ASRDataSeg
+from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
-
 
 __version__ = "0.0.3"
 
@@ -135,7 +133,8 @@ class BcutASR(BaseASR):
 
     def result(self, task_id: Optional[str] = None):
         """查询转换结果"""
-        resp = requests.get(API_QUERY_RESULT, params={"model_id": 7, "task_id": task_id or self.task_id}, headers=self.headers)
+        resp = requests.get(API_QUERY_RESULT, params={"model_id": 7, "task_id": task_id or self.task_id},
+                            headers=self.headers)
         resp.raise_for_status()
         resp = resp.json()
         return resp["data"]
@@ -167,7 +166,8 @@ class BcutASR(BaseASR):
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
         if self.need_word_time_stamp:
-            return [ASRDataSeg(w['label'].strip(), w['start_time'], w['end_time']) for u in resp_data['utterances'] for w in u['words']]
+            return [ASRDataSeg(w['label'].strip(), w['start_time'], w['end_time']) for u in resp_data['utterances'] for
+                    w in u['words']]
         else:
             return [ASRDataSeg(u['transcript'], u['start_time'], u['end_time']) for u in resp_data['utterances']]
 

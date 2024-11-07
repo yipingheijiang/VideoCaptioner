@@ -2,29 +2,28 @@
 
 import datetime
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
 from PyQt5.QtGui import QPixmap, QFont
-from qfluentwidgets import ComboBox, SwitchButton, SimpleCardWidget, CaptionLabel, CardWidget, ToolTipFilter, \
-    ToolTipPosition, LineEdit, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
-    InfoBadge, IndeterminateProgressRing, ProgressRing, InfoBarPosition
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
+from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
+    ProgressRing, InfoBarPosition
 
-from app.core.thread.create_task_thread import CreateTaskThread
-from ..core.entities import LANGUAGES, Task, VideoInfo
-from ..common.config import cfg
-from ..core.thread.transcript_thread import TranscriptThread
-from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
 from app.config import RESOURCE_PATH
-
+from app.core.thread.create_task_thread import CreateTaskThread
+from ..common.config import cfg
+from ..core.entities import LANGUAGES, Task, VideoInfo
+from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
+from ..core.thread.transcript_thread import TranscriptThread
 
 DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
 
 class VideoInfoCard(CardWidget):
     finished = pyqtSignal(Task)
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.task = None
@@ -36,7 +35,7 @@ class VideoInfoCard(CardWidget):
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(20, 15, 20, 15)
         self.layout.setSpacing(20)
-        
+
         self.setup_thumbnail()
         self.setup_info_layout()
         self.setup_button_layout()
@@ -61,15 +60,15 @@ class VideoInfoCard(CardWidget):
         self.info_layout = QVBoxLayout()
         self.info_layout.setContentsMargins(3, 8, 3, 8)
         self.info_layout.setSpacing(10)
-        
+
         self.video_title = BodyLabel(self.tr("请拖入音频或视频文件"), self)
         self.video_title.setFont(QFont("Microsoft YaHei", 14, QFont.Bold))
         self.video_title.setWordWrap(True)
         self.info_layout.addWidget(self.video_title, alignment=Qt.AlignTop)
-        
+
         self.details_layout = QHBoxLayout()
         self.details_layout.setSpacing(15)
-        
+
         self.resolution_info = self.create_pill_button(self.tr("画质"), 110)
         self.file_size_info = self.create_pill_button(self.tr("文件大小"), 110)
         self.duration_info = self.create_pill_button(self.tr("时长"), 100)
@@ -122,7 +121,7 @@ class VideoInfoCard(CardWidget):
     def update_thumbnail(self, thumbnail_path):
         """更新视频缩略图"""
         if not Path(thumbnail_path).exists():
-            thumbnail_path = RESOURCE_PATH / "assets" /  "audio-thumbnail.png"
+            thumbnail_path = RESOURCE_PATH / "assets" / "audio-thumbnail.png"
 
         pixmap = QPixmap(str(thumbnail_path)).scaled(
             self.video_thumbnail.size(),
@@ -134,7 +133,7 @@ class VideoInfoCard(CardWidget):
     def setup_signals(self):
         self.start_button.clicked.connect(self.on_start_button_clicked)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
-    
+
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         self.progress_ring.show()
@@ -186,7 +185,7 @@ class VideoInfoCard(CardWidget):
             duration=1500,
             parent=self
         )
-    
+
     def on_transcript_finished(self, task):
         """转录完成处理"""
         self.start_button.setEnabled(True)
@@ -252,12 +251,12 @@ class TranscriptionInterface(QWidget):
         """文件选择处理"""
         desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
         file_dialog = QFileDialog()
-        
+
         # 构建文件过滤器
         video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
         audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
         filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
-        
+
         file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
         if file_path:
             self.create_task(file_path)
@@ -291,17 +290,18 @@ class TranscriptionInterface(QWidget):
         for file_path in files:
             if not os.path.isfile(file_path):
                 continue
-                
+
             file_ext = os.path.splitext(file_path)[1][1:].lower()
-            
+
             # 检查文件格式是否支持
-            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in
+                                                                                SupportedAudioFormats}
             is_supported = file_ext in supported_formats
-                        
+
             if is_supported:
                 self.create_task(file_path)
                 InfoBar.success(
-                    self.tr("导入成功"), 
+                    self.tr("导入成功"),
                     self.tr("开始语音转文字"),
                     duration=1500,
                     parent=self
@@ -314,6 +314,7 @@ class TranscriptionInterface(QWidget):
                     duration=1500,
                     parent=self
                 )
+
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

@@ -1,13 +1,9 @@
 from PyQt5.QtCore import QThread, pyqtSignal
-from ...core.thread.create_task_thread import CreateTaskThread
-from ...core.thread.transcript_thread import TranscriptThread
-from ...core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
-from ...core.thread.video_synthesis_thread import VideoSynthesisThread
-from ...core.entities import Task
 
-from .transcript_thread import TranscriptThread
 from .subtitle_optimization_thread import SubtitleOptimizationThread
+from .transcript_thread import TranscriptThread
 from .video_synthesis_thread import VideoSynthesisThread
+from ...core.entities import Task
 
 
 class SubtitlePipelineThread(QThread):
@@ -19,12 +15,12 @@ class SubtitlePipelineThread(QThread):
     progress = pyqtSignal(int, str)  # 进度值, 进度描述
     finished = pyqtSignal(Task)
     error = pyqtSignal(str)
-    
+
     def __init__(self, task: Task):
         super().__init__()
         self.task = task
         self.has_error = False
-        
+
     def run(self):
         try:
             def handle_error(error_msg):
@@ -42,7 +38,7 @@ class SubtitlePipelineThread(QThread):
 
             if self.has_error:
                 return
-            
+
             # 2. 字幕优化/翻译
             self.task.status = Task.Status.OPTIMIZING
             self.progress.emit(40, self.tr("开始优化字幕"))
@@ -69,7 +65,7 @@ class SubtitlePipelineThread(QThread):
             self.task.status = Task.Status.COMPLETED
             self.progress.emit(100, self.tr("处理完成"))
             self.finished.emit(self.task)
-            
+
         except Exception as e:
             self.task.status = Task.Status.FAILED
             self.error.emit(str(e))

@@ -1,25 +1,19 @@
 # coding:utf-8
-from typing import List, Union
+from typing import List
+from typing import Union
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QIcon, QPainter
+from PyQt5.QtGui import QColor, QPainter
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QFrame, QHBoxLayout, QLabel, QToolButton,
-                             QVBoxLayout, QPushButton)
-
+                             QVBoxLayout)
 from qfluentwidgets import ComboBox, ColorDialog
-
-from qfluentwidgets.common.style_sheet import FluentStyleSheet
+from qfluentwidgets import CompactSpinBox, CompactDoubleSpinBox
 from qfluentwidgets.common.config import isDarkTheme
-from qfluentwidgets.common.icon import FluentIconBase
 from qfluentwidgets.common.icon import FluentIcon as FIF
 from qfluentwidgets.common.icon import FluentIconBase, drawIcon
+from qfluentwidgets.common.style_sheet import FluentStyleSheet
 from qfluentwidgets.components.widgets.icon_widget import IconWidget
-
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QSpinBox
-from PyQt5.QtGui import QIcon
-from qfluentwidgets import SettingCard, CompactSpinBox, SpinBox, CompactDoubleSpinBox
-from typing import Union
 
 
 class SettingIconWidget(IconWidget):
@@ -126,14 +120,14 @@ class DoubleSpinBoxSettingCard(SettingCard):
     def __init__(self, icon: Union[str, QIcon], title: str, content: str = None,
                  minimum: float = 0.0, maximum: float = 100.0, decimals: int = 1, parent=None):
         super().__init__(icon, title, content, parent)
-                
+
         # 创建CompactDoubleSpinBox
         self.spinBox = CompactDoubleSpinBox(self)
         self.spinBox.setRange(minimum, maximum)
         self.spinBox.setDecimals(decimals)
         self.spinBox.setMinimumWidth(60)
-        self.spinBox.setSingleStep(0.2) # 设置步长为0.1
-        
+        self.spinBox.setSingleStep(0.2)  # 设置步长为0.1
+
         # 添加到布局
         self.hBoxLayout.addWidget(self.spinBox, 0, Qt.AlignRight)
         self.hBoxLayout.addSpacing(8)
@@ -156,16 +150,16 @@ class SpinBoxSettingCard(SettingCard):
 
     valueChanged = pyqtSignal(int)
 
-    def __init__(self, icon: Union[str, QIcon], title: str, content: str = None, 
+    def __init__(self, icon: Union[str, QIcon], title: str, content: str = None,
                  minimum: int = 0, maximum: int = 100, parent=None):
         super().__init__(icon, title, content, parent)
-                
+
         # 创建SpinBox
         self.spinBox = CompactSpinBox(self)
         self.spinBox.setRange(minimum, maximum)
         self.spinBox.setMinimumWidth(60)
         self.spinBox.setSingleStep(2)  # 设置步长为2
-        
+
         # 添加到布局
         self.hBoxLayout.addWidget(self.spinBox, 0, Qt.AlignRight)
         self.hBoxLayout.addSpacing(8)
@@ -191,7 +185,7 @@ class ComboBoxSettingCard(SettingCard):
 
     def __init__(self, icon: Union[str, QIcon], title: str, content: str = None, texts: List[str] = None, parent=None):
         super().__init__(icon, title, content, parent)
-        
+
         # 创建ComboBox
         self.comboBox = ComboBox(self)
         self.hBoxLayout.addWidget(self.comboBox, 0, Qt.AlignRight)
@@ -297,7 +291,7 @@ class ColorPickerButton(QToolButton):
     def __showColorDialog(self):
         """ show color dialog """
         w = ColorDialog(self.color, self.tr(
-            'Choose ')+self.title, self.window(), self.enableAlpha)
+            'Choose ') + self.title, self.window(), self.enableAlpha)
         w.colorChanged.connect(self.__onColorChanged)
         w.exec()
 

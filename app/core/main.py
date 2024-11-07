@@ -1,17 +1,11 @@
-import logging
 import os
 
-from bk_asr import BcutASR, JianYingASR, KuaiShouASR
+from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
 from bk_asr.ASRData import ASRData
-from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
-from subtitle_processor.optimizer import SubtitleOptimizer
-from subtitle_processor.summarizer import SubtitleSummarizer
-# from subtitle_processor.translator import SubtitleTranslator
-
-from utils.video_utils import add_subtitles, video2audio
-from app.core.subtitle_processor.subtitle_config import OPENAI_API_KEY, OPENAI_BASE_URL, MODEL
-from utils.optimize_subtitles import optimize_subtitles
 from utils.logger import setup_logger
+from utils.optimize_subtitles import optimize_subtitles
+
+# from subtitle_processor.translator import SubtitleTranslator
 
 os.environ['OPENAI_BASE_URL'] = OPENAI_BASE_URL
 os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
@@ -42,8 +36,8 @@ if __name__ == '__main__':
     # # raise 4
     # subtitle_json = asr_data.to_json()
 
-
-    asr_data = ASRData.from_srt(open(r"E:\GithubProject\VideoCaptioner\app\core\subtitles0.srt", encoding="utf-8").read())
+    asr_data = ASRData.from_srt(
+        open(r"E:\GithubProject\VideoCaptioner\app\core\subtitles0.srt", encoding="utf-8").read())
     optimize_subtitles(asr_data)
     asr_data.segments = asr_data.segments[:20]
     subtitle_json = asr_data.to_json()
@@ -63,14 +57,13 @@ if __name__ == '__main__':
     optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=10, thread_num=50, translate=True)
     print(optimizer_result)
 
-
     # print("[+]正在优化字幕...")
     # optimizer = SubtitleOptimizer(summary_content=summarize_result)
     # optimizer_result = optimizer.optimizer_multi_thread(subtitle_json, batch_num=50, thread_num=10)
 
     # 保存字幕
     for i, subtitle_text in optimizer_result.items():
-        seg = asr_data.segments[int(i)-1]
+        seg = asr_data.segments[int(i) - 1]
         seg.text = subtitle_text
     asr_data.to_srt(save_path=srt_file)
 

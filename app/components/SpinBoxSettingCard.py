@@ -1,9 +1,9 @@
+from typing import Union
+
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QSpinBox
 from PyQt5.QtGui import QIcon
 from qfluentwidgets import SettingCard, CompactSpinBox
 from qfluentwidgets.common.config import ConfigItem, qconfig
-from typing import Union
 
 
 class SpinBoxSettingCard(SettingCard):
@@ -11,17 +11,17 @@ class SpinBoxSettingCard(SettingCard):
 
     valueChanged = pyqtSignal(int)
 
-    def __init__(self, configItem: ConfigItem, icon: Union[str, QIcon], title: str, content: str = None, 
+    def __init__(self, configItem: ConfigItem, icon: Union[str, QIcon], title: str, content: str = None,
                  minimum: int = 0, maximum: int = 100, parent=None):
         super().__init__(icon, title, content, parent)
-        
+
         self.configItem = configItem
-        
+
         # 创建SpinBox
         self.spinBox = CompactSpinBox(self)
         self.spinBox.setRange(minimum, maximum)
         self.spinBox.setMinimumWidth(60)
-        
+
         # 添加到布局
         self.hBoxLayout.addWidget(self.spinBox, 0, Qt.AlignRight)
         self.hBoxLayout.addSpacing(8)
