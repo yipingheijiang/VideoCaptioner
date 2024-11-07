@@ -3,9 +3,15 @@ import re
 import subprocess
 from typing import Literal
 
+from ..utils.logger import setup_logger
+
+logger = setup_logger("video_utils")
+
 
 def video2audio(input_file: str, output: str = "") -> bool:
     """使用ffmpeg将视频转换为音频"""
+    logger.info(f"开始将视频转换为音频: {input_file}")
+    
     # 创建output目录
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -20,26 +26,34 @@ def video2audio(input_file: str, output: str = "") -> bool:
         '-y',
         output
     ]
-    result = subprocess.run(cmd, capture_output=True, check=True, encoding='utf-8', errors='replace')
-
-    if result.returncode == 0 and Path(output).is_file():
-        return True
-    else:
+    logger.info(f"执行命令: {' '.join(cmd)}")
+    
+    try:
+        result = subprocess.run(cmd, capture_output=True, check=True, encoding='utf-8', errors='replace')
+        if result.returncode == 0 and Path(output).is_file():
+            logger.info("音频转换成功")
+            return True
+        else:
+            logger.error("音频转换失败")
+            return False
+    except Exception as e:
+        logger.error(f"音频转换出错: {str(e)}")
         return False
 
 
 def check_cuda_available() -> bool:
     """检查CUDA是否可用"""
+    logger.info("检查CUDA是否可用")
     try:
         # 检查ffmpeg是否支持cuda
         result = subprocess.run(['ffmpeg', '-hwaccels'], capture_output=True, text=True)
         if 'cuda' not in result.stdout.lower():
+            logger.info("CUDA不可用")
             return False
-
-        # 检查系统是否有NVIDIA GPU
-        nvidia_smi = subprocess.run(['nvidia-smi'], capture_output=True)
-        return nvidia_smi.returncode == 0
-    except:
+        logger.info("CUDA可用")
+        return True
+    except Exception as e:
+        logger.error(f"检查CUDA出错: {str(e)}")
         return False
 
 
@@ -53,14 +67,18 @@ def add_subtitles(
         soft_subtitle: bool = False,
         progress_callback: callable = None
 ) -> None:
+    logger.info(f"开始添加字幕: 输入文件={input_file}, 字幕文件={subtitle_file}")
+    
     assert Path(input_file).is_file(), "输入文件不存在"
     assert Path(subtitle_file).is_file(), "字幕文件不存在"
 
     # 如果是WebM格式，强制使用硬字幕
     if Path(output).suffix.lower() == '.webm':
         soft_subtitle = False
+        logger.info("WebM格式视频，强制使用硬字幕")
 
     if soft_subtitle:
+        logger.info("使用软字幕")
         # 添加软字幕
         cmd = [
             'ffmpeg',
@@ -72,26 +90,21 @@ def add_subtitles(
             output,
             '-y'
         ]
+        logger.info(f"执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
     else:
+        logger.info("使用硬字幕")
         subtitle_file = Path(subtitle_file).as_posix().replace(':', r'\:')
         vf = f"subtitles='{subtitle_file}'"
-        # if Path(subtitle_file).suffix == '.srt':
-        #     font: str = 'MicrosoftYaHei',
-        #     font_size: int = 24,
-        #     font_color: str = '#FFFFFF',
-        #     font_color = font_color.lstrip('#')
-        #     font_color_ass = f"&H00{font_color[4:6]}{font_color[2:4]}{font_color[0:2]}&"
-        #     font = Path(font).as_posix().replace(':', r'\:')
-        #     force_style = f"FontName={font},FontSize={font_size},PrimaryColour={font_color_ass},Outline=1,Shadow=0,BackColour=&H009C9C9C&,Bold=-1,Alignment=2"
-        #     vf = f"subtitles={subtitle_file}:force_style='{force_style}'"
         if Path(output).suffix.lower() == '.webm':
             vcodec = 'libvpx-vp9'
+            logger.info("WebM格式视频，使用libvpx-vp9编码器")
 
         # 检查CUDA是否可用
         use_cuda = check_cuda_available()
         cmd = ['ffmpeg']
         if use_cuda:
+            logger.info("使用CUDA加速")
             cmd.extend(['-hwaccel', 'cuda'])
         cmd.extend([
             '-i', input_file,
@@ -102,6 +115,7 @@ def add_subtitles(
             output
         ])
 
+        logger.info(f"执行命令: {' '.join(cmd)}")
         cmd_str = subprocess.list2cmdline(cmd)
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8',
                                    errors='replace')
@@ -121,6 +135,7 @@ def add_subtitles(
                 if duration_match:
                     h, m, s = map(float, duration_match.groups())
                     total_duration = h * 3600 + m * 60 + s
+                    logger.info(f"视频总时长: {total_duration}秒")
 
             # 解析当前处理时间
             time_match = re.search(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
@@ -138,12 +153,16 @@ def add_subtitles(
         # 检查进程的返回码
         return_code = process.wait()
         if return_code != 0:
+            logger.error(f"视频合成失败，返回码: {return_code}")
             raise Exception(return_code)
+        logger.info("视频合成完成")
 
 
 def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
+    logger.info(f"获取视频信息: {filepath}")
     try:
         cmd = ["ffmpeg", "-i", filepath]
+        logger.info(f"执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
         info = result.stderr
 
@@ -164,10 +183,12 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
         if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):
             hours, minutes, seconds = map(float, duration_match.groups())
             video_info['duration_seconds'] = hours * 3600 + minutes * 60 + seconds
+            logger.info(f"视频时长: {video_info['duration_seconds']}秒")
 
         # 提取比特率
         if bitrate_match := re.search(r'bitrate: (\d+) kb/s', info):
             video_info['bitrate_kbps'] = int(bitrate_match.group(1))
+            logger.info(f"视频码率: {video_info['bitrate_kbps']}kb/s")
 
         # 提取视频流信息
         if video_stream_match := re.search(r'Stream #\d+:\d+.*Video: (\w+).*?, (\d+)x(\d+).*?, ([\d.]+) (?:fps|tb)',
@@ -178,11 +199,14 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
                 'height': int(video_stream_match.group(3)),
                 'fps': float(video_stream_match.group(4))
             })
+            logger.info(f"视频编码: {video_info['video_codec']}, 分辨率: {video_info['width']}x{video_info['height']}, FPS: {video_info['fps']}")
+            
             if thumbnail_path:
                 if extract_thumbnail(filepath, video_info['duration_seconds'] * 0.3, thumbnail_path):
                     video_info['thumbnail_path'] = thumbnail_path
         else:
             video_info['thumbnail_path'] = thumbnail_path
+            logger.warning("未找到视频流信息")
 
         # 提取音频流信息
         if audio_stream_match := re.search(r'Stream #\d+:\d+.*Audio: (\w+).* (\d+) Hz', info):
@@ -190,10 +214,11 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
                 'audio_codec': audio_stream_match.group(1),
                 'audio_sampling_rate': int(audio_stream_match.group(2))
             })
+            logger.info(f"音频编码: {video_info['audio_codec']}, 采样率: {video_info['audio_sampling_rate']}Hz")
 
         return video_info
     except Exception as e:
-        print(f"获取视频信息时出错: {str(e)}")
+        logger.error(f"获取视频信息时出错: {str(e)}")
         return {k: '' if isinstance(v, str) else 0 for k, v in video_info.items()}
 
 
@@ -206,8 +231,10 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
     :param thumbnail_path: 输出缩略图文件的路径
     :return: True 表示成功，False 表示失败
     """
+    logger.info(f"开始提取缩略图")
+    
     if not Path(video_path).is_file():
-        print(f"视频文件不存在: {video_path}")
+        logger.error(f"视频文件不存在: {video_path}")
         return False
 
     try:
@@ -229,35 +256,22 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
             "-y",
             thumbnail_path
         ]
+        logger.info(f"执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30, encoding='utf-8',
                                 errors='replace')
-        return result.returncode == 0
+        success = result.returncode == 0
+        if success:
+            logger.info("缩略图提取成功")
+        else:
+            logger.error("缩略图提取失败")
+        return success
 
     except Exception as e:
-        raise e
+        logger.error(f"提取缩略图时出错: {str(e)}")
         return False
 
 
 if __name__ == "__main__":
-    # subtitle = "E:/GithubProject/VideoCaptioner/app/core/subtitles0.srt"
-
-    video_path = r"C:\Users\weifeng\Videos\【卡卡】佛山周末穷游好去处!.mp4"
-    # video2audio(video_path, r"E:\\GithubProject\\VideoCaptioner\\app\\work_dir\\【卡卡】【语文大师】夜宿山寺——唐·李白\\audio.mp3")
-
-    extract_thumbnail(video_path, 2,
-                      "e:/GithubProject/VideoCaptioner/AppData/work-dir/【卡卡】佛山周末穷游好去处!/thumbnail.jpg")
-
-    # video_path = r"C:\Users\weifeng\Videos\xhs\08.mp4"
-    # # info = get_video_info(video_path, need_thumbnail=True)
-    # # print(info)
-
-    # thumbnail_file = r"C:\Users\weifeng\Videos\thumbnail.png"  # 替换为你希望保存的缩略图路径
-    # success = extract_thumbnail(video_path, 2, thumbnail_file)
-    # if not success:
-    #     print("提取缩略图失败")
-    # video_path = r"C:\Users\weifeng\Videos\xhs.mp4"
-    # video_path = r"C:\Users\weifeng\Videos\【卡卡】N进制演示器.mp4"
-    # srt_subtitle = r"E:\GithubProject\VideoCaptioner\app\work_dir\低视力音乐助人者_mp4\result_subtitle.srt"
-    # ass_subtitle = r"E:\GithubProject\VideoCaptioner\app\work_dir\低视力音乐助人者_mp4\result_subtitle.ass"
-    # # font_path = r"E:\GithubProject\VideoCaptioner\app\resource\AlibabaPuHuiTi-Medium.ttf"
-    # add_subtitles(video_path, srt_subtitle, "output.mp4", progress_callback=print, soft_subtitle=False)
+    video_path = r"C:\Users\weifeng\Videos\example_video.mp4"
+    thumbnail_path = "e:/example_thumbnail.jpg"
+    success = extract_thumbnail(video_path, 2, thumbnail_path)

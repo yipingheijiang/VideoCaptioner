@@ -13,7 +13,9 @@ from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButt
 from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
 from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from ..core.thread.create_task_thread import CreateTaskThread
+from ..config import ASSETS_PATH
 
+LOGO_PATH = ASSETS_PATH / "logo.png"
 
 class TaskCreationInterface(QWidget):
     """
@@ -99,13 +101,19 @@ class TaskCreationInterface(QWidget):
 
     def setup_logo(self):
         self.logo_label = QLabel(self)
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        logo_path = os.path.abspath(os.path.join(current_dir, "..", "resource", "logo.png"))
-        self.logo_pixmap = QPixmap(logo_path)
+        self.logo_pixmap = QPixmap(str(LOGO_PATH))
+            # Start of Selection
+            # 使用更高质量的平滑变换来缩放图像以减少锯齿
+        # self.logo_pixmap = self.logo_pixmap.scaled(
+        #     150, 150, 
+        #     Qt.KeepAspectRatio, 
+        #     Qt.SmoothTransformation
+        # )
+
         self.logo_label.setPixmap(self.logo_pixmap)
         self.logo_label.setAlignment(Qt.AlignCenter)
         self.main_layout.addWidget(self.logo_label)
-        self.main_layout.addSpacing(10)
+        self.main_layout.addSpacing(20)
 
     def setup_search_layout(self):
         self.search_layout = QHBoxLayout()
@@ -301,7 +309,6 @@ class TaskCreationInterface(QWidget):
         self.create_task_thread.start()
 
     def _process_url(self, url):
-        print(f"正在处理URL: {url}")
         self.create_task_thread = CreateTaskThread(url, 'url')
         self.create_task_thread.finished.connect(self.on_create_task_finished)
         self.create_task_thread.progress.connect(self.on_create_task_progress)

@@ -19,7 +19,7 @@ class Language(Enum):
 
 
 class SubtitleLayoutEnum(Enum):
-    """ 字幕布局 ["译文在上", "原文在上", "仅原文", "仅译文"]"""
+    """ 字幕布局 """
     TRANSLATE_ON_TOP = "译文在上"
     ORIGINAL_ON_TOP = "原文在上"
     ONLY_ORIGINAL = "仅原文"

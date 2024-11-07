@@ -11,10 +11,10 @@ import requests
 
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
+from ..utils.logger import setup_logger
 
+logger = setup_logger("jianying_asr")
 
-# from ASRData import ASRDataSeg
-# from BaseASR import BaseASR
 
 class JianYingASR(BaseASR):
     def __init__(self, audio_path: Union[str, bytes], use_cache: bool = False, need_word_time_stamp: bool = False,
@@ -82,18 +82,25 @@ class JianYingASR(BaseASR):
         return response.json()
 
     def _run(self, callback=None):
-        # logging.info("正在上传文件...")
         if callback:
             callback(20, "正在上传...")
+        logger.info("正在上传文件...")
         self.upload()
+        
         if callback:
             callback(50, "提交任务...")
+        logger.info("提交任务...")
         query_id = self.submit()
+        
         if callback:
             callback(60, "获取结果...")
+        logger.info("获取结果...")
         resp_data = self.query(query_id)
+        
         if callback:
             callback(100, "转录完成")
+        logger.info("转录完成")
+        
         return resp_data
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:

@@ -19,11 +19,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 {dialogue}
 """
 
-
 ASS_TEMP_FILENAME = CACHE_PATH / "preview.ass"  # 预览的临时 ASS 文件路径
 PREVIEW_IMAGE_FILENAME = CACHE_PATH / "preview.png"  # 预览的图片路径
 DEFAULT_BG_PATH = RESOURCE_PATH / "assets" / "default_bg.png"
-
 
 def run_subprocess(command: list):
     """运行子进程命令，并处理异常"""
@@ -34,24 +32,14 @@ def run_subprocess(command: list):
         raise
 
 def generate_ass_file(style_str: str, preview_text: Tuple[str, Optional[str]]) -> str:
-    """生成临时 ASS 文件
-
-    Args:
-        style_str: ASS 样式字符串
-        preview_text: 预览文本元组 (原文, 译文), 译文可选
-
-    Returns:
-        临时 ASS 文件路径
-    """
+    """生成临时 ASS 文件"""
     original_text, translate_text = preview_text
-
-    # 构建对话内容
-    dialogue = []
-    if translate_text:
-        dialogue.append(f"Dialogue: 0,0:00:00.00,0:00:01.00,Secondary,,0,0,0,,{translate_text}")
-        dialogue.append(f"Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,{original_text}")
-    else:
-        dialogue.append(f"Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,{original_text}")
+    dialogue = [
+        f"Dialogue: 0,0:00:00.00,0:00:01.00,Secondary,,0,0,0,,{translate_text}",
+        f"Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,{original_text}"
+    ] if translate_text else [
+        f"Dialogue: 0,0:00:00.00,0:00:01.00,Default,,0,0,0,,{original_text}"
+    ]
 
     ass_content = SCRIPT_INFO_TEMPLATE.format(
         style_str=style_str,
@@ -62,19 +50,9 @@ def generate_ass_file(style_str: str, preview_text: Tuple[str, Optional[str]]) -
     return str(ASS_TEMP_FILENAME)
 
 def ensure_background(bg_path: Path) -> Path:
-    """确保背景图片存在，若不存在则创建默认黑色背景
-
-    Args:
-        bg_path: 背景图片路径
-
-    Returns:
-        有效的背景图片路径
-    """
+    """确保背景图片存在，若不存在则创建默认黑色背景"""
     if not bg_path or not bg_path.exists():
-        if Path(DEFAULT_BG_PATH).exists():
-            bg_path = Path(DEFAULT_BG_PATH)
-            return bg_path
-        else:
+        if not Path(DEFAULT_BG_PATH).exists():
             DEFAULT_BG_PATH.parent.mkdir(parents=True, exist_ok=True)
             run_subprocess([
                 'ffmpeg', 
@@ -83,29 +61,18 @@ def ensure_background(bg_path: Path) -> Path:
                 '-frames:v', '1', 
                 str(DEFAULT_BG_PATH)
             ])
+        return Path(DEFAULT_BG_PATH)
     return bg_path
 
 def generate_preview(style_str: str, preview_text: Tuple[str, Optional[str]], bg_path: str) -> str:
-    """生成预览图片
-
-    Args:
-        style_str: ASS 样式字符串
-        preview_text: 预览文本元组 (原文, 译文), 译文可选
-        bg_path: 背景图片路径, 为空则使用默认黑色背景
-
-    Returns:
-        预览图片路径
-    """
+    """生成预览图片"""
     ass_file = generate_ass_file(style_str, preview_text)
-    bg_path = Path(bg_path)
-    bg_path = ensure_background(bg_path)
+    bg_path = ensure_background(Path(bg_path))
 
     output_path = PREVIEW_IMAGE_FILENAME
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 处理 ASS 文件路径
     ass_file_processed = ass_file.replace('\\', '/').replace(':', r'\\:')
-    output_path = output_path.as_posix()
     cmd = [
         'ffmpeg', 
         '-y',

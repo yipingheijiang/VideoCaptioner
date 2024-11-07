@@ -9,10 +9,12 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from ..entities import Task, TranscribeModelEnum, VideoInfo, LANGUAGES
 from ..utils.video_utils import get_video_info
 from ...common.config import cfg
+from ..utils.logger import setup_logger
+
+logger = setup_logger("create_task_thread")
 
 current_dir = Path(__file__).parent.parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
-
 
 class CreateTaskThread(QThread):
     finished = pyqtSignal(Task)
@@ -37,10 +39,12 @@ class CreateTaskThread(QThread):
             elif self.task_type == 'synthesis':
                 self.create_video_synthesis_task()
         except Exception as e:
+            logger.error("创建任务失败: %s", str(e))
             self.progress.emit(0, self.tr("创建任务失败"))
             self.error.emit(str(e))
 
     def create_file_task(self, file_path):
+        logger.info("开始创建文件任务")
         # 使用 Path 对象处理路径
         task_work_dir = Path(cfg.work_dir.value) / Path(file_path).stem
 
@@ -102,13 +106,16 @@ class CreateTaskThread(QThread):
         )
         self.finished.emit(task)
         self.progress.emit(100, self.tr("创建任务完成"))
+        logger.info("文件任务创建完成")
 
     def create_url_task(self, url):
+        logger.info("开始创建URL任务")
         self.progress.emit(5, self.tr("正在获取视频信息"))
         # 下载视频。保存到 cfg.work_dir.value 下
         video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value,
                                                                                        self.progress_hook)
         self.progress.emit(100, self.tr("下载视频完成"))
+        logger.info("视频下载完成")
 
         video_info = VideoInfo(
             file_name=Path(video_file_path).stem,
@@ -178,8 +185,10 @@ class CreateTaskThread(QThread):
             subtitle_style_srt=subtitle_style_srt
         )
         self.finished.emit(task)
+        logger.info("URL任务创建完成")
 
     def create_transcription_task(self, file_path):
+        logger.info("开始创建转录任务")
         # 使用 Path 对象处理路径
         task_work_dir = Path(file_path).parent
 
@@ -215,8 +224,10 @@ class CreateTaskThread(QThread):
             original_subtitle_save_path=str(original_subtitle_save_path),
         )
         self.finished.emit(task)
+        logger.info("转录任务创建完成")
 
     def create_subtitle_optimization_task(file_path):
+        logger.info("开始创建字幕优化任务")
         task_work_dir = Path(file_path.strip()).parent
 
         original_subtitle_save_path = task_work_dir / file_path
@@ -250,9 +261,11 @@ class CreateTaskThread(QThread):
             subtitle_layout=cfg.subtitle_layout.value,
             subtitle_style_srt=subtitle_style_srt
         )
+        logger.info("字幕优化任务创建完成")
         return task
 
     def create_video_synthesis_task(subtitle_file, video_file):
+        logger.info("开始创建视频合成任务")
         subtitle_file = Path(subtitle_file.strip()).as_posix()
         video_file = Path(video_file.strip()).as_posix()
         task_work_dir = Path(video_file.strip()).parent
@@ -271,6 +284,7 @@ class CreateTaskThread(QThread):
             video_save_path=str(video_save_path),
             soft_subtitle=cfg.soft_subtitle.value,
         )
+        logger.info("视频合成任务创建完成")
         return task
 
     def progress_hook(self, d):
@@ -284,6 +298,7 @@ class CreateTaskThread(QThread):
 
             self.progress.emit(int(float(clean_percent)),
                                f'{self.tr("下载进度")}: {clean_percent}%  {self.tr("速度")}: {clean_speed}')
+            logger.info("下载进度: %s%% 速度: %s", clean_percent, clean_speed)
 
 
 def sanitize_filename(name, replacement="_"):
@@ -339,6 +354,7 @@ def sanitize_filename(name, replacement="_"):
 
 
 def download(url, work_dir, progress_hook):
+    logger.info("开始下载视频: %s", url)
     # 设置工作目录
     # 初始化 ydl 选项
     initial_ydl_opts = {
@@ -399,4 +415,5 @@ def download(url, work_dir, progress_hook):
             thumbnail_file_path = str(file)
             break
 
+        logger.info("视频下载完成: %s", video_file_path)
         return video_file_path, subtitle_file_path, thumbnail_file_path, info_dict

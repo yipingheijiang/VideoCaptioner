@@ -5,7 +5,7 @@ from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
                             SplashScreen)
 
-from ..config import GITHUB_REPO_URL
+from ..config import GITHUB_REPO_URL, ASSETS_PATH
 from ..common.config import cfg
 from ..core.thread.version_manager_thread import VersionManager
 from .subtitle_style_interface import SubtitleStyleInterface
@@ -13,7 +13,7 @@ from .batch_process_interface import BatchProcessInterface
 from .home_interface import HomeInterface
 from .setting_interface import SettingInterface
 
-
+LOGO_PATH = ASSETS_PATH / "logo.png"
 
 class MainWindow(FluentWindow):
 
@@ -38,7 +38,7 @@ class MainWindow(FluentWindow):
         self.versionThread.started.connect(self.versionManager.performCheck)
         self.versionThread.start()
 
-        # 向导航界面添加项目
+        # 初始化导航界面
         self.initNavigation()
         self.splashScreen.finish()
 
@@ -50,21 +50,20 @@ class MainWindow(FluentWindow):
         self.addSubInterface(self.subtitleStyleInterface, FIF.FONT, self.tr('字幕样式'))
 
         self.navigationInterface.addSeparator()
-        pos = NavigationItemPosition.SCROLL
 
         # 在底部添加自定义小部件
         self.navigationInterface.addItem(routeKey='avatar', text='GitHub', icon=FIF.GITHUB, onClick=self.onGithubDialog, position=NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
 
         # 设置默认界面
-        self.switchTo(self.batchProcessInterface)
+        self.switchTo(self.homeInterface)
 
     def initWindow(self):
         """初始化窗口"""
         self.resize(1050, 800)
         self.setMinimumWidth(700)
-        self.setWindowIcon(QIcon(':/gallery/images/logo.png'))
-        self.setWindowTitle('VideoCaptioner')
+        self.setWindowIcon(QIcon(str(LOGO_PATH)))
+        self.setWindowTitle(self.tr('卡卡字幕助手 -- VideoCaptioner'))
 
         self.setMicaEffectEnabled(cfg.get(cfg.micaEnabled))
 
@@ -73,8 +72,8 @@ class MainWindow(FluentWindow):
         self.splashScreen.setIconSize(QSize(106, 106))
         self.splashScreen.raise_()
 
-        desktop = QApplication.desktop().availableGeometry()
         # 设置窗口位置, 居中
+        desktop = QApplication.desktop().availableGeometry()
         w, h = desktop.width(), desktop.height()
         self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
 
@@ -118,6 +117,7 @@ class MainWindow(FluentWindow):
             self.splashScreen.resize(self.size())
 
     def closeEvent(self, event):
+        # 关闭所有子界面
         self.homeInterface.close()
         self.batchProcessInterface.close()
         self.subtitleStyleInterface.close()

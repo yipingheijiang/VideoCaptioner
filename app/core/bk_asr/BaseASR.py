@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import zlib
 import tempfile
@@ -49,7 +48,7 @@ class BaseASR:
                 if os.path.exists(self.CACHE_FILE) and os.path.getsize(self.CACHE_FILE) > 20 * 1024 * 1024:
                     os.remove(self.CACHE_FILE)
             except IOError as e:
-                logging.error(f"Failed to save cache: {e}")
+                pass
 
     def _set_data(self):
         if isinstance(self.audio_path, bytes):

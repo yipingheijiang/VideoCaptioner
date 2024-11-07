@@ -7,20 +7,18 @@ import requests
 
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
+from ..utils.logger import setup_logger
+
+logger = setup_logger("bcut_asr")
 
 __version__ = "0.0.3"
-
 API_BASE_URL = "https://member.bilibili.com/x/bcut/rubick-interface"
-
 # 申请上传
 API_REQ_UPLOAD = API_BASE_URL + "/resource/create"
-
 # 提交上传
 API_COMMIT_UPLOAD = API_BASE_URL + "/resource/create/complete"
-
 # 创建任务
 API_CREATE_TASK = API_BASE_URL + "/task"
-
 # 查询结果
 API_QUERY_RESULT = API_BASE_URL + "/task/result"
 
@@ -79,7 +77,7 @@ class BcutASR(BaseASR):
         self.__per_size = resp_data["per_size"]
         self.__clips = len(resp_data["upload_urls"])
 
-        logging.info(
+        logger.info(
             f"申请上传成功, 总计大小{resp_data['size'] // 1024}KB, {self.__clips}分片, 分片大小{resp_data['per_size'] // 1024}KB: {self.__in_boss_key}"
         )
         self.__upload_part()
@@ -90,7 +88,7 @@ class BcutASR(BaseASR):
         for clip in range(self.__clips):
             start_range = clip * self.__per_size
             end_range = (clip + 1) * self.__per_size
-            logging.info(f"开始上传分片{clip}: {start_range}-{end_range}")
+            logger.info(f"开始上传分片{clip}: {start_range}-{end_range}")
             resp = requests.put(
                 self.__upload_urls[clip],
                 data=self.file_binary[start_range:end_range],
@@ -99,7 +97,7 @@ class BcutASR(BaseASR):
             resp.raise_for_status()
             etag = resp.headers.get("Etag")
             self.__etags.append(etag)
-            logging.info(f"分片{clip}上传成功: {etag}")
+            logger.info(f"分片{clip}上传成功: {etag}")
 
     def __commit_upload(self) -> None:
         """提交上传数据"""
@@ -118,7 +116,7 @@ class BcutASR(BaseASR):
         resp.raise_for_status()
         resp = resp.json()
         self.__download_url = resp["data"]["download_url"]
-        logging.info(f"提交成功")
+        logger.info(f"提交成功")
 
     def create_task(self) -> str:
         """开始创建转换任务"""
@@ -128,7 +126,7 @@ class BcutASR(BaseASR):
         resp.raise_for_status()
         resp = resp.json()
         self.task_id = resp["data"]["task_id"]
-        logging.info(f"任务已创建: {self.task_id}")
+        logger.info(f"任务已创建: {self.task_id}")
         return self.task_id
 
     def result(self, task_id: Optional[str] = None):
@@ -161,7 +159,7 @@ class BcutASR(BaseASR):
 
         callback(100, "转录成功")
 
-        logging.info(f"转换成功")
+        logger.info(f"转换成功")
         return json.loads(task_resp["result"])
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
@@ -173,7 +171,6 @@ class BcutASR(BaseASR):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     # Example usage
     audio_file = r"test.mp3"
     asr = BcutASR(audio_file)

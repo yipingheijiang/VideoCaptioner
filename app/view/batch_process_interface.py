@@ -213,7 +213,7 @@ class BatchProcessInterface(QWidget):
         """单个任务出错"""
         InfoBar.error(
             self.tr("任务出错"),
-            self.tr(f"任务出错: {error}"),
+            self.tr("任务出错:") + error,
             duration=2000,
             parent=self
         )

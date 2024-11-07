@@ -18,7 +18,7 @@ from ..core.utils.test_opanai import test_openai, get_openai_models
 
 
 class SettingInterface(ScrollArea):
-    """ Setting interface """
+    """ 设置界面 """
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -233,11 +233,10 @@ class SettingInterface(ScrollArea):
         self.setWidgetResizable(True)
         self.setObjectName('settingInterface')
 
-        # initialize style sheet
+        # 初始化样式表
         self.scrollWidget.setObjectName('scrollWidget')
         self.settingLabel.setObjectName('settingLabel')
 
-        # StyleSheet.SETTING_INTERFACE.apply(self)
         self.setStyleSheet("""        
             SettingInterface, #scrollWidget {
                 background-color: transparent;
@@ -253,7 +252,7 @@ class SettingInterface(ScrollArea):
             }
         """)
 
-        # initialize layout
+        # 初始化布局
         self.__initLayout()
         self.__connectSignalToSlot()
 
@@ -301,7 +300,7 @@ class SettingInterface(ScrollArea):
         self.expandLayout.addWidget(self.aboutGroup)
 
     def __connectSignalToSlot(self):
-        """ connect signal to slot """
+        """ 连接信号与槽 """
         cfg.appRestartSig.connect(self.__showRestartTooltip)
 
         # 检查 LLM 连接
@@ -327,17 +326,17 @@ class SettingInterface(ScrollArea):
         self.aboutCard.clicked.connect(self.checkUpdate)
 
     def __showRestartTooltip(self):
-        """ show restart tooltip """
+        """ 显示重启提示 """
         InfoBar.success(
-            self.tr('Updated successfully'),
-            self.tr('Configuration takes effect after restart'),
+            self.tr('更新成功'),
+            self.tr('配置将在重启后生效'),
             duration=1500,
             parent=self
         )
 
     def __onsavePathCardClicked(self):
-        """ download folder card clicked slot """
-        folder = QFileDialog.getExistingDirectory(self, self.tr("Choose folder"), "./")
+        """ 处理保存路径卡片点击事件 """
+        folder = QFileDialog.getExistingDirectory(self, self.tr("选择文件夹"), "./")
         if not folder or cfg.get(cfg.save_path) == folder:
             return
         cfg.set(cfg.save_path, folder)
@@ -370,7 +369,7 @@ class SettingInterface(ScrollArea):
         self.connection_thread.start()
 
     def onConnectionCheckFinished(self, is_success, message, models):
-        # 恢复检查按钮状态
+        """ 处理连接检查完成事件 """
         self.checkLLMConnectionCard.button.setEnabled(True)
         self.checkLLMConnectionCard.button.setText(self.tr("检查连接"))
         if models:
@@ -411,6 +410,7 @@ class LLMConnectionThread(QThread):
         self.model = model
 
     def run(self):
+        """ 查 LLM 连接并获取模型列表 """
         is_success, message = test_openai(self.api_base, self.api_key, self.model)
         models = get_openai_models(self.api_base, self.api_key)
         self.finished.emit(is_success, message, models)

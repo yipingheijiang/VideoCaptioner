@@ -1,29 +1,4 @@
-# OPENAI_BASE_URL = 'https://api.gptgod.online/v1'
-# OPENAI_API_KEY = 'sk-4StuHHm6Z1q0VcPHdPTUBdmKMsHW9JNZKe4jV7pJikBsGRuj'
-# MODEL = "gpt-4o-mini"
-#
 
-# OPENAI_BASE_URL = 'http://10.0.0.128:8000/v1'
-# OPENAI_API_KEY = 'sk-4StuHHm6Z1q0VcPHdPTUBdmKMsHW9JNZKe4jV7pJikBsGRuj'
-# MODEL = "claude-3-5-sonnet-20240620"
-
-# OPENAI_BASE_URL = 'https://api.smnet.asia/v1'
-# OPENAI_API_KEY = 'sk-zr0f9rc6VtfzdnAs0257Ee091a3e49119d7f8d1d55A33517'
-# MODEL = "gpt-4o-mini"
-
-# OPENAI_BASE_URL = 'https://api.turboai.one/v1'
-# OPENAI_API_KEY = 'sk-ZOCYCz5kexAS3X8JD3A33a5eB20f486eA26896798055F2C5'
-# MODEL = "claude-3-5-sonnet-20240620"
-
-# OPENAI_BASE_URL = 'https://api.groq.com/openai/v1'
-# OPENAI_API_KEY = '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'
-# MODEL = "llama-3.1-70b-versatile"
-#
-OPENAI_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4/'
-OPENAI_API_KEY = '2c5ea04d3b3bbc1b77c4be40728a0e55.4I2QsOArbptqgyfk'
-MODEL = "GLM-4-Plus"
-
-# 系统提示信息
 SPLIT_SYSTEM_PROMPT = """
 You are a subtitle segmentation expert, skilled in breaking down unsegmented text into individual segments, separated by <br>.
 Requirements:
@@ -183,7 +158,8 @@ Translate the provided subtitles into the target language while adhering to spec
 - Pay special attention to cultural nuances and idiomatic expressions to enhance relatability and engagement.
 """
 
-REFLECT_TRANSLATE_PROMPT0 = """### Role Definition
+REFLECT_TRANSLATE_PROMPT0 = """
+# Role Definition
 
 You are a **Subtitle Proofreading and Translation Expert**, responsible for handling subtitles generated through speech recognition. These subtitles may contain homophone errors, formatting issues, and more. Your task is not only to proofread the subtitles but also to translate them into another language, ensuring that the subtitles are **accurate**, **fluent**, and align with the cultural and stylistic norms of the target language.
 
@@ -255,7 +231,8 @@ Please return pure JSON following the format below:
 }
 """
 
-REFLECT_TRANSLATE_PROMPT = """You are a subtitle proofreading and translation expert. Your task is to process subtitles generated through speech recognition.
+REFLECT_TRANSLATE_PROMPT = """
+You are a subtitle proofreading and translation expert. Your task is to process subtitles generated through speech recognition.
 
 These subtitles may contain errors, and you need to correct the original subtitles and translate them into [TargetLanguage]. Please follow these guidelines:
 
@@ -319,7 +296,8 @@ Please process the given subtitles according to these instructions and return th
 
 """
 
-SINGLE_TRANSLATE_PROMPT = """You are a professional translator. 
+SINGLE_TRANSLATE_PROMPT = """
+You are a professional translator. 
 Please translate the following text into [target_language]. 
 Do not respond with unrelated content:
 """

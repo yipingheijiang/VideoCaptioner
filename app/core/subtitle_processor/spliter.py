@@ -5,6 +5,9 @@ from typing import List
 
 from .split_by_llm import split_by_llm, MAX_WORD_COUNT
 from ..bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
+from ..utils.logger import setup_logger
+
+logger = setup_logger("subtitle_spliter")
 
 SEGMENT_THRESHOLD = 1000  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
@@ -48,7 +51,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     new_segments = []
 
     for sentence in sentences:
-        # print(f"[+] 处理句子: {sentence}")
+        logger.debug(f"处理句子: {sentence}")
         sentence_proc = preprocess_text(sentence)
         word_count = count_words(sentence_proc)
         best_ratio = 0.0
@@ -86,8 +89,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
             merged_end_time = asr_data.segments[end_seg_index].end_time
             merged_seg = ASRDataSeg(merged_text, merged_start_time, merged_end_time)
 
-            # print(f"[+] 合并分段: {merged_seg.text}")
-            # print("=============")
+            logger.debug(f"合并分段: {merged_seg.text}")
 
             # 拆分超过最大词数的分段
             if count_words(merged_text) > MAX_WORD_COUNT:
@@ -99,8 +101,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
 
             asr_index = end_seg_index + 1  # 移动到下一个未处理的分段
         else:
-            # 无法匹配句子，跳过当前分段
-            print(f"[-] 无法匹配句子: {sentence}")
+            logger.warning(f"无法匹配句子: {sentence}")
             asr_index += 1
 
     return ASRData(new_segments)
@@ -111,7 +112,7 @@ def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> Lis
     基于最大时间间隔拆分长分段，尽可能避免拆分语义连续的英文单词
     """
     result_segs = []
-    # print(f"[+] 正在拆分长分段: {merged_text}")
+    logger.debug(f"正在拆分长分段: {merged_text}")
 
     # 基本情况：如果分段足够短或无法进一步拆分
     if count_words(merged_text) <= MAX_WORD_COUNT or len(segs_to_merge) == 1:
@@ -229,27 +230,27 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
 
     # 确定分段数
     num_segments = determine_num_segments(total_word_count, threshold=SEGMENT_THRESHOLD)
-    print(f"[+] 根据字数 {total_word_count}，确定分段数: {num_segments}")
+    logger.info(f"根据字数 {total_word_count}，确定分段数: {num_segments}")
 
     # 分割ASRData
     asr_data_segments = split_asr_data(asr_data, num_segments)
 
     # 多线程执行 split_by_llm 获取句子列表
-    # print("[+] 正在并行请求LLM将每个分段的文本拆分为句子...")
+    logger.info("正在并行请求LLM将每个分段的文本拆分为句子...")
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         def process_segment(asr_data_part):
             txt = asr_data_part.to_txt().replace("\n", "")
             sentences = split_by_llm(txt, model=model, use_cache=True)
-            print(f"[+] 分段的句子提取完成，共 {len(sentences)} 句")
+            logger.info(f"分段的句子提取完成，共 {len(sentences)} 句")
             return sentences
 
         all_sentences = list(executor.map(process_segment, asr_data_segments))
     all_sentences = [item for sublist in all_sentences for item in sublist]
 
-    # print(f"[+] 总共提取到 {len(all_sentences)} 句")
+    logger.info(f"总共提取到 {len(all_sentences)} 句")
 
     # 基于LLM已经分段的句子，对ASR分段进行合并
-    # print("[+] 正在合并ASR分段基于句子列表...")
+    logger.info("正在合并ASR分段基于句子列表...")
     merged_asr_data = merge_segments_based_on_sentences(asr_data, all_sentences)
 
     # 按开始时间排序合并后的分段(其实好像不需要)
@@ -258,27 +259,28 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
 
     return final_asr_data
 
-
-if __name__ == '__main__':
+def main():
+    # 示例：解析命令行参数
     import argparse
-
     parser = argparse.ArgumentParser(description="优化ASR分段处理脚本")
-    # parser.add_argument('--srt_path', type=str, required=True, help='输入的SRT文件路径')
-    # parser.add_argument('--save_path', type=str, required=True, help='输入的SRT文件路径')
     parser.add_argument('--num_threads', type=int, default=FIXED_NUM_THREADS, help='线程数量')
     args = parser.parse_args()
 
-    args.srt_path = r"E:\GithubProject\VideoCaptioner\work_dir\Wake up babe a dangerous new open-source AI model is here\subtitle\original.en.srt"
+    # 示例：设置文件路径
+    args.srt_path = r"E:\GithubProject\VideoCaptioner\work_dir\example\subtitle\original.en.srt"
     args.save_path = args.srt_path.replace(".srt", "_merged.srt")
 
-    # 从SRT文件加载ASR数据
+    # 示例：从SRT文件加载ASR数据
     with open(args.srt_path, encoding="utf-8") as f:
         asr_data = from_srt(f.read())
-    print(asr_data.is_word_timestamp())
-    # exit()
+    logger.info(f"ASR数据加载完成，是否包含单词时间戳: {asr_data.is_word_timestamp()}")
 
-    final_asr_data = main(asr_data=asr_data, save_path=args.save_path, num_threads=args.num_threads)
+    # 示例：合并ASR分段
+    final_asr_data = merge_segments(asr_data=asr_data, num_threads=args.num_threads)
 
-    # 保存到SRT文件
+    # 示例：保存合并后的SRT文件
     final_asr_data.to_srt(save_path=args.save_path)
-    print(f"[+] 已保存合并后的SRT文件: {args.save_path}")
+    logger.info(f"已保存合并后的SRT文件: {args.save_path}")
+
+if __name__ == '__main__':
+    main()

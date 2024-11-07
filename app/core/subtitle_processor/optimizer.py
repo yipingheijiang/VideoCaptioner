@@ -16,7 +16,7 @@ from ..subtitle_processor.aligner import SubtitleAligner
 from ..utils import json_repair
 from ..utils.logger import setup_logger
 
-logger = setup_logger("subtitle_translate")
+logger = setup_logger("subtitle_optimizer")
 
 BATCH_SIZE = 20
 MAX_THREADS = 10
@@ -70,13 +70,13 @@ class SubtitleOptimizer:
         batch_num = self.batch_num
         items = list(subtitle_json.items())[:]
         chunks = [dict(items[i:i + batch_num]) for i in range(0, len(items), batch_num)]
-        logger.debug(chunks)
 
         def process_chunk(chunk):
             if translate:
                 try:
                     result = self.translate(chunk, reflect)
                 except Exception as e:
+                    logger.error(f"翻译失败，使用单条翻译：{e}")
                     result = self.translate_single(chunk)
             else:
                 result = self.optimize(chunk)
@@ -88,7 +88,7 @@ class SubtitleOptimizer:
 
         # 合并结果
         optimizer_result = {k: v for result in results for k, v in result.items()}
-        # print("合并结果", optimizer_result)
+        logger.info("字幕优化完成")
         return optimizer_result
 
     @retry.retry(tries=2)
@@ -129,8 +129,7 @@ class SubtitleOptimizer:
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
         assert isinstance(response_content, dict) and len(response_content) == len(original_subtitle), "翻译结果错误"
-        print(f"{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}", len(response_content),
-              len(original_subtitle))
+        # logger.info(f"翻译结果：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}, 翻译条数：{len(response_content)}")
         translated_subtitle = {}
         original_list = list(original_subtitle.values())
         translated_list = list(response_content.values())
@@ -155,8 +154,6 @@ class SubtitleOptimizer:
                    {"role": "user", "content": example_input},
                    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
-        # print("input_content", input_content)
-        # print("prompt", prompt)
         return message
 
     def _create_optimizer_message(self, original_subtitle):
@@ -201,7 +198,7 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     # 验证是否匹配
     similar_list = calculate_similarity_list(aligned_source, aligned_target)
     if similar_list.count(True) / len(similar_list) >= 0.8:
-        # logger.info(f"修复成功！{similar_list.count(True) / len(similar_list)}:.2f")
+        logger.info(f"修复成功！相似度：{similar_list.count(True) / len(similar_list):.2f}")
         start_id = next(iter(dict1.keys()))
         modify_dict = {str(int(start_id) + i): value for i, value in enumerate(aligned_target)}
         return modify_dict

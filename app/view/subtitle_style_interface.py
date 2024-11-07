@@ -456,10 +456,11 @@ class SubtitleStyleInterface(QWidget):
 
     def updatePreviewImage(self):
         """更新预览图片"""
-        preview_width = int(self.previewTopWidget.width() * 0.98)
-        self.previewImage.scaledToWidth(preview_width)
-        if self.previewImage.height() > self.previewTopWidget.height():
-            self.previewImage.scaledToHeight(self.previewTopWidget.height())
+        height = int(self.previewTopWidget.height() * 0.98)
+        width = int(self.previewTopWidget.width() * 0.98)
+        self.previewImage.scaledToWidth(width)
+        if self.previewImage.height() > height:
+            self.previewImage.scaledToHeight(height)
         self.previewImage.setBorderRadius(8, 8, 8, 8)
 
     def resizeEvent(self, event):

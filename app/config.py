@@ -15,10 +15,10 @@ FEEDBACK_URL = "https://github.com/WEIFENG2333/VideoCaptioner/issues"
 ROOT_PATH = Path(__file__).parent
 
 RESOURCE_PATH = ROOT_PATH / "resource"
-
 APPDATA_PATH = ROOT_PATH.parent / "AppData"
 
 BIN_PATH = RESOURCE_PATH / "bin"
+ASSETS_PATH = RESOURCE_PATH / "assets"
 
 CACHE_PATH = APPDATA_PATH / "cache"
 LOG_PATH = APPDATA_PATH / "logs"

@@ -9,30 +9,32 @@ from .transcription_interface import TranscriptionInterface
 from .video_synthesis_interface import VideoSynthesisInterface
 
 
-
 class HomeInterface(QWidget):
+    # 定义一个信号，当任务完成时发出
     finished = pyqtSignal(Task)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        # 设置对象名称和样式
         self.setObjectName('HomeInterface')
         self.setStyleSheet("""
             HomeInterface{background: white}
         """)
 
+        # 创建分段控件和堆叠控件
         self.pivot = SegmentedWidget(self)
         self.pivot.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.stackedWidget = QStackedWidget(self)
         self.vBoxLayout = QVBoxLayout(self)
 
+        # 添加子界面
         self.task_creation_interface = TaskCreationInterface(self)
         self.transcription_interface = TranscriptionInterface(self)
         self.subtitle_optimization_interface = SubtitleOptimizationInterface(self)
         self.video_synthesis_interface = VideoSynthesisInterface(self)
 
-        # 添加子界面
         self.addSubInterface(self.task_creation_interface, 'TaskCreationInterface', self.tr('任务创建'))
         self.addSubInterface(self.transcription_interface, 'TranscriptionInterface', self.tr('语音转录'))
         self.addSubInterface(self.subtitle_optimization_interface, 'SubtitleOptimizationInterface',
@@ -70,8 +72,8 @@ class HomeInterface(QWidget):
         self.pivot.setCurrentItem('VideoSynthesisInterface')
 
     def addSubInterface(self, widget, objectName, text):
+        # 添加子界面到堆叠控件和分段控件
         widget.setObjectName(objectName)
-        # widget.setAlignment(Qt.AlignCenter)
         self.stackedWidget.addWidget(widget)
         self.pivot.addItem(
             routeKey=objectName,
@@ -80,11 +82,13 @@ class HomeInterface(QWidget):
         )
 
     def onCurrentIndexChanged(self, index):
+        # 当堆叠控件的当前索引改变时，更新分段控件的当前项
         widget = self.stackedWidget.widget(index)
         if widget:
             self.pivot.setCurrentItem(widget.objectName())
 
     def closeEvent(self, event):
+        # 关闭事件，关闭所有子界面
         self.task_creation_interface.close()
         self.transcription_interface.close()
         self.subtitle_optimization_interface.close()

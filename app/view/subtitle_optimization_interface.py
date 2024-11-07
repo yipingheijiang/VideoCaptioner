@@ -68,7 +68,6 @@ class SubtitleTableModel(QAbstractTableModel):
             self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole, Qt.EditRole])
 
     def update_all(self, data):
-        print(self.tr("update all ====="))
         self._data = data
         self.layoutChanged.emit()
 

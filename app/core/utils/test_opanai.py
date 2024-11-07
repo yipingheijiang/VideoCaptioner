@@ -13,12 +13,9 @@ def test_openai(base_url, api_key, model):
     bool: 是否成功
     str: 错误信息或者AI助手的回复
     """
-    # 创建OpenAI客户端
-    client = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=15)
-
     try:
-        # 发送请求到OpenAI API
-        response = client.chat.completions.create(
+        # 创建OpenAI客户端并发送请求到OpenAI API
+        response = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=15).chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -34,8 +31,8 @@ def test_openai(base_url, api_key, model):
 
 def get_openai_models(base_url, api_key):
     try:
-        client = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=10)
-        models = client.models.list()
+        # 创建OpenAI客户端并获取模型列表
+        models = openai.OpenAI(base_url=base_url, api_key=api_key, timeout=10).models.list()
 
         # 根据不同模型设置权重进行排序
         def get_model_weight(model_name):
@@ -46,9 +43,7 @@ def get_openai_models(base_url, api_key):
                 return 5
             elif model_name.startswith('claude-3'):
                 return 6
-            elif model_name.startswith('deepseek'):
-                return 3
-            elif model_name.startswith('glm'):
+            elif model_name.startswith(('deepseek', 'glm')):
                 return 3
             return 0
 
@@ -57,5 +52,5 @@ def get_openai_models(base_url, api_key):
             key=lambda x: (-get_model_weight(x), x)
         )
         return sorted_models
-    except Exception as e:
+    except Exception:
         return []

@@ -14,9 +14,8 @@ def count_words(text: str) -> int:
     返回:
         int: 文本中的总词数。
     """
-    # 统计英文单词
+    # 使用正则表达式统计英文单词和中文字符
     english_words = re.findall(r'\b\w+\b', text)
-    # 统计中文字符
     chinese_chars = re.findall(r'[\u4e00-\u9fff]', text)
     return len(english_words) + len(chinese_chars)
 
@@ -28,24 +27,18 @@ def optimize_subtitles(asr_data):
     参数:
         asr_data (ASRData): 包含字幕段落的 ASRData 对象。
     """
-    for i in range(len(asr_data.segments) - 1, 0, -1):
-        seg = asr_data.segments[i]
-        prev_seg = asr_data.segments[i - 1]
+    segments = asr_data.segments
+    for i in range(len(segments) - 1, 0, -1):
+        seg = segments[i]
+        prev_seg = segments[i - 1]
 
-        # 判断前一个段落的词数是否小于等于5且时间相邻
-        if count_words(prev_seg.text) <= 4 and abs(seg.start_time - prev_seg.end_time) < 100 and count_words(
-                seg.text) <= 10:
-            # print(prev_seg.end_time, seg.start_time)
-            # print(f"[-]合并段落: 【{prev_seg.text}】 --- 【{seg.text}】")
+        # 判断前一个段落的词数是否小于等于4且时间相邻
+        if count_words(prev_seg.text) <= 4 and abs(seg.start_time - prev_seg.end_time) < 100 and count_words(seg.text) <= 10:
             asr_data.merge_with_next_segment(i - 1)
 
 
 if __name__ == '__main__':
-    text = "they were manufacturing 1"
-    print(count_words(text))  # 3
-
-    text = "你好  world"
-    print(count_words(text))  # 3
-
-    text = "Hello, 世界！你好，world！"
-    print(count_words(text))  # 6
+    # 测试 count_words 函数
+    print(count_words("they were manufacturing 1"))  # 3
+    print(count_words("你好  world"))  # 3
+    print(count_words("Hello, 世界！你好，world！"))  # 6

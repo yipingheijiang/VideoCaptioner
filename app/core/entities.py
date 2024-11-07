@@ -195,4 +195,3 @@ class Task:
     video_save_path: Optional[str] = None
     soft_subtitle: bool = True
     subtitle_style_srt: Optional[str] = None
-    # TODO: 添加ass样式

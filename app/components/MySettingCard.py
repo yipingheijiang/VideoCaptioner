@@ -318,16 +318,3 @@ class ColorPickerButton(QToolButton):
 
         painter.setBrush(color)
         painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 5, 5)
-
-
-if __name__ == '__main__':
-    import sys
-    from PyQt5.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    w = SpinBoxSettingCard(FIF.FONT, 'test', 'test')
-    w.show()
-    sys.exit(app.exec_())
