@@ -1,3 +1,4 @@
+import webbrowser
 from PyQt5.QtCore import Qt, QUrl, pyqtSignal, QThread
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QWidget, QLabel, QFileDialog
@@ -6,9 +7,10 @@ from qfluentwidgets import InfoBar
 from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, OptionsSettingCard, PushSettingCard,
                             HyperlinkCard, PrimaryPushSettingCard, ScrollArea,
                             ComboBoxSettingCard, ExpandLayout, CustomColorSettingCard,
-                            setTheme, setThemeColor, RangeSettingCard)
+                            setTheme, setThemeColor, RangeSettingCard, MessageBox)
 
-from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL
+from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL, RELEASE_URL
+from app.core.thread.version_manager_thread import VersionManager
 from ..common.config import cfg
 from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from ..components.LineEditSettingCard import LineEditSettingCard
@@ -318,8 +320,11 @@ class SettingInterface(ScrollArea):
         self.themeCard.optionChanged.connect(lambda ci: setTheme(cfg.get(ci)))
         self.themeColorCard.colorChanged.connect(setThemeColor)
 
-        # 关于
+        # 反馈
         self.feedbackCard.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(FEEDBACK_URL)))
+
+        # 关于
+        self.aboutCard.clicked.connect(self.checkUpdate)
 
     def __showRestartTooltip(self):
         """ show restart tooltip """
@@ -393,6 +398,8 @@ class SettingInterface(ScrollArea):
                 parent=self
             )
 
+    def checkUpdate(self):
+        webbrowser.open(RELEASE_URL)
 
 class LLMConnectionThread(QThread):
     finished = pyqtSignal(bool, str, list)

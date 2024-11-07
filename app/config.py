@@ -7,9 +7,9 @@ APP_NAME = "VideoCaptioner"
 AUTHOR = "Weifeng"
 
 HELP_URL = "https://www.bkfeng.top"
-REPO_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets"
-RELEASE_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/releases/latest"
-FEEDBACK_URL = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets/issues"
+GITHUB_REPO_URL = "https://github.com/WEIFENG2333/VideoCaptioner"
+RELEASE_URL = "https://github.com/WEIFENG2333/VideoCaptioner/releases/latest"
+FEEDBACK_URL = "https://github.com/WEIFENG2333/VideoCaptioner/issues"
 
 # 路径
 ROOT_PATH = Path(__file__).parent

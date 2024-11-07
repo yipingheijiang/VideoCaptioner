@@ -5,7 +5,7 @@ from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
                             SplashScreen)
 
-from ..config import HELP_URL
+from ..config import GITHUB_REPO_URL
 from ..common.config import cfg
 from ..core.thread.version_manager_thread import VersionManager
 from .subtitle_style_interface import SubtitleStyleInterface
@@ -31,6 +31,7 @@ class MainWindow(FluentWindow):
         self.versionManager = VersionManager()
         self.versionManager.newVersionAvailable.connect(self.onNewVersion)
         self.versionManager.announcementAvailable.connect(self.onAnnouncement)
+
         # 创建版本检查线程
         self.versionThread = QThread()
         self.versionManager.moveToThread(self.versionThread)
@@ -52,12 +53,7 @@ class MainWindow(FluentWindow):
         pos = NavigationItemPosition.SCROLL
 
         # 在底部添加自定义小部件
-        self.navigationInterface.addWidget(
-            routeKey='avatar',
-            widget=NavigationAvatarWidget('zhiyiYo', ':/gallery/images/shoko.png'),
-            onClick=self.onSupport,
-            position=NavigationItemPosition.BOTTOM
-        )
+        self.navigationInterface.addItem(routeKey='avatar', text='GitHub', icon=FIF.GITHUB, onClick=self.onGithubDialog, position=NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.settingInterface, FIF.SETTING, self.tr('Settings'), NavigationItemPosition.BOTTOM)
 
         # 设置默认界面
@@ -85,17 +81,17 @@ class MainWindow(FluentWindow):
         self.show()
         QApplication.processEvents()
 
-    def onSupport(self):
-        """支持作者"""
+    def onGithubDialog(self):
+        """打开GitHub"""
         w = MessageBox(
-            '支持作者🥰',
-            '个人开发不易，如果这个项目帮助到了您，可以考虑请作者喝一瓶快乐水🥤。您的支持就是作者开发和维护项目的动力🚀',
+            'GitHub信息',
+            'VideoCaptioner 由本人在课余时间独立开发完成，目前托管在GitHub上，欢迎Star和Fork。项目诚然还有很多地方需要完善，遇到软件的问题或者BUG欢迎提交Issue。\n\n https://github.com/WEIFENG2333/VideoCaptioner',
             self
         )
-        w.yesButton.setText('确定')
+        w.yesButton.setText('打开 GitHub')
         w.cancelButton.setText('取消')
         if w.exec():
-            QDesktopServices.openUrl(QUrl(HELP_URL))
+            QDesktopServices.openUrl(QUrl(GITHUB_REPO_URL))
 
     def onNewVersion(self, version, force_update, update_info, download_url):
         """新版本提示"""
