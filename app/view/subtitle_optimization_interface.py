@@ -10,9 +10,9 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHe
 from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView
 from qfluentwidgets import FluentIcon as FIF
 
-from app.core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
+from ..core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
 from ..common.config import cfg
-from ..core.bk_asr.ASRData import from_subtitle_file, from_srt, from_vtt, from_youtube_vtt, from_json
+from ..core.bk_asr.ASRData import from_subtitle_file
 from ..core.entities import OutputSubtitleFormatEnum, SupportedSubtitleFormats
 from ..core.entities import Task
 from ..core.thread.create_task_thread import CreateTaskThread
@@ -201,13 +201,7 @@ class SubtitleOptimizationInterface(QWidget):
     def update_info(self, task: Task):
         """更新页面信息"""
         original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
-        if original_subtitle_save_path.suffix == '.srt':
-            asr_data = from_srt(Path(self.task.original_subtitle_save_path).read_text(encoding="utf-8"))
-        elif original_subtitle_save_path.suffix == '.vtt':
-            try:
-                asr_data = from_youtube_vtt(Path(self.task.original_subtitle_save_path).read_text(encoding="utf-8"))
-            except Exception as e:
-                asr_data = from_vtt(Path(self.task.original_subtitle_save_path).read_text(encoding="utf-8"))
+        asr_data = from_subtitle_file(original_subtitle_save_path)
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(self.tr("已加载文件"))
@@ -259,6 +253,14 @@ class SubtitleOptimizationInterface(QWidget):
 
     def update_all(self, data):
         self.model.update_all(data)
+
+    def remove_widget(self):
+        """隐藏顶部开始按钮和底部进度条"""
+        self.start_button.hide()
+        for i in range(self.bottom_layout.count()):
+            widget = self.bottom_layout.itemAt(i).widget()
+            if widget:
+                widget.hide()
 
     def on_file_select(self):
         # 构建文件过滤器

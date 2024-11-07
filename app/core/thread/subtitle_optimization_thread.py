@@ -4,8 +4,8 @@ from typing import Dict
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from app.core.subtitle_processor.optimizer import SubtitleOptimizer
-from app.core.subtitle_processor.summarizer import SubtitleSummarizer
+from ..subtitle_processor.optimizer import SubtitleOptimizer
+from ..subtitle_processor.summarizer import SubtitleSummarizer
 from ..bk_asr.ASRData import from_subtitle_file
 from ..entities import Task
 from ..subtitle_processor.spliter import merge_segments

@@ -5,11 +5,13 @@ from threading import Lock
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog
-from qfluentwidgets import ComboBox, CardWidget, ToolTipFilter, \
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QMainWindow
+from qfluentwidgets import ComboBox, CardWidget, ToolTipFilter, FluentWindow, isDarkTheme, \
     ToolTipPosition, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
-    InfoBadgePosition, ProgressRing, InfoBarPosition, ScrollArea, Action, RoundMenu, IconInfoBadge, InfoLevel
+    InfoBadgePosition, ProgressRing, InfoBarPosition, ScrollArea, Action, RoundMenu, IconInfoBadge, \
+    InfoLevel
 from qfluentwidgets import FluentIcon as FIF
+from qframelesswindow import FramelessWindow, StandardTitleBar
 
 from ..config import RESOURCE_PATH
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
@@ -17,6 +19,7 @@ from ..core.entities import Task, VideoInfo
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
 from ..core.thread.transcript_thread import TranscriptThread
+from ..view.subtitle_optimization_interface import SubtitleOptimizationInterface
 
 
 class BatchProcessInterface(QWidget):
@@ -225,6 +228,8 @@ class BatchProcessInterface(QWidget):
 
     def on_add_file(self):
         """添加文件按钮点击事件"""
+        self.create_task(r"C:\Users\weifeng\Videos\【语文大师】夜宿山寺——唐·李白.mp4")
+        return
         # 构建文件过滤器字符串
         video_formats = [f"*.{fmt.value}" for fmt in SupportedVideoFormats]
         audio_formats = [f"*.{fmt.value}" for fmt in SupportedAudioFormats]
@@ -371,6 +376,7 @@ class TaskInfoCard(CardWidget):
 
         self.transcript_thread = None
         self.subtitle_thread = None
+        self.subtitle_window = None  # 添加成员变量
 
     def setup_ui(self):
         self.setFixedHeight(150)
@@ -440,10 +446,10 @@ class TaskInfoCard(CardWidget):
 
     def setup_button_layout(self):
         self.button_layout = QVBoxLayout()
-        self.remove_button = PushButton(self.tr("删除"), self)
+        self.preview_subtitle_button = PushButton(self.tr("预览字幕"), self)
         self.open_folder_button = PushButton(self.tr("打开文件夹"), self)
         self.start_button = PrimaryPushButton(self.tr("开始转录"), self)
-        self.button_layout.addWidget(self.remove_button)
+        self.button_layout.addWidget(self.preview_subtitle_button)
         self.button_layout.addWidget(self.open_folder_button)
         self.button_layout.addWidget(self.start_button)
 
@@ -453,6 +459,10 @@ class TaskInfoCard(CardWidget):
         button_widget.setLayout(self.button_layout)
         button_widget.setFixedWidth(150)
         self.layout.addWidget(button_widget)
+
+    def mouseDoubleClickEvent(self, event):
+        """双击事件处理"""
+        self.open_subtitle()
 
     def update_info(self, video_info: VideoInfo):
         """更新视频信息显示"""
@@ -496,11 +506,16 @@ class TaskInfoCard(CardWidget):
     def setup_signals(self):
         self.start_button.clicked.connect(self.start)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
-        self.remove_button.clicked.connect(lambda: self.remove.emit(self))
+        self.preview_subtitle_button.clicked.connect(self.open_subtitle)
 
     def show_context_menu(self, pos):
         """显示右键菜单"""
         menu = RoundMenu(parent=self)
+        
+        # 添加打开字幕选项
+        open_subtitle_action = Action(self.tr("打开字幕"), self)
+        open_subtitle_action.triggered.connect(self.open_subtitle)
+        menu.addAction(open_subtitle_action)
 
         # 添加菜单项
         open_folder_action = Action(self.tr("打开文件夹"), self)
@@ -521,6 +536,35 @@ class TaskInfoCard(CardWidget):
 
         # 显示菜单
         menu.exec_(self.mapToGlobal(pos))
+
+    def open_subtitle(self):
+        """打开字幕优化界面"""
+        preview_subtitle_path = Path(self.task.original_subtitle_save_path)
+        if self.task.result_subtitle_save_path:
+            preview_subtitle_path = Path(self.task.result_subtitle_save_path)
+        if preview_subtitle_path.exists():
+            self.subtitle_window = QWidget()
+            self.subtitle_window.setWindowTitle(self.tr("字幕预览"))
+            subtitle_interface = SubtitleOptimizationInterface(self.subtitle_window)
+            subtitle_interface.load_subtitle_file(str(preview_subtitle_path))
+            subtitle_interface.remove_widget()
+            layout = QHBoxLayout(self.subtitle_window)
+            layout.setContentsMargins(0, 0, 0, 10)
+            layout.addWidget(subtitle_interface)
+            
+            self.subtitle_window.resize(1000, 800)
+
+            theme = 'dark' if isDarkTheme() else 'light'
+            with open(RESOURCE_PATH / "assets" / "qss" / theme / "demo.qss", encoding='utf-8') as f:
+                self.subtitle_window.setStyleSheet(f.read())
+            self.subtitle_window.show()
+        else:
+            InfoBar.warning(
+                self.tr("警告"),
+                self.tr("字幕文件不存在"), 
+                duration=2000,
+                parent=self
+            )
 
     def cancel(self):
         """修改任务状态"""
@@ -559,7 +603,7 @@ class TaskInfoCard(CardWidget):
         self.progress_ring.show()
         self.progress_ring.setValue(100)
         self.start_button.setDisabled(True)
-        self.remove_button.setDisabled(True)
+        self.preview_subtitle_button.setDisabled(True)
         self.task_state.setLevel(InfoLevel.WARNING)
         self.task_state.setIcon(FIF.SYNC)
 
@@ -635,7 +679,7 @@ class TaskInfoCard(CardWidget):
         """重置UI状态"""
         self.start_button.setEnabled(True)
         self.start_button.setText(self.tr("开始转录"))
-        self.remove_button.setEnabled(True)
+        self.preview_subtitle_button.setEnabled(True)
         self.progress_ring.setValue(100)
         self.task_state.setLevel(InfoLevel.INFOAMTION)
         self.task_state.setIcon(FIF.REMOVE)
