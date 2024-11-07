@@ -146,6 +146,8 @@ class VideoSynthesisInterface(QWidget):
 
     def process(self):
         self.synthesize_button.setEnabled(False)
+        self.progress_bar.resume()
+        
         if not self.task:
             self.task = None
             self.create_task()
@@ -184,6 +186,7 @@ class VideoSynthesisInterface(QWidget):
 
     def on_video_synthesis_error(self, error):
         self.synthesize_button.setEnabled(True)
+        self.progress_bar.error()
         InfoBar.error(
             self.tr("错误"),
             str(error),

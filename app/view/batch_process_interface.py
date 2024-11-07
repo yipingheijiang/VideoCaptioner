@@ -606,6 +606,7 @@ class TaskInfoCard(CardWidget):
         self.preview_subtitle_button.setDisabled(True)
         self.task_state.setLevel(InfoLevel.WARNING)
         self.task_state.setIcon(FIF.SYNC)
+        self.progress_ring.resume()
 
         # 开始转录过程
         if self.task.status == Task.Status.TRANSCRIBING:
@@ -656,7 +657,7 @@ class TaskInfoCard(CardWidget):
         self.reset_ui()
         self.task_state.setLevel(InfoLevel.ERROR)
         self.task_state.setIcon(FIF.CLOSE)
-
+        self.progress_ring.error()
         self.update_tooltip()
         self.error.emit(error)
         InfoBar.error(

@@ -210,6 +210,7 @@ class SubtitleOptimizationInterface(QWidget):
         """主处理函数"""
         self.start_button.setEnabled(False)
         self.file_select_button.setEnabled(False)
+        self.progress_bar.resume()
         self._update_task_config()
 
         self.subtitle_optimization_thread = SubtitleOptimizationThread(self.task)
@@ -242,6 +243,7 @@ class SubtitleOptimizationInterface(QWidget):
     def on_subtitle_optimization_error(self, error):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
+        self.progress_bar.error()
         InfoBar.error(self.tr("优化失败"), self.tr(error), duration=20000, parent=self)
 
     def on_subtitle_optimization_progress(self, value, status):
