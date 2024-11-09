@@ -12,7 +12,7 @@ from qfluentwidgets import FluentIcon as FIF
 
 from ..core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
 from ..common.config import cfg
-from ..core.bk_asr.ASRData import from_subtitle_file
+from ..core.bk_asr.ASRData import from_subtitle_file, from_json
 from ..core.entities import OutputSubtitleFormatEnum, SupportedSubtitleFormats
 from ..core.entities import Task
 from ..core.thread.create_task_thread import CreateTaskThread

@@ -7,16 +7,27 @@ from pathlib import Path
 from .ASRData import ASRDataSeg, from_srt
 from .BaseASR import BaseASR
 from ..utils.logger import setup_logger
+from ...config import MODEL_PATH
 
 logger = setup_logger("whisper_asr")
 
+
 class WhisperASR(BaseASR):
-    def __init__(self, audio_path, model_path=None, language="en", whisper_cpp_path="whisper-cpp",
+    def __init__(self, audio_path, language="en", whisper_cpp_path="whisper-cpp", whisper_model=None,
                  use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache)
-        if model_path is None:
-            model_path = r"E:\GithubProject\VideoCaptioner\app\resource\models\ggml-medium.bin"
-        self.model_path = Path(model_path)
+        # 如果指定了 whisper_model，则在 models 目录下查找对应模型
+        if whisper_model:
+            models_dir = Path(MODEL_PATH)
+            model_files = list(models_dir.glob(f"*ggml*{whisper_model}*.bin"))
+            if not model_files:
+                raise ValueError(f"在 {models_dir} 目录下未找到包含 '{whisper_model}' 的模型文件")
+            model_path = str(model_files[0])
+            logger.info(f"找到模型文件: {model_path}")
+        else:
+            raise ValueError("whisper_model 不能为空")
+
+        self.model_path = model_path
         self.whisper_cpp_path = Path(whisper_cpp_path)
         self.need_word_time_stamp = need_word_time_stamp
         self.language = language

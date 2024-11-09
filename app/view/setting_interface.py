@@ -15,13 +15,15 @@ from ..common.config import cfg
 from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from ..components.LineEditSettingCard import LineEditSettingCard
 from ..core.utils.test_opanai import test_openai, get_openai_models
-
+from ..components.WhisperSettingDialog import WhisperSettingDialog
 
 class SettingInterface(ScrollArea):
     """ 设置界面 """
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.setWindowTitle(self.tr("设置"))
+
         self.scrollWidget = QWidget()
         self.expandLayout = ExpandLayout(self.scrollWidget)
 
@@ -38,13 +40,13 @@ class SettingInterface(ScrollArea):
             texts=[model.value for model in cfg.transcribe_model.validator.options],
             parent=self.transcribeGroup
         )
-        self.transcribeLanguageCard = ComboBoxSettingCard(
-            cfg.transcribe_language,
+        self.whisperSettingCard = HyperlinkCard(
+            '',
+            self.tr('打开 Whisper 设置'),
             FIF.LANGUAGE,
-            self.tr('Whisper 转录语言'),
-            self.tr('选择语音转成文字的语言(仅针对Whisper模型)'),
-            texts=[lang.value for lang in cfg.transcribe_language.validator.options],
-            parent=self.transcribeGroup
+            self.tr('Whisper 设置'),
+            self.tr('配置 Whisper 模型和转录语言'),
+            self.transcribeGroup
         )
 
         # LLM 配置
@@ -204,14 +206,14 @@ class SettingInterface(ScrollArea):
             self.tr('打开帮助页面'),
             FIF.HELP,
             self.tr('帮助'),
-            self.tr('发现新功能并了解有关PyQt-Fluent-Widgets的使用技巧'),
+            self.tr('发现新功能并了解有关VideoCaptioner的使用技巧'),
             self.aboutGroup
         )
         self.feedbackCard = PrimaryPushSettingCard(
             self.tr('提供反馈'),
             FIF.FEEDBACK,
             self.tr('提供反馈'),
-            self.tr('通过提供反馈帮助我们改进PyQt-Fluent-Widgets'),
+            self.tr('提供反馈帮助我们改进VideoCaptioner'),
             self.aboutGroup
         )
         self.aboutCard = PrimaryPushSettingCard(
@@ -261,7 +263,7 @@ class SettingInterface(ScrollArea):
 
         # 添加卡片到组
         self.transcribeGroup.addSettingCard(self.transcribeModelCard)
-        self.transcribeGroup.addSettingCard(self.transcribeLanguageCard)
+        self.transcribeGroup.addSettingCard(self.whisperSettingCard)
 
         self.llmGroup.addSettingCard(self.apiKeyCard)
         self.llmGroup.addSettingCard(self.apiBaseCard)
@@ -303,6 +305,10 @@ class SettingInterface(ScrollArea):
         """ 连接信号与槽 """
         cfg.appRestartSig.connect(self.__showRestartTooltip)
 
+
+        # Whisper 设置
+        self.whisperSettingCard.linkButton.clicked.connect(self.show_whisper_settings)
+
         # 检查 LLM 连接
         self.checkLLMConnectionCard.clicked.connect(self.checkLLMConnection)
 
@@ -325,6 +331,17 @@ class SettingInterface(ScrollArea):
         # 关于
         self.aboutCard.clicked.connect(self.checkUpdate)
 
+
+    def show_whisper_settings(self):
+        """显示Whisper设置对话框"""
+        dialog = WhisperSettingDialog(self.window())
+        if dialog.exec_():
+            if dialog.check_whisper_model():
+                return True
+            else:
+                return False
+        return False
+    
     def __showRestartTooltip(self):
         """ 显示重启提示 """
         InfoBar.success(

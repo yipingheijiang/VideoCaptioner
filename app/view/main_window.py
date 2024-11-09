@@ -58,6 +58,13 @@ class MainWindow(FluentWindow):
         # 设置默认界面
         self.switchTo(self.homeInterface)
 
+    def switchTo(self, interface):
+        if interface.windowTitle():
+            self.setWindowTitle(interface.windowTitle())
+        else:
+            self.setWindowTitle(self.tr('卡卡字幕助手 -- VideoCaptioner'))
+        self.stackedWidget.setCurrentWidget(interface, popOut=False)
+
     def initWindow(self):
         """初始化窗口"""
         self.resize(1050, 800)

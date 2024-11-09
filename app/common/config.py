@@ -7,7 +7,7 @@ from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, Boo
                             Theme, FolderValidator, ConfigSerializer, EnumSerializer)
 
 from app.config import WORK_PATH, SETTINGS_PATH
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, TranscribeLanguageEnum
+from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, TranscribeLanguageEnum, WhisperModelEnum
 
 
 class Language(Enum):
@@ -36,6 +36,7 @@ class LanguageSerializer(ConfigSerializer):
         return Language(QLocale(value)) if value != "Auto" else Language.AUTO
 
 
+
 class Config(QConfig):
     """ Config of application """
     # LLM CONFIG
@@ -52,12 +53,17 @@ class Config(QConfig):
     transcribe_language = OptionsConfigItem("Transcribe", "TranscribeLanguage", TranscribeLanguageEnum.ENGLISH.value,
                                             OptionsValidator(TranscribeLanguageEnum),
                                             EnumSerializer(TranscribeLanguageEnum))
+    # Whisper 配置
+    whisper_model = OptionsConfigItem("Whisper", "Model", WhisperModelEnum.TINY.value,
+                                      OptionsValidator(WhisperModelEnum), EnumSerializer(WhisperModelEnum))
+
     # 字幕配置
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
     target_language = OptionsConfigItem("Subtitle", "TargetLanguage", TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
                                         OptionsValidator(TargetLanguageEnum), EnumSerializer(TargetLanguageEnum))
     soft_subtitle = ConfigItem("Subtitle", "SoftSubtitle", False, BoolValidator())
+
 
     # 字幕样式配置
     subtitle_style_name = ConfigItem("SubtitleStyle", "StyleName", "default")

@@ -20,15 +20,16 @@ APPDATA_PATH = ROOT_PATH.parent / "AppData"
 BIN_PATH = RESOURCE_PATH / "bin"
 ASSETS_PATH = RESOURCE_PATH / "assets"
 
+
 CACHE_PATH = APPDATA_PATH / "cache"
 LOG_PATH = APPDATA_PATH / "logs"
 SETTINGS_PATH = APPDATA_PATH / "settings.json"
 WORK_PATH = APPDATA_PATH / "work-dir"
+MODEL_PATH = APPDATA_PATH / "models"
 
 # 日志配置
 LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-
-# 添加 bin 路径
+# 环境变量添加 bin 路径
 os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(BIN_PATH)

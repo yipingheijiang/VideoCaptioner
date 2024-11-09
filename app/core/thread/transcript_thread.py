@@ -66,6 +66,7 @@ class TranscriptThread(QThread):
             }
             if self.task.transcribe_model == TranscribeModelEnum.WHISPER:
                 args["language"] = self.task.transcribe_language
+                args["whisper_model"] = self.task.whisper_model
             asr = asr_class(self.task.audio_save_path, **args)
             asr_data = asr.run(callback=self.progress_callback)
 

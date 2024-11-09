@@ -248,9 +248,7 @@ class BatchProcessInterface(QWidget):
         )
 
     def on_add_file(self):
-        """���加文件按钮点击事件"""
-        self.create_task(r"C:\Users\weifeng\Videos\【语文大师】夜宿山寺——唐·李白.mp4")
-        return
+        """添加文件按钮点击事件"""
         # 构建文件过滤器字符串
         video_formats = [f"*.{fmt.value}" for fmt in SupportedVideoFormats]
         audio_formats = [f"*.{fmt.value}" for fmt in SupportedAudioFormats]

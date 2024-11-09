@@ -51,7 +51,7 @@ def generate_ass_file(style_str: str, preview_text: Tuple[str, Optional[str]]) -
 
 def ensure_background(bg_path: Path) -> Path:
     """确保背景图片存在，若不存在则创建默认黑色背景"""
-    if not bg_path or not bg_path.exists():
+    if not bg_path.is_file() or not bg_path.exists():
         if not Path(DEFAULT_BG_PATH).exists():
             DEFAULT_BG_PATH.parent.mkdir(parents=True, exist_ok=True)
             run_subprocess([

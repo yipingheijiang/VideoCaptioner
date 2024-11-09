@@ -9,6 +9,8 @@ from typing import Dict, Tuple, Union
 
 import requests
 
+from app.config import VERSION
+
 from .ASRData import ASRDataSeg
 from .BaseASR import BaseASR
 from ..utils.logger import setup_logger
@@ -116,7 +118,7 @@ class JianYingASR(BaseASR):
     def _get_tid(self):
         i = str(datetime.datetime.now().year)[3]
         fr = 390 + int(i)
-        ed = f"3278516897751" if int(i)%2 != 0 else f"{uuid.getnode():012d}"
+        ed = f"3278516897751" if int(i)%2 != 0 else f"{uuid.getnode():013d}"
         print(f"{fr}{ed}")
         return f"{fr}{ed}"
 

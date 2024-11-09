@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 import os
+from pathlib import Path
 import sys
 from urllib.parse import urlparse
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
-from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel
+from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel, ToolButton
+from qfluentwidgets import FluentIcon, FluentStyleSheet
 
 from ..common.config import cfg
 from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
 from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
 from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from ..core.thread.create_task_thread import CreateTaskThread
-from ..config import ASSETS_PATH
+from ..config import ASSETS_PATH, MODEL_PATH
+from ..components.WhisperSettingDialog import WhisperSettingDialog
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 
@@ -50,6 +53,12 @@ class TaskCreationInterface(QWidget):
         self.config_layout.setObjectName("config_layout")
         self.config_layout.setSpacing(20)
 
+        # 创建转录模型卡片和设置按钮的容器
+        transcription_container = QWidget()
+        transcription_layout = QHBoxLayout(transcription_container)
+        transcription_layout.setContentsMargins(0, 0, 0, 0)
+        transcription_layout.setSpacing(5)
+
         # 创建转录模型卡片
         self.transcription_model_card = ComboBoxSimpleSettingCard(
             self.tr("转录模型"),
@@ -58,8 +67,19 @@ class TaskCreationInterface(QWidget):
             self
         )
         self.transcription_model_card.valueChanged.connect(
-            lambda value: cfg.set(cfg.transcribe_model, TranscribeModelEnum(value))
+            self.on_transcription_model_changed
         )
+        
+        # 创建设置按钮
+        self.whisper_setting_button = ToolButton(FluentIcon.SETTING)
+        # self.whisper_setting_button.setIcon(FluentIcon.SETTING)
+        self.whisper_setting_button.setFixedSize(32, 32)
+        self.whisper_setting_button.clicked.connect(self.show_whisper_settings)
+        self.whisper_setting_button.setVisible(
+            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value
+        )
+        transcription_layout.addWidget(self.transcription_model_card)
+        transcription_layout.addWidget(self.whisper_setting_button)
 
         # 创建字幕修正卡片
         self.subtitle_optimization_card = SwitchButtonSimpleSettingCard(
@@ -88,7 +108,7 @@ class TaskCreationInterface(QWidget):
             lambda value: cfg.set(cfg.target_language, TargetLanguageEnum(value))
         )
 
-        self.config_layout.addWidget(self.transcription_model_card)
+        self.config_layout.addWidget(transcription_container)
         self.config_layout.addWidget(self.subtitle_optimization_card)
         self.config_layout.addWidget(self.subtitle_translation_card)
         self.config_layout.addWidget(self.target_language_card)
@@ -96,24 +116,22 @@ class TaskCreationInterface(QWidget):
         config_container = QWidget()
         config_container.setLayout(self.config_layout)
         config_container.setFixedHeight(70)
-
         self.main_layout.addWidget(config_container)
+        self.main_layout.addSpacing(20)
 
     def setup_logo(self):
         self.logo_label = QLabel(self)
         self.logo_pixmap = QPixmap(str(LOGO_PATH))
-            # Start of Selection
-            # 使用更高质量的平滑变换来缩放图像以减少锯齿
-        # self.logo_pixmap = self.logo_pixmap.scaled(
-        #     150, 150, 
-        #     Qt.KeepAspectRatio, 
-        #     Qt.SmoothTransformation
-        # )
+        self.logo_pixmap = self.logo_pixmap.scaled(
+            150, 150, 
+            Qt.KeepAspectRatio, 
+            Qt.SmoothTransformation
+        )
 
         self.logo_label.setPixmap(self.logo_pixmap)
         self.logo_label.setAlignment(Qt.AlignCenter)
         self.main_layout.addWidget(self.logo_label)
-        self.main_layout.addSpacing(20)
+        self.main_layout.addSpacing(30)
 
     def setup_search_layout(self):
         self.search_layout = QHBoxLayout()
@@ -122,11 +140,37 @@ class TaskCreationInterface(QWidget):
         self.search_input.setPlaceholderText(self.tr("请拖拽文件或输入视频URL"))
         self.search_input.setFixedHeight(40)
         self.search_input.setClearButtonEnabled(True)
-        self.search_input.focusOutEvent = lambda text: None
-        self.start_button = PushButton(self.tr("选择文件"), self)
-        self.start_button.setFixedSize(80, 40)
+        self.search_input.focusOutEvent = lambda e: super(LineEdit, self.search_input).focusOutEvent(e)
+        self.search_input.paintEvent = lambda e: super(LineEdit, self.search_input).paintEvent(e)
+        self.search_input.setStyleSheet(self.search_input.styleSheet() + """
+            QLineEdit {
+                border-radius: 18px;
+                padding: 0 20px;
+                background-color: transparent;
+                border: 1px solid rgba(255,255, 255, 0.08);
+            }
+            QLineEdit:focus[transparent=true] {
+                border: 1px solid rgba(47,141, 99, 0.48);
+            }
+            
+        """)
+        self.start_button = ToolButton(FluentIcon.FOLDER, self)
+        self.start_button.setFixedSize(40, 40)
+        self.start_button.setStyleSheet(self.start_button.styleSheet() + """
+            QToolButton {
+                border-radius: 20px;
+                background-color: #2F8D63;
+            }
+            QToolButton:hover {
+                background-color: #2E805C;
+            }
+            QToolButton:pressed {
+                background-color: #2E905C;
+            }
+        """)
         self.search_layout.addWidget(self.search_input)
         self.search_layout.addWidget(self.start_button)
+        self.search_layout.setSpacing(10)
         self.main_layout.addLayout(self.search_layout)
         self.main_layout.addSpacing(100)
 
@@ -138,15 +182,16 @@ class TaskCreationInterface(QWidget):
         self.status_label.setStyleSheet("font-size: 14px; color: #888888;")
         self.status_layout.addWidget(self.status_label, 0, Qt.AlignCenter)
         self.progress_bar = ProgressBar(self)
+        self.status_label.hide()
+        self.progress_bar.hide()
         self.progress_bar.setFixedWidth(300)
         self.status_layout.addWidget(self.progress_bar, 0, Qt.AlignCenter)
 
         self.main_layout.addStretch(1)
         self.main_layout.addLayout(self.status_layout)
-        self.main_layout.addSpacing(2)
 
     def setup_info_label(self):
-        self.info_label = QLabel(self.tr("© 2023 VideoCaptioner. 使用前请阅读使用说明"), self)
+        self.info_label = BodyLabel(self.tr("© 2023 VideoCaptioner • By Weifeng"), self)
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 12px; color: #888888;")
         self.main_layout.addStretch()
@@ -163,6 +208,21 @@ class TaskCreationInterface(QWidget):
         self.subtitle_translation_card.setChecked(cfg.need_translate.value)
         self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
         self.search_input.setText("")
+
+    def on_transcription_model_changed(self, value):
+        """当转录模型改变时触发"""
+        cfg.set(cfg.transcribe_model, TranscribeModelEnum(value))
+        self.whisper_setting_button.setVisible(value == TranscribeModelEnum.WHISPER.value)
+
+    def show_whisper_settings(self):
+        """显示Whisper设置对话框"""
+        dialog = WhisperSettingDialog(self.window())
+        if dialog.exec_():
+            if dialog.check_whisper_model():
+                return True
+            else:
+                return False
+        return False
 
     def on_subtitle_optimization_clicked(self, checked):
         if cfg.api_base.value == "" and checked:
@@ -193,7 +253,7 @@ class TaskCreationInterface(QWidget):
         cfg.set(cfg.need_translate, checked)
 
     def on_start_clicked(self):
-        if self.start_button.text() == self.tr("选择文件"):
+        if self.start_button._icon == FluentIcon.FOLDER:
             desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
             file_dialog = QFileDialog()
 
@@ -206,45 +266,17 @@ class TaskCreationInterface(QWidget):
             if file_path:
                 self.search_input.setText(file_path)
             return
+        
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER and not self.show_whisper_settings():
+            return
 
         self.process()
 
     def on_search_input_changed(self):
         if self.search_input.text():
-            self.start_button.setText(self.tr("开始"))
-            self.start_button.setStyleSheet("""
-                QPushButton {
-                    color: white;
-                    background-color: #2F8D63;
-                    border: none;
-                    border-radius: 5px;
-                    padding: 5px 10px;
-                    font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: #2E805C;
-                }
-                QPushButton:pressed {
-                    background-color: #2E905C;
-                }
-            """)
+            self.start_button.setIcon(FluentIcon.PLAY)
         else:
-            self.start_button.setText(self.tr("选择文件"))
-            self.start_button.setStyleSheet("""
-                QPushButton {
-                    color: #333;
-                    background-color: #f0f0f0;
-                    border: 1px solid #ccc;
-                    border-radius: 5px;
-                    padding: 5px 10px;
-                }
-                QPushButton:hover {
-                    background-color: #e0e0e0;
-                }
-                QPushButton:pressed {
-                    background-color: #d0d0d0;
-                }
-            """)
+            self.start_button.setIcon(FluentIcon.FOLDER)
 
     def dragEnterEvent(self, event):
         event.accept() if event.mimeData().hasUrls() else event.ignore()
@@ -328,6 +360,8 @@ class TaskCreationInterface(QWidget):
         )
 
     def on_create_task_progress(self, value, status):
+        self.progress_bar.show()
+        self.status_label.show()
         self.progress_bar.setValue(value)
         self.status_label.setText(status)
 
@@ -361,7 +395,7 @@ class TaskCreationInterface(QWidget):
                 parent=self
             )
 
-
+        
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)

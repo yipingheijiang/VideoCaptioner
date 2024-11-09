@@ -2,6 +2,11 @@
 import os
 import sys
 
+# 添加项目根目录到 Python 路径
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.append(project_root)
+
 from PyQt5.QtCore import Qt, QTranslator
 from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import FluentTranslator

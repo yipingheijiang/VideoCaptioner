@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     ProgressRing, InfoBarPosition
 
+from app.components.WhisperSettingDialog import WhisperSettingDialog
 from app.config import RESOURCE_PATH
 from app.core.thread.create_task_thread import CreateTaskThread
 from ..common.config import cfg
@@ -134,8 +135,33 @@ class VideoInfoCard(CardWidget):
         self.start_button.clicked.connect(self.on_start_button_clicked)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
 
+    def show_whisper_settings(self):
+        dialog = WhisperSettingDialog(self.window())
+        if dialog.exec_():
+            if dialog.check_whisper_model():
+                InfoBar.success(
+                    self.tr("找到模型文件"),
+                    self.tr("Whisper设置已更新"),
+                    duration=2000,
+                    parent=self,
+                    position=InfoBarPosition.BOTTOM_RIGHT
+                )
+                return True
+            else:
+                InfoBar.error(
+                    self.tr("错误"),
+                    self.tr("该模型文件不存在"),
+                    duration=5000,
+                    parent=self
+                )
+                return False
+        return False
+
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
+        if self.task.status == Task.Status.TRANSCRIBING:
+            if not self.show_whisper_settings():
+                return
         self.progress_ring.show()
         self.progress_ring.setValue(100)
         self.start_button.setDisabled(True)

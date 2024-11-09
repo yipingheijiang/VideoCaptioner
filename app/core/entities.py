@@ -133,6 +133,14 @@ class VideoInfo:
     audio_sampling_rate: int
     thumbnail_path: str
 
+class WhisperModelEnum(Enum):
+    TINY = "tiny"
+    BASE = "base"
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE_V1 = "large-v1"
+    LARGE_V2 = "large-v2"
+    LARGE_V3 = "large-v3"
 
 @dataclass
 class Task:
@@ -179,6 +187,7 @@ class Task:
     use_asr_cache: bool = True
     need_word_time_stamp: bool = False
     original_subtitle_save_path: Optional[str] = None
+    whisper_model: Optional[WhisperModelEnum] = None
 
     # LLM（优化翻译模型）
     base_url: Optional[str] = None

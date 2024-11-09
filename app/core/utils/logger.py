@@ -1,15 +1,17 @@
 import logging
 import logging.handlers
-import os
+from pathlib import Path
 
-import urllib3
 from urllib3.exceptions import InsecureRequestWarning
+
+from ...config import LOG_PATH
+
 
 
 def setup_logger(name: str, 
                 level: int = logging.INFO,
                 fmt: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                log_file: str = None) -> logging.Logger:
+                log_file: str = str(LOG_PATH / 'app.log')) -> logging.Logger:
     """
     创建并配置一个日志记录器。
 
@@ -34,6 +36,7 @@ def setup_logger(name: str,
 
         # 文件处理器，使用轮转策略
         if log_file:
+            Path(log_file).parent.mkdir(parents=True, exist_ok=True)
             file_handler = logging.handlers.RotatingFileHandler(
                 log_file, maxBytes=10*1024*1024, backupCount=5, encoding='utf-8'
             )

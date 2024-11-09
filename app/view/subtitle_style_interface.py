@@ -40,8 +40,6 @@ class PreviewThread(QThread):
 
     def run(self):
         preview_path = cfg.get(cfg.subtitle_preview_image)
-        # if not preview_path or not os.path.exists(preview_path):
-        #     preview_path = str(Path(__file__).parent / "default_bg.png")
         preview_path = generate_preview(self.style_str, self.preview_text, preview_path)
         self.previewReady.emit(preview_path)
 
@@ -50,6 +48,7 @@ class SubtitleStyleInterface(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setObjectName("SubtitleStyleInterface")
+        self.setWindowTitle(self.tr("字幕样式配置"))
 
         # 创建主布局
         self.hBoxLayout = QHBoxLayout(self)
