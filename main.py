@@ -13,6 +13,7 @@ from qfluentwidgets import FluentTranslator
 
 from app.common.config import cfg
 from app.view.main_window import MainWindow
+from app.config import RESOURCE_PATH
 
 # enable dpi scale
 if cfg.get(cfg.dpiScale) == "Auto":
@@ -47,7 +48,8 @@ locale = cfg.get(cfg.language).value
 
 translator = FluentTranslator(locale)
 myTranslator = QTranslator()
-myTranslator.load(f"translations/VideoCaptioner_{locale.name()}.qm")
+translations_path = RESOURCE_PATH / "translations" / f"VideoCaptioner_{locale.name()}.qm"
+myTranslator.load(str(translations_path))
 app.installTranslator(translator)
 app.installTranslator(myTranslator)
 

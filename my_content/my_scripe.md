@@ -33,3 +33,24 @@ pylupdate5 VideoCaptioner.pro
 ```
 lrelease translations/VideoCaptioner_en_US.ts
 ```
+
+
+
+```
+python -m nuitka --module app --output-dir=dist --include-package=app
+```
+
+python -m nuitka ^
+    --standalone ^
+    --output-dir=release ^
+    --windows-disable-console ^
+    --enable-plugin=pyqt5 ^
+    --include-package=app ^
+    --include-data-dir=resource=resource ^
+    --show-progress ^
+    --show-memory ^
+    --windows-company-name=VideoCaptioner ^
+    --windows-product-name=VideoCaptioner ^
+    --windows-file-version=1.0.0 ^
+    --windows-product-version=1.0.0 ^
+    main.py

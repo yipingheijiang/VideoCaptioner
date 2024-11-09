@@ -13,9 +13,9 @@ from ..common.config import cfg
 from ..components.MySettingCard import SpinBoxSettingCard, ComboBoxSettingCard, ColorSettingCard, \
     DoubleSpinBoxSettingCard
 from ..core.utils.subtitle_preview import generate_preview
+from ..config import SUBTITLE_STYLE_PATH
 
-current_dir = Path(__file__).parent.parent
-SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
+
 PERVIEW_TEXTS = {
     "长文本": ("This is a long text used for testing subtitle preview.",
                "这是一段用于测试字幕预览的长文本"),
@@ -312,7 +312,7 @@ class SubtitleStyleInterface(QWidget):
         self.subFontCard.addItems(fontFamilies)
 
         # 获取样式目录下的所有txt文件名
-        style_files = [f.stem for f in SUBTITLE_STYLE_DIR.glob("*.txt")]
+        style_files = [f.stem for f in SUBTITLE_STYLE_PATH.glob("*.txt")]
         if "default" in style_files:
             style_files.insert(0, style_files.pop(style_files.index("default")))
         else:
@@ -362,7 +362,7 @@ class SubtitleStyleInterface(QWidget):
         # 连接样式切换信号
         self.styleNameComboBox.currentTextChanged.connect(self.loadStyle)
         self.newStyleButton.clicked.connect(self.createNewStyle)
-        self.openStyleFolderButton.clicked.connect(lambda: os.startfile(SUBTITLE_STYLE_DIR))
+        self.openStyleFolderButton.clicked.connect(lambda: os.startfile(SUBTITLE_STYLE_PATH))
 
     def onSettingChanged(self):
         """当任何设置改变时调用"""
@@ -473,7 +473,7 @@ class SubtitleStyleInterface(QWidget):
 
     def loadStyle(self, style_name):
         """加载指定样式"""
-        style_path = SUBTITLE_STYLE_DIR / f"{style_name}.txt"
+        style_path = SUBTITLE_STYLE_PATH / f"{style_name}.txt"
 
         if not style_path.exists():
             return
@@ -568,7 +568,7 @@ class SubtitleStyleInterface(QWidget):
                 return
 
             # 检查是否已存在同名样式
-            if (SUBTITLE_STYLE_DIR / f"{style_name}.txt").exists():
+            if (SUBTITLE_STYLE_PATH / f"{style_name}.txt").exists():
                 InfoBar.warning(
                     title=self.tr('警告'),
                     content=self.tr('样式 ') + style_name + self.tr(' 已存在'),
@@ -604,11 +604,11 @@ class SubtitleStyleInterface(QWidget):
             style_name (str): 样式名称
         """
         # 确保样式目录存在
-        SUBTITLE_STYLE_DIR.mkdir(parents=True, exist_ok=True)
+        SUBTITLE_STYLE_PATH.mkdir(parents=True, exist_ok=True)
 
         # 生成样式内容并保存
         style_content = self.generateAssStyles()
-        style_path = SUBTITLE_STYLE_DIR / f"{style_name}.txt"
+        style_path = SUBTITLE_STYLE_PATH / f"{style_name}.txt"
 
         with open(style_path, 'w', encoding='utf-8') as f:
             f.write(style_content)
