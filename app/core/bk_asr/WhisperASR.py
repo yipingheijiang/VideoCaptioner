@@ -64,7 +64,8 @@ class WhisperASR(BaseASR):
                 text=True,
                 encoding='utf-8',
                 bufsize=1,
-                universal_newlines=True
+                universal_newlines=True,
+                shell=True
             )
 
             total_duration = self.get_audio_duration(str(temp_audio))
@@ -111,7 +112,7 @@ class WhisperASR(BaseASR):
         try:
             cmd = ["ffmpeg", "-i", filepath]
             logger.info("获取音频时长命令: %s", " ".join(cmd))
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', shell=True)
             info = result.stderr
             # 提取时长
             if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):

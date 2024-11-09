@@ -171,10 +171,8 @@ class VideoInfoCard(CardWidget):
         """打开文件夹按钮点击事件"""
         if self.task and self.task.work_dir:
             original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
-            if original_subtitle_save_path.exists():
-                os.system(f'explorer /select,"{str(original_subtitle_save_path)}"')
-            else:
-                os.startfile(self.task.work_dir)
+            target_path = str(original_subtitle_save_path.parent if original_subtitle_save_path.exists() else Path(self.task.work_dir))
+            os.startfile(target_path)
         else:
             InfoBar.warning(
                 self.tr("警告"),

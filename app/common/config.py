@@ -2,6 +2,7 @@
 from enum import Enum
 
 from PyQt5.QtCore import QLocale
+from PyQt5.QtGui import QColor
 from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
                             OptionsValidator, RangeConfigItem, RangeValidator,
                             Theme, FolderValidator, ConfigSerializer, EnumSerializer)
@@ -38,7 +39,7 @@ class LanguageSerializer(ConfigSerializer):
 
 
 class Config(QConfig):
-    """ Config of application """
+    """ 应用配置 """
     # LLM CONFIG
     api_key = ConfigItem("LLM", "API_Key", "")
     api_base = ConfigItem("LLM", "API_Base", "")
@@ -73,17 +74,18 @@ class Config(QConfig):
     # 保存配置
     work_dir = ConfigItem("Save", "Work_Dir", WORK_PATH, FolderValidator())
 
-    # main window
+    # 软件页面配置
     micaEnabled = ConfigItem("MainWindow", "MicaEnabled", False, BoolValidator())
     dpiScale = OptionsConfigItem("MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]),
                                  restart=True)
     language = OptionsConfigItem("MainWindow", "Language", Language.AUTO, OptionsValidator(Language),
                                  LanguageSerializer(), restart=True)
 
-    # software update
+    # 更新
     checkUpdateAtStartUp = ConfigItem("Update", "CheckUpdateAtStartUp", True, BoolValidator())
 
 
 cfg = Config()
 cfg.themeMode.value = Theme.DARK
+cfg.themeColor.value = QColor("#ff28f08b")
 qconfig.load(SETTINGS_PATH, cfg)

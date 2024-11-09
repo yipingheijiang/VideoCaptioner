@@ -28,7 +28,6 @@ def run_subprocess(command: list):
     try:
         subprocess.run(command, check=True, capture_output=True, shell=True)
     except subprocess.CalledProcessError as e:
-        print(f"命令执行错误: {e.stderr}")
         raise
 
 def generate_ass_file(style_str: str, preview_text: Tuple[str, Optional[str]]) -> str:

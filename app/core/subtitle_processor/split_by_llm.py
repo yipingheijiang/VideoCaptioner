@@ -35,8 +35,9 @@ def get_cache(text: str, model: str) -> Optional[List[str]]:
     从缓存中获取断句结果
     """
     cache_key = get_cache_key(text, model)
-    cache_file = os.path.join(CACHE_PATH, f"{cache_key}.json")
-    if os.path.exists(cache_file):
+    cache_file = CACHE_PATH / f"{cache_key}.json"
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    if cache_file.exists():
         try:
             with open(cache_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -50,8 +51,8 @@ def set_cache(text: str, model: str, result: List[str]) -> None:
     将断句结果设置到缓存中
     """
     cache_key = get_cache_key(text, model)
-    cache_file = os.path.join(CACHE_PATH, f"{cache_key}.json")
-    os.makedirs(CACHE_PATH, exist_ok=True)
+    cache_file = CACHE_PATH / f"{cache_key}.json"
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
     try:
         with open(cache_file, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False)
@@ -66,7 +67,6 @@ def split_by_llm(*args, **kwargs) -> List[str]:
     try:
         return split_by_llm_retry(*args, **kwargs)
     except Exception as e:
-        print(f"[!] 断句失败: {str(e)}")
         return []
 
 
@@ -79,7 +79,6 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
     if use_cache:
         cached_result = get_cache(text, model)
         if cached_result:
-            # print(f"[+] 从缓存中获取结果: {cached_result}")
             return cached_result
 
     prompt = f"Please use multiple <br> tags to separate the following sentence:\n{text}"

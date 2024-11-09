@@ -31,7 +31,7 @@ class SubtitlePipelineThread(QThread):
                 self.error.emit(error_msg)
 
             # 1. 转录生成字幕
-            self.task.status = Task.Status.TRANSCRIBING
+            # self.task.status = Task.Status.TRANSCRIBING
             logger.info("开始转录")
             self.progress.emit(0, self.tr("开始转录"))
             transcript_thread = TranscriptThread(self.task)
@@ -44,7 +44,7 @@ class SubtitlePipelineThread(QThread):
                 return
 
             # 2. 字幕优化/翻译
-            self.task.status = Task.Status.OPTIMIZING
+            # self.task.status = Task.Status.OPTIMIZING
             logger.info("开始优化字幕")
             self.progress.emit(40, self.tr("开始优化字幕"))
             optimization_thread = SubtitleOptimizationThread(self.task)
@@ -57,7 +57,7 @@ class SubtitlePipelineThread(QThread):
                 return
 
             # 3. 视频合成
-            self.task.status = Task.Status.GENERATING
+            # self.task.status = Task.Status.GENERATING
             logger.info("开始合成视频")
             self.progress.emit(80, self.tr("开始合成视频"))
             synthesis_thread = VideoSynthesisThread(self.task)

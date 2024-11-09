@@ -27,23 +27,25 @@ class VideoSynthesisInterface(QWidget):
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAcceptDrops(True)  # 启用拖放功能
         self.setup_ui()
+        self.setup_style()
         self.set_value()
         self.setup_signals()
         self.task = None
 
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)
+        self.main_layout.setSpacing(20)
 
         # 配置卡片
         self.config_card = CardWidget(self)
-        # self.config_card.setFixedWidth(600)
         self.config_layout = QVBoxLayout(self.config_card)
-        self.config_layout.setContentsMargins(20, 10, 20, 10)
+        self.config_layout.setContentsMargins(20, 20, 20, 20)
+        self.config_layout.setSpacing(20)
 
         # 字幕文件选择
         self.subtitle_layout = QHBoxLayout()
-        self.subtitle_layout.setSpacing(10)
-        self.subtitle_label = BodyLabel(self.tr("字幕文件:"), self)
+        self.subtitle_layout.setSpacing(15)
+        self.subtitle_label = BodyLabel(self.tr("字幕文件"), self)
         self.subtitle_input = LineEdit(self)
         self.subtitle_input.setPlaceholderText(self.tr("选择或者拖拽字幕文件"))
         self.subtitle_input.setAcceptDrops(True)  # 启用拖放
@@ -55,8 +57,8 @@ class VideoSynthesisInterface(QWidget):
 
         # 视频文件选择
         self.video_layout = QHBoxLayout()
-        self.video_layout.setSpacing(10)
-        self.video_label = BodyLabel(self.tr("视频文件:"), self)
+        self.video_layout.setSpacing(15)
+        self.video_label = BodyLabel(self.tr("视频文件"), self)
         self.video_input = LineEdit(self)
         self.video_input.setPlaceholderText(self.tr("选择或者拖拽视频文件"))
         self.video_input.setAcceptDrops(True)  # 启用拖放
@@ -87,6 +89,35 @@ class VideoSynthesisInterface(QWidget):
         self.bottom_layout.addWidget(self.progress_bar, 1)  # 进度条使用剩余空间
         self.bottom_layout.addWidget(self.status_label)  # 状态标签使用固定宽度
         self.main_layout.addLayout(self.bottom_layout)
+
+    def setup_style(self):
+        self.subtitle_input.focusOutEvent = lambda e: super(LineEdit, self.subtitle_input).focusOutEvent(e)
+        self.subtitle_input.paintEvent = lambda e: super(LineEdit, self.subtitle_input).paintEvent(e)
+        self.subtitle_input.setStyleSheet(self.subtitle_input.styleSheet() + """
+            QLineEdit {
+                border-radius: 15px;
+                padding: 0 20px;
+                background-color: transparent;
+                border: 1px solid rgba(255,255, 255, 0.08);
+            }
+            QLineEdit:focus[transparent=true] {
+                border: 1px solid rgba(47,141, 99, 0.48);
+            }
+        """)
+
+        self.video_input.focusOutEvent = lambda e: super(LineEdit, self.video_input).focusOutEvent(e)
+        self.video_input.paintEvent = lambda e: super(LineEdit, self.video_input).paintEvent(e)
+        self.video_input.setStyleSheet(self.video_input.styleSheet() + """
+            QLineEdit {
+                border-radius: 15px;
+                padding: 0 20px;
+                background-color: transparent;
+                border: 1px solid rgba(255,255, 255, 0.08);
+            }
+            QLineEdit:focus[transparent=true] {
+                border: 1px solid rgba(47,141, 99, 0.48);
+            }
+        """)
 
     def setup_signals(self):
         # 文件选择相关信号
@@ -198,10 +229,8 @@ class VideoSynthesisInterface(QWidget):
     def open_video_folder(self):
         if self.task and self.task.work_dir:
             file_path = Path(self.task.video_save_path)
-            if os.path.exists(file_path):
-                os.system(f'explorer /select,"{file_path}"')
-            else:
-                os.startfile(self.task.work_dir)
+            target_path = str(file_path.parent if file_path.exists() else Path(self.task.work_dir))
+            os.startfile(target_path)
         else:
             InfoBar.warning(
                 self.tr("警告"),

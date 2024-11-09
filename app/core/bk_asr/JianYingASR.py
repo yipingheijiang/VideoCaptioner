@@ -119,7 +119,6 @@ class JianYingASR(BaseASR):
         i = str(datetime.datetime.now().year)[3]
         fr = 390 + int(i)
         ed = f"3278516897751" if int(i)%2 != 0 else f"{uuid.getnode():013d}"
-        print(f"{fr}{ed}")
         return f"{fr}{ed}"
 
     def _generate_sign_parameters(self, url: str, pf: str = '4', appvr: str = '4.0.0', tdid='') -> \

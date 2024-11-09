@@ -334,7 +334,6 @@ class TaskCreationInterface(QWidget):
             return False
 
     def _process_file(self, file_path):
-        print(f"正在处理文件: {file_path}")
         self.create_task_thread = CreateTaskThread(file_path, 'file')
         self.create_task_thread.finished.connect(self.on_create_task_finished)
         self.create_task_thread.progress.connect(self.on_create_task_progress)

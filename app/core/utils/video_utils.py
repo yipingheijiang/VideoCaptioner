@@ -29,7 +29,14 @@ def video2audio(input_file: str, output: str = "") -> bool:
     logger.info(f"执行命令: {' '.join(cmd)}")
     
     try:
-        result = subprocess.run(cmd, capture_output=True, check=True, encoding='utf-8', errors='replace')
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            check=True, 
+            encoding='utf-8', 
+            errors='replace', 
+            shell=True
+            )
         if result.returncode == 0 and Path(output).is_file():
             logger.info("音频转换成功")
             return True
@@ -46,7 +53,10 @@ def check_cuda_available() -> bool:
     logger.info("检查CUDA是否可用")
     try:
         # 检查ffmpeg是否支持cuda
-        result = subprocess.run(['ffmpeg', '-hwaccels'], capture_output=True, text=True)
+        result = subprocess.run(['ffmpeg', '-hwaccels'], 
+                                capture_output=True, 
+                                text=True,
+                                shell=True)
         if 'cuda' not in result.stdout.lower():
             logger.info("CUDA不可用")
             return False
@@ -91,7 +101,14 @@ def add_subtitles(
             '-y'
         ]
         logger.info(f"执行命令: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            encoding='utf-8', 
+            errors='replace',
+            shell=True
+            )
     else:
         logger.info("使用硬字幕")
         subtitle_file = Path(subtitle_file).as_posix().replace(':', r'\:')
@@ -117,8 +134,15 @@ def add_subtitles(
 
         logger.info(f"执行命令: {' '.join(cmd)}")
         cmd_str = subprocess.list2cmdline(cmd)
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8',
-                                   errors='replace')
+        process = subprocess.Popen(
+            cmd, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True, 
+            encoding='utf-8',
+            errors='replace',
+            shell=True
+        )
         # 实时读取输出并调用回调函数
         total_duration = None
         current_time = 0
@@ -163,7 +187,14 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
     try:
         cmd = ["ffmpeg", "-i", filepath]
         logger.info(f"执行命令: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            encoding='utf-8', 
+            errors='replace', 
+            shell=True
+            )
         info = result.stderr
 
         video_info = {
@@ -257,8 +288,14 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
             thumbnail_path
         ]
         logger.info(f"执行命令: {' '.join(cmd)}")
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30, encoding='utf-8',
-                                errors='replace')
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            encoding='utf-8', 
+            errors='replace', 
+            shell=True
+        )
         success = result.returncode == 0
         if success:
             logger.info("缩略图提取成功")

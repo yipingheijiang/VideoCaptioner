@@ -126,7 +126,8 @@ class DownloadThread(QThread):
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                universal_newlines=True
+                universal_newlines=True,
+                shell=True
             )
             
             while True:
@@ -226,7 +227,7 @@ class DownloadDialog(MessageBoxBase):
             InfoBar.warning(
                 title=self.tr('提示'),
                 content=self.tr('模型文件已存在,无需重复下载'),
-                parent=self,
+                parent=self.window(),
                 duration=3000
             )
             return
@@ -252,17 +253,17 @@ class DownloadDialog(MessageBoxBase):
         InfoBar.success(
             title=self.tr('完成'),
             content=self.tr('模型下载完成!'),
-            parent=self,
+            parent=self.window(),
             duration=3000
         )
         self.download_button.setEnabled(True)
-        self.progress_label.hide()
+        self.progress_label.setText(self.tr('下载完成'))
         
     def download_error(self, error):
         InfoBar.error(
             title=self.tr('错误'),
             content=error,
-            parent=self,
+            parent=self.window(),
             duration=3000
         )
         self.download_button.setEnabled(True)
@@ -304,10 +305,11 @@ class WhisperSettingDialog(MessageBoxBase):
         self.downloadButton.clicked.connect(self.show_download_dialog)
         
         self.openFolderButton = HyperlinkButton(
-            f'file:///{MODEL_PATH}',
+            '',
             self.tr('打开模型文件夹'), 
             self
         )
+        self.openFolderButton.clicked.connect(lambda: os.startfile(MODEL_PATH))
         self.buttonLayout.addWidget(self.downloadButton)
         self.buttonLayout.addStretch()
         self.buttonLayout.addWidget(self.openFolderButton)
@@ -339,11 +341,12 @@ class WhisperSettingDialog(MessageBoxBase):
     def __onYesButtonClicked(self):
         if self.check_whisper_model():
             self.accept()
+            print("找到模型文件")
             InfoBar.success(
                 self.tr("找到模型文件"),
                 self.tr("Whisper设置已更新"),
                 duration=3000,
-                parent=self,
+                parent=self.window(),
                 position=InfoBarPosition.BOTTOM_RIGHT
             )
         else:

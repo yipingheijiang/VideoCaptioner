@@ -259,6 +259,7 @@ class ColorSettingCard(SettingCard):
         """
         super().__init__(icon, title, content, parent)
         self.colorPicker = ColorPickerButton(color, title, self, enableAlpha)
+        self.colorPicker.setFixedWidth(60)
         self.hBoxLayout.addWidget(self.colorPicker, 0, Qt.AlignRight)
         self.hBoxLayout.addSpacing(16)
         self.colorPicker.colorChanged.connect(self.__onColorChanged)
@@ -297,7 +298,6 @@ class ColorPickerButton(QToolButton):
 
     def __onColorChanged(self, color):
         """ color changed slot """
-        print(color)
         self.setColor(color)
         self.colorChanged.emit(color)
 

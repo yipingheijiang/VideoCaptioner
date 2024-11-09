@@ -35,10 +35,3 @@ def optimize_subtitles(asr_data):
         # 判断前一个段落的词数是否小于等于4且时间相邻
         if count_words(prev_seg.text) <= 4 and abs(seg.start_time - prev_seg.end_time) < 100 and count_words(seg.text) <= 10:
             asr_data.merge_with_next_segment(i - 1)
-
-
-if __name__ == '__main__':
-    # 测试 count_words 函数
-    print(count_words("they were manufacturing 1"))  # 3
-    print(count_words("你好  world"))  # 3
-    print(count_words("Hello, 世界！你好，world！"))  # 6

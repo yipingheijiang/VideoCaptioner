@@ -33,3 +33,7 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # 环境变量添加 bin 路径
 os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(BIN_PATH)
+
+# 创建路径
+for p in [CACHE_PATH, LOG_PATH, WORK_PATH, MODEL_PATH]:
+    p.mkdir(parents=True, exist_ok=True)

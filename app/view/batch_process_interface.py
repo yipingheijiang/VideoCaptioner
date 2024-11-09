@@ -160,7 +160,9 @@ class BatchProcessInterface(QWidget):
                 task_card.error.connect(self.on_task_error)
                 task_card.start()
                 break
-        self.on_batch_finished()
+        # 判断是否所有任务都已完成
+        if all(task_card.task.status in [Task.Status.COMPLETED, Task.Status.FAILED] for task_card in self.task_cards):
+            self.on_batch_finished()
 
     def cancel_batch_process(self):
         """取消批量处理"""
@@ -230,6 +232,7 @@ class BatchProcessInterface(QWidget):
         else:
             # 所有任务都完成了
             self.on_batch_finished()
+    
     def on_batch_finished(self):
         """批量处理完成的处理"""
         self.processing = False
@@ -587,10 +590,10 @@ class TaskInfoCard(CardWidget):
 
     def cancel(self):
         """修改任务状态"""
-        self.update_tooltip()
         self.stop()
-        self.task.status = Task.Status.CANCELED
+        self.task.status = Task.Status.PENDING
         self.finished.emit(self.task)
+        self.update_tooltip()
 
     def stop(self):
         """停止转录"""
@@ -641,13 +644,7 @@ class TaskInfoCard(CardWidget):
             self.subtitle_thread.error.connect(self.on_error)
             self.subtitle_thread.start()
         else:
-            InfoBar.warning(
-                self.tr("警告"),
-                self.tr("任务状态错误"),
-                duration=2000,
-                parent=self
-            )
-            self.reset_ui()
+            self.on_error(self.tr("任务状态错误"))
 
     def on_open_folder_clicked(self):
         """打开文件夹按钮点击事件"""
@@ -706,6 +703,7 @@ class TaskInfoCard(CardWidget):
         self.progress_ring.setValue(100)
         self.task_state.setLevel(InfoLevel.INFOAMTION)
         self.task_state.setIcon(FIF.REMOVE)
+        self.update_tooltip()
 
     def set_task(self, task):
         """设置任务并更新UI"""
