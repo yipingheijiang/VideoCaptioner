@@ -191,7 +191,7 @@ class TaskCreationInterface(QWidget):
         self.main_layout.addLayout(self.status_layout)
 
     def setup_info_label(self):
-        self.info_label = BodyLabel(self.tr("© 2023 VideoCaptioner • By Weifeng"), self)
+        self.info_label = BodyLabel(self.tr("© 2024 VideoCaptioner • By Weifeng"), self)
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 12px; color: #888888;")
         self.main_layout.addStretch()

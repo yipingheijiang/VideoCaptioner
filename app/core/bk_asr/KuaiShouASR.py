@@ -19,7 +19,8 @@ class KuaiShouASR(BaseASR):
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
         logger.debug("Making segments from response data")
-        return [ASRDataSeg(u['text'], u['start_time'], u['end_time']) for u in resp_data['data']['text']]
+        print(resp_data)
+        return [ASRDataSeg(u['text'], float(u['start_time'])*1000, float(u['end_time'])*1000) for u in resp_data['data']['text']]
 
     def _submit(self) -> dict:
         logger.info("Submitting audio file for ASR")

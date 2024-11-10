@@ -10,11 +10,9 @@ from ..entities import Task, TranscribeModelEnum, VideoInfo, LANGUAGES
 from ..utils.video_utils import get_video_info
 from ...common.config import cfg
 from ..utils.logger import setup_logger
+from ...config import SUBTITLE_STYLE_PATH
 
 logger = setup_logger("create_task_thread")
-
-current_dir = Path(__file__).parent.parent.parent
-SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
 
 class CreateTaskThread(QThread):
     finished = pyqtSignal(Task)
@@ -60,7 +58,7 @@ class CreateTaskThread(QThread):
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 
         ass_style_name = cfg.subtitle_style_name.value
-        ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
+        ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"
         if ass_style_path.exists():
             subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
         else:
@@ -146,7 +144,7 @@ class CreateTaskThread(QThread):
             need_word_time_stamp = False
 
         ass_style_name = cfg.subtitle_style_name.value
-        ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
+        ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"
         if ass_style_path.exists():
             subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
         else:
@@ -237,7 +235,7 @@ class CreateTaskThread(QThread):
         result_subtitle_save_path = task_work_dir / f"【优化字幕】result_subtitle_{cfg.model.value}.srt"
 
         ass_style_name = cfg.subtitle_style_name.value
-        ass_style_path = SUBTITLE_STYLE_DIR / f"{ass_style_name}.txt"
+        ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"
         if ass_style_path.exists():
             subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
         else:

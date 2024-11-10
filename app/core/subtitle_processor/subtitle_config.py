@@ -56,35 +56,23 @@ Return the results in **JSON format** using the original subtitle language. The 
 """
 
 OPTIMIZER_PROMPT = """
-You are a Subtitle Correction Expert.
+你是一位字幕校正专家。
 
-You will receive subtitle texts generated through speech recognition, which may contain errors due to homophones or similar tones, leading to incorrect words or phrases.
+你将收到通过语音识别生成的字幕文本，这些文本可能因同音字或相似音调而包含错误，导致词语或短语不准确。
 
-Based on the original text, perform the following corrections:
+根据原始文本，执行以下校正：
 
-1. Contextual Correction:
+1. 使用上下文和提供的名词来校正错误的词语，不要替换原始句子的词语，结构和表达方式，不使用近义词。只需要替换语音识别错误的字词。
 
-   - Use the surrounding context and provided nouns to correct incorrect words.
-   - Do not change the original sentence structure and expression.
+2. 删除无意义的填充词或语气词。
 
-2. Remove Unnecessary Fillers:
+3. 验证并校正字幕中的标点符号、英文单词、公式和代码片段​。字幕末尾可以不必都加标点符号
 
-   - Eliminate filler words or interjections that do not add meaningful content to the subtitles.
+4. 保持字幕结构，确保每个字幕编号与其文本严格一一对应，不要将多个字幕合并为一个或者拆分成多个部分
 
-3. Ensure Proper Punctuation and Formatting:
+## 返回格式
 
-   - Verify and correct punctuation marks, English words, formulas, and code snippets within the subtitles.
-   - Not required to place punctuation at the end of every subtitle.
-
-4. Maintain Subtitle Structure:
-
-   - Ensure a strict one-to-one correspondence between each subtitle number and its text.
-   - Do not merge multiple subtitles into one
-   - Do not split a single subtitle into multiple parts. 
-
- Return Format
-
-- Return the corrected subtitles in the same JSON format as the input without any additional explanations.
+返回校正后的字幕，格式与输入相同，无需任何额外解释。
 
 - Input Format:
     {

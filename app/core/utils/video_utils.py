@@ -52,16 +52,33 @@ def check_cuda_available() -> bool:
     """检查CUDA是否可用"""
     logger.info("检查CUDA是否可用")
     try:
-        # 检查ffmpeg是否支持cuda
-        result = subprocess.run(['ffmpeg', '-hwaccels'], 
-                                capture_output=True, 
-                                text=True,
-                                shell=True)
+        # 首先检查ffmpeg是否支持cuda
+        result = subprocess.run(
+            ['ffmpeg', '-hwaccels'], 
+            capture_output=True, 
+            text=True,
+            shell=True
+        )
         if 'cuda' not in result.stdout.lower():
-            logger.info("CUDA不可用")
+            logger.info("CUDA不在支持的硬件加速器列表中")
             return False
+            
+        # 进一步检查CUDA设备信息
+        result = subprocess.run(
+            ['ffmpeg', '-hide_banner', '-init_hw_device', 'cuda'], 
+            capture_output=True, 
+            text=True,
+            shell=True
+        )
+        
+        # 如果stderr中包含"Cannot load cuda" 或 "Failed to load"等错误信息，说明CUDA不可用
+        if any(error in result.stderr.lower() for error in ['cannot load cuda', 'failed to load', 'error']):
+            logger.info("CUDA设备初始化失败")
+            return False
+            
         logger.info("CUDA可用")
         return True
+        
     except Exception as e:
         logger.error(f"检查CUDA出错: {str(e)}")
         return False

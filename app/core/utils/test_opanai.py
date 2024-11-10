@@ -23,9 +23,11 @@ def test_openai(base_url, api_key, model):
             ],
             max_tokens=100
         )
+        print(response)
         # 返回AI的回复
         return True, str(response.choices[0].message.content)
     except Exception as e:
+        raise e
         return False, str(e)
 
 
@@ -54,3 +56,7 @@ def get_openai_models(base_url, api_key):
         return sorted_models
     except Exception:
         return []
+
+
+if __name__ == "__main__":
+    print(test_openai("https://ddg.bkfeng.top/v1", "2", "gpt-4o-mini"))

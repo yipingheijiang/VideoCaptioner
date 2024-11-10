@@ -54,3 +54,8 @@ python -m nuitka ^
     --windows-file-version=1.0.0 ^
     --windows-product-version=1.0.0 ^
     main.py
+
+
+python -m nuitka --standalone --output-dir=niitka-build --windows-console-mode=disable --enable-plugin=pyqt5 --include-package=app --include-data-dir=resource=resource --show-progress --show-memory --windows-company-name=VideoCaptioner --windows-product-name=VideoCaptioner --windows-file-version=1.0.0 --windows-product-version=1.0.0 main.py
+
+python -m nuitka --standalone --output-dir=release --windows-console-mode=disable --enable-plugin=pyqt5 --include-package=app --nofollow-import-to=yt_dlp --experimental=use_pefile --show-progress --show-memory --windows-company-name=VideoCaptioner --windows-product-name=VideoCaptioner --windows-file-version=1.0.0 --windows-product-version=1.0.0 main.py

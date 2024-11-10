@@ -52,20 +52,46 @@ class SubtitleOptimizationThread(QThread):
 
             self.progress.emit(2, self.tr("开始优化字幕..."))
             logger.info("开始优化字幕...")
+            
             # 设置环境变量
+            api_configs = {
+                "ddg": {
+                    "base_url": "http://ddg.bkfeng.top/v1",
+                    "api_key": "Convenient-for-beginners-Please-do-not-use-for-personal-use-Server-has-limited-concurrency",
+                    "llm_model": "claude-3-haiku-20240307",
+                    "thread_num": 3,
+                    "batch_size": 10
+                },
+                "zhipu": {
+                    "base_url": "https://open.bigmodel.cn/api/paas/v4",
+                    "api_key": "c96c2f6ce767136cdddc3fef1692c1de.H27sLU4GwuUVqPn5",
+                    "llm_model": "glm-4-flash",
+                    "thread_num": 10,
+                    "batch_size": 10
+                }
+            }
+
             if self.task.base_url:
                 base_url = self.task.base_url
                 api_key = self.task.api_key
                 if not test_openai(base_url, api_key, llm_model)[0]:
                     raise Exception(self.tr("OpenAI API 测试失败, 请检查设置"))
             else:
-                # 使用智谱的API
-                base_url = "https://open.bigmodel.cn/api/paas/v4"
-                api_key = "c96c2f6ce767136cdddc3fef1692c1de.H27sLU4GwuUVqPn5"
-                llm_model = "glm-4-flash"
-                thread_num = 10
-                batch_size = 10
-
+                logger.info("使用自带的API配置")
+                # 遍历配置字典找到第一个可用的API
+                for config in api_configs.values():
+                    if test_openai(config["base_url"], config["api_key"], config["llm_model"])[0]:
+                        base_url = config["base_url"]
+                        api_key = config["api_key"] 
+                        llm_model = config["llm_model"]
+                        thread_num = config["thread_num"]
+                        batch_size = config["batch_size"]
+                        break
+                else:
+                    raise Exception(self.tr("自带的API配置暂时不可用，请配置自己的API"))
+                
+            logger.info(f"使用 {llm_model} 作为LLM模型")
+            
             os.environ['OPENAI_BASE_URL'] = base_url
             os.environ['OPENAI_API_KEY'] = api_key
 

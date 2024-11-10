@@ -43,6 +43,7 @@ app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
 #     font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
 #     print(font_family)
 #     app.setFont(QFont(font_family, 12))  # 字体大小为 12
+
 # 国际化（多语言）
 locale = cfg.get(cfg.language).value
 
