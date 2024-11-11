@@ -40,7 +40,7 @@ class SubtitleOptimizationThread(QThread):
             thread_num = self.task.thread_num
             batch_size = self.task.batch_size
             target_language = self.task.target_language
-            need_summarize = False
+            need_summarize = True
             subtitle_style_srt = self.task.subtitle_style_srt
             subtitle_layout = self.task.subtitle_layout
             # TODO: 开启字幕总结功能
@@ -53,13 +53,12 @@ class SubtitleOptimizationThread(QThread):
             self.progress.emit(2, self.tr("开始优化字幕..."))
             logger.info("开始优化字幕...")
             
-            # 设置环境变量
             api_configs = {
                 "ddg": {
                     "base_url": "http://ddg.bkfeng.top/v1",
-                    "api_key": "Convenient-for-beginners-Please-do-not-use-for-personal-use-Server-has-limited-concurrency",
-                    "llm_model": "claude-3-haiku-20240307",
-                    "thread_num": 3,
+                    "api_key": "Hey-man-This-free-server-is-convenient-for-beginners-Please-do-not-use-for-personal-use-Server-just-has-limited-concurrency",
+                    "llm_model": "gpt-4o-mini",
+                    "thread_num": 4,
                     "batch_size": 10
                 },
                 "zhipu": {
@@ -113,11 +112,11 @@ class SubtitleOptimizationThread(QThread):
             if need_translate or need_optimize:
                 summarize_result = ""
                 self.progress.emit(20, self.tr("总结字幕..."))
-                logger.info("总结字幕...")
                 if need_summarize:
                     summarizer = SubtitleSummarizer(model=llm_model)
                     summarize_result = summarizer.summarize(asr_data.to_txt())
-
+                logger.info(f"总结字幕:{summarize_result}")
+                
                 if need_translate:
                     self.progress.emit(30, self.tr("优化+翻译..."))
                     logger.info("优化+翻译...")

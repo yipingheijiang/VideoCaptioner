@@ -21,17 +21,22 @@ class SubtitleSummarizer:
         self.client = OpenAI(base_url=base_url, api_key=api_key)
 
     def summarize(self, subtitle_content: str) -> str:
-        logger.info(f"开始摘要化字幕内容: {subtitle_content[:20]}")
-        subtitle_content = subtitle_content[:3000]
-        response = self.client.chat.completions.create(
-            model=self.model,
-            stream=False,
-            messages=[
-                {"role": "system", "content": SUMMARIZER_PROMPT},
-                {"role": "user", "content": f"summarize the video content:\n{subtitle_content}"}
-            ]
-        )
-        return str(json_repair.loads(response.choices[0].message.content))
+        logger.info(f"开始摘要化字幕内容")
+        try:
+            subtitle_content = subtitle_content[:3000]
+            response = self.client.chat.completions.create(
+                model=self.model,
+                stream=False,
+                messages=[
+                    {"role": "system", "content": SUMMARIZER_PROMPT},
+                    {"role": "user", "content": f"summarize the video content:\n{subtitle_content}"}
+                ]
+            )
+            return str(json_repair.loads(response.choices[0].message.content))
+        except Exception as e:
+            logger.error(f"摘要化字幕内容失败: {e}")
+            return ""
+    
     
 
 if __name__ == "__main__":

@@ -341,7 +341,6 @@ class WhisperSettingDialog(MessageBoxBase):
     def __onYesButtonClicked(self):
         if self.check_whisper_model():
             self.accept()
-            print("找到模型文件")
             InfoBar.success(
                 self.tr("找到模型文件"),
                 self.tr("Whisper设置已更新"),

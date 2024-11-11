@@ -23,7 +23,6 @@ def test_openai(base_url, api_key, model):
             ],
             max_tokens=100
         )
-        print(response)
         # 返回AI的回复
         return True, str(response.choices[0].message.content)
     except Exception as e:

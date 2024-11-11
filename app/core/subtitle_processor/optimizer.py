@@ -108,6 +108,7 @@ class SubtitleOptimizer:
             messages=message,
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
+        print(response_content)
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
         # 在 translations 中查找对应的翻译  文本-翻译 映射
@@ -151,8 +152,8 @@ class SubtitleOptimizer:
                           '"那么你现在可能无法避开Cursor这款IDE。"}}')
         prompt = REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
         message = [{"role": "system", "content": prompt},
-                   {"role": "user", "content": example_input},
-                   {"role": "assistant", "content": example_output},
+                #    {"role": "user", "content": example_input},
+                #    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
         return message
 
@@ -163,8 +164,8 @@ class SubtitleOptimizer:
         example_input = '{"0": "调用现成的start方法","1": "才能成功开启现成啊","2": "而且stread这个类","3": "很多业务罗技和这个代码","4": "全部都给掺到一块去了"}'
         example_output = '{"0": "调用线程的start()方法","1": "才能成功开启线程","2": "而且Thread这个类","3": "很多业务逻辑和这个代码","4": "全部都给掺到一块去了"}'
         message = [{"role": "system", "content": OPTIMIZER_PROMPT},
-                   {"role": "user", "content": example_input},
-                   {"role": "assistant", "content": example_output},
+                #    {"role": "user", "content": example_input},
+                #    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
         return message
 
@@ -174,7 +175,7 @@ class SubtitleOptimizer:
         for key, value in original_subtitle.items():
             try:
                 message = [{"role": "system",
-                            "content": SINGLE_TRANSLATE_PROMPT.replace("[target_language]", self.target_language)},
+                            "content": SINGLE_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)},
                            {"role": "user", "content": value}]
                 response = self.client.chat.completions.create(
                     model=self.model,
@@ -198,12 +199,14 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     # 验证是否匹配
     similar_list = calculate_similarity_list(aligned_source, aligned_target)
     if similar_list.count(True) / len(similar_list) >= 0.8:
-        logger.info(f"修复成功！相似度：{similar_list.count(True) / len(similar_list):.2f}")
+        logger.info(f"修复成功！序列匹配相似度：{similar_list.count(True) / len(similar_list):.2f}")
         start_id = next(iter(dict1.keys()))
         modify_dict = {str(int(start_id) + i): value for i, value in enumerate(aligned_target)}
         return modify_dict
     else:
         logger.error(f"修复失败！相似度：{similar_list.count(True) / len(similar_list):.2f}")
+        logger.error(f"源字幕：{list1}")
+        logger.error(f"目标字幕：{list2}")
         raise ValueError("Fail to repair.")
 
 

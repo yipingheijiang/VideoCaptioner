@@ -285,7 +285,7 @@ Please process the given subtitles according to these instructions and return th
 """
 
 SINGLE_TRANSLATE_PROMPT = """
-You are a professional translator. 
-Please translate the following text into [target_language]. 
-Do not respond with unrelated content:
+You are a professional [TargetLanguage] translator. 
+Please translate the following text into [TargetLanguage]. 
+Return the translation result directly without any explanation or other content.
 """
