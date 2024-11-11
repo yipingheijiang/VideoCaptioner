@@ -19,9 +19,10 @@ from ..config import SUBTITLE_STYLE_PATH
 PERVIEW_TEXTS = {
     "长文本": ("This is a long text used for testing subtitle preview.",
                "这是一段用于测试字幕预览的长文本"),
-    "中文本": ("The quick brown fox jumps over the lazy dog.",
-               "敏捷的棕色狐狸跳过了懒惰的狗"),
-    "短文本": ("Hello World!", "你好，世界！")
+    "中文本": ("Welcome to apply for South China Normal University!",
+               "欢迎报考华南师范大学"),
+    "短文本": ("Elementary school students know this",
+              "小学二年级的都知道")
 }
 
 

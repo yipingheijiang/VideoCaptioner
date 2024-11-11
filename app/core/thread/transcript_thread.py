@@ -16,7 +16,7 @@ class TranscriptThread(QThread):
 
     ASR_MODELS = {
         TranscribeModelEnum.JIANYING: JianYingASR,
-        TranscribeModelEnum.KUAISHOU: KuaiShouASR,
+        # TranscribeModelEnum.KUAISHOU: KuaiShouASR,
         TranscribeModelEnum.BIJIAN: BcutASR,
         TranscribeModelEnum.WHISPER: WhisperASR,
     }

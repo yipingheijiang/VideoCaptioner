@@ -72,10 +72,10 @@ class OutputSubtitleFormatEnum(Enum):
 
 class TranscribeModelEnum(Enum):
     """ 转录模型 """
-    JIANYING = "剪映"
-    BIJIAN = "必剪"
-    KUAISHOU = "快手"
-    WHISPER = "Whisper"
+    BIJIAN = "B 接口"
+    JIANYING = "J 接口"
+    # KUAISHOU = "K j接口"
+    WHISPER = "Whisper[本地]"
 
 
 class TargetLanguageEnum(Enum):
@@ -114,10 +114,6 @@ LANGUAGES = {
     "French": "fr",
     "German": "de",
 }
-
-SUPPORTED_AUDIO_FORMATS = "Audio files (*.mp3 *.wav *.m4a *.ogg *.opus *.flac);;\
-Video files (*.mp4 *.webm *.ogm *.mov *.mkv *.avi *.wmv);;All files (*.*)"
-
 
 @dataclass
 class VideoInfo:
