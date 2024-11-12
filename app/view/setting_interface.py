@@ -248,7 +248,7 @@ class SettingInterface(ScrollArea):
                 background-color: transparent;
             }
             QLabel#settingLabel {
-                font: 33px 'LXGW WenKai';
+                font: 33px 'Microsoft YaHei';
                 background-color: transparent;
                 color: white;
             }
