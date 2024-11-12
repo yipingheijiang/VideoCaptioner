@@ -22,37 +22,27 @@ the upgraded claude sonnet is now available for all users<br>developers can buil
 """
 
 SUMMARIZER_PROMPT = """
-You are a **Professional Video Analyst** skilled in accurately extracting information from video subtitles, including main content and important terms.
+您是一位**专业视频分析师**，擅长从视频字幕中准确提取信息，包括主要内容和重要术语。
 
+## 您的任务
 
-## Your Tasks
+### 1. 总结视频内容
+- 确定视频类型，根据具体视频内容，解释翻译时需要注意的要点。
+- 提供详细总结：对视频内容提供详细说明。
 
-### 1. Summarize Video Content
-There may be errors in the generated subtitles due to homophones or similar-sounding words.you need to correct these errors when summary
-- Identify Video Type, According to the specific video content, explain the points to be mindful of during translation.
-- Provide Detailed Summary: Offer a detail comprehensive explanation of the video content.
+### 2. 提取所有重要术语
 
+- 提取所有重要名词和短语（无需翻译）。你需要判断识别错误的词语，处理并纠正因同音字或相似音调造成的转录错误
 
-### 2. Extract ALL Important Terms
+## 输出格式
 
-- **Correct Transcript Errors**:
-  - Address and rectify any errors in the transcript caused by homophones or similar-sounding words.
-  - Use contextual clues and reasoning to ensure accuracy.
+以**JSON格式**返回结果，输出语言和原字幕语言相同。JSON应包括两个字段：`summary`和`terms`
 
-- **Identify Key Terms**:
-  - Extract all significant nouns and phrases (don't need to translate), 
-
-## Output Format
-
-Return the results in **JSON format** using the original subtitle language. The JSON should include two fields: `summary` and `terms`.
-
-- **terms**: 
-- **summary**: A summary of the video content.
-  - `entities`: Names of people, organizations, object, locations, etc.
-  - `technical_terms`: Professional or technical terminology.
-  - `keywords`: Other significant keywords or phrases.
-- **suggest**: Suggestions for translation.
-
+- **summary**：视频内容的总结。给出翻译建议。
+- **terms**：
+  - `entities`：人名、组织、物体、地点等名称。
+  - `technical_terms`：专业或技术术语。
+  - `keywords`：其他重要关键词或短语。
 """
 
 OPTIMIZER_PROMPT = """
@@ -72,7 +62,7 @@ OPTIMIZER_PROMPT = """
 
 ## 返回格式
 
-返回校正后的字幕，格式与输入相同，无需任何额外解释。
+返回校正后的字幕，输出语言和原字幕语言相同，格式与输入相同，无需任何额外解释。
 
 - Input Format:
     {

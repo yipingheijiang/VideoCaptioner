@@ -8,7 +8,7 @@ from PyQt5.QtGui import QDragEnterEvent, QDropEvent
 from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHeaderView, QFileDialog
 from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView
-from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import FluentIcon as FIF, InfoBarPosition
 
 from ..core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
 from ..common.config import cfg
@@ -237,8 +237,13 @@ class SubtitleOptimizationInterface(QWidget):
         self.file_select_button.setEnabled(True)
         if self.task.status == Task.Status.PENDING:
             self.finished.emit(task)
-        InfoBar.success(self.tr("优化完成"), self.tr("优化完成字幕"), duration=3000, parent=self)
-
+        InfoBar.success(
+            self.tr("优化完成"),
+            self.tr("优化完成字幕..."),
+            duration=2000,
+            position=InfoBarPosition.BOTTOM,
+            parent=self.parent()
+        )
     def on_subtitle_optimization_error(self, error):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)

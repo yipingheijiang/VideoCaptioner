@@ -53,7 +53,7 @@ class CreateTaskThread(QThread):
 
         # 定义各个路径
         audio_save_path = task_work_dir / "audio.mp3"
-        original_subtitle_save_path = task_work_dir / "【原始字幕】original_subtitle.srt"
+        original_subtitle_save_path = task_work_dir / f"【原始字幕】original_subtitle_{cfg.transcribe_model.value.value}.srt"
         result_subtitle_save_path = task_work_dir / "【优化字幕】result_subtitle.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 

@@ -160,7 +160,7 @@ class VideoInfoCard(CardWidget):
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         if self.task.status == Task.Status.TRANSCRIBING:
-            if not self.show_whisper_settings():
+            if self.task.transcribe_model == Task.whisper_model and not self.show_whisper_settings():
                 return
         self.progress_ring.show()
         self.progress_ring.setValue(100)
@@ -183,6 +183,7 @@ class VideoInfoCard(CardWidget):
 
     def start_transcription(self):
         """开始转录过程"""
+        self.start_button.setEnabled(False)
         self._update_task_config()
         self.transcript_thread = TranscriptThread(self.task)
         self.transcript_thread.finished.connect(self.on_transcript_finished)
@@ -198,11 +199,14 @@ class VideoInfoCard(CardWidget):
         """更新转录进度"""
         self.start_button.setText(message)
         self.progress_ring.setValue(value)
+        self.start_button.setEnabled(True)
+
 
     def on_transcript_error(self, error):
         """处理转录错误"""
         self.start_button.setEnabled(True)
         self.start_button.setText(self.tr("重新转录"))
+        self.start_button.setEnabled(True)
         InfoBar.error(
             self.tr("转录失败"),
             self.tr(error),

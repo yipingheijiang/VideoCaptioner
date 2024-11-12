@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QDropEvent
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QApplication,
                              QFileDialog)
@@ -21,6 +21,8 @@ SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
 
 
 class VideoSynthesisInterface(QWidget):
+    finished = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("VideoSynthesisInterface")
@@ -129,8 +131,7 @@ class VideoSynthesisInterface(QWidget):
         self.open_folder_button.clicked.connect(self.open_video_folder)
 
     def set_value(self):
-        self.subtitle_input.setText("E:/GithubProject/VideoCaptioner/app/core/subtitles0.srt")
-        self.video_input.setText("C:/Users/weifeng/Videos/佛山周末穷游好去处!.mp4")
+        pass
 
     def choose_subtitle_file(self):
         # 构建文件过滤器
@@ -203,6 +204,7 @@ class VideoSynthesisInterface(QWidget):
 
     def on_video_synthesis_finished(self, task):
         self.synthesize_button.setEnabled(True)
+        self.open_video_folder()
         InfoBar.success(
             self.tr("成功"),
             self.tr("视频合成已完成"),

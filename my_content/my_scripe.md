@@ -37,7 +37,7 @@ lrelease translations/VideoCaptioner_en_US.ts
 
 
 ```
-python -m nuitka --module app --output-dir=dist --include-package=app
+python -m nuitka --module app --output-dir=release/dist --include-package=app
 ```
 
 python -m nuitka ^

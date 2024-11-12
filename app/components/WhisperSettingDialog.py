@@ -18,63 +18,67 @@ from ..config import CACHE_PATH
 
 logger = setup_logger("whisper_download")
 
-# 定义模型配置
+# 使用阿里云镜像定义模型配置
+# https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-tiny.bin
+# "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin?download=true"
+
+# 使用阿里云镜像定义模型配置
 WHISPER_MODELS = [
     {
         "label": "Tiny",
         "value": "ggml-tiny.bin", 
         "size": "77.7 MB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-tiny.bin"
     },
     {
         "label": "Base",
         "value": "ggml-base.bin",
-        "size": "148 MB",
+        "size": "148 MB", 
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-base.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-base.bin"
     },
     {
         "label": "Small",
         "value": "ggml-small.bin",
         "size": "488 MB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-small.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-small.bin"
     },
     {
-        "label": "Medium",
+        "label": "Medium", 
         "value": "ggml-medium.bin",
         "size": "1.53 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-medium.bin"
     },
     {
         "label": "Large(v1)",
         "value": "ggml-large-v1.bin",
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v1.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-large-v1.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v1.bin"
     },
     {
         "label": "Large(v2)",
-        "value": "ggml-large-v2.bin",
+        "value": "ggml-large-v2.bin", 
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v2.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-large-v2.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v2.bin"
     },
     {
         "label": "Large(v3)",
         "value": "ggml-large-v3.bin",
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
-        "mirrorLink": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin"
     },
     {
         "label": "Distil Large(v3)",
         "value": "ggml-distil-large-v3.bin",
         "size": "1.52 GB",
         "downloadLink": "https://huggingface.co/distil-whisper/distil-large-v3-ggml/resolve/main/ggml-distil-large-v3.bin?download=true",
-        "mirrorLink": "https://hf-mirror.com/distil-whisper/distil-large-v3-ggml/resolve/main/ggml-distil-large-v3.bin?download=true"
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-distil-large-v3.bin"
     }
 ]
 
@@ -114,7 +118,6 @@ class DownloadThread(QThread):
                 '--auto-file-renaming=false',
                 '--allow-overwrite=true',
                 '--check-certificate=false',
-                
                 f'--dir={temp_dir}',
                 f'--out={temp_file.name}',
                 self.url

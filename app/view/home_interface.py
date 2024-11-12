@@ -56,18 +56,21 @@ class HomeInterface(QWidget):
     def switch_to_transcription(self, task):
         # 切换到转录界面
         self.transcription_interface.set_task(task)
+        self.transcription_interface.process()
         self.stackedWidget.setCurrentWidget(self.transcription_interface)
         self.pivot.setCurrentItem('TranscriptionInterface')
 
     def switch_to_subtitle_optimization(self, task):
         # 切换到字幕优化界面
         self.subtitle_optimization_interface.set_task(task)
+        self.subtitle_optimization_interface.process()
         self.stackedWidget.setCurrentWidget(self.subtitle_optimization_interface)
         self.pivot.setCurrentItem('SubtitleOptimizationInterface')
 
     def switch_to_video_synthesis(self, task):
         # 切换到视频合成界面
         self.video_synthesis_interface.set_task(task)
+        self.video_synthesis_interface.process()
         self.stackedWidget.setCurrentWidget(self.video_synthesis_interface)
         self.pivot.setCurrentItem('VideoSynthesisInterface')
 
