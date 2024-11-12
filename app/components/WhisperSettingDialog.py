@@ -65,21 +65,21 @@ WHISPER_MODELS = [
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v2.bin",
         "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v2.bin"
-    },
-    {
-        "label": "Large(v3)",
-        "value": "ggml-large-v3.bin",
-        "size": "3.09 GB",
-        "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
-        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin"
-    },
-    {
-        "label": "Distil Large(v3)",
-        "value": "ggml-distil-large-v3.bin",
-        "size": "1.52 GB",
-        "downloadLink": "https://huggingface.co/distil-whisper/distil-large-v3-ggml/resolve/main/ggml-distil-large-v3.bin?download=true",
-        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-distil-large-v3.bin"
     }
+    # {
+    #     "label": "Large(v3)",
+    #     "value": "ggml-large-v3.bin",
+    #     "size": "3.09 GB",
+    #     "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
+    #     "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin"
+    # },
+    # {
+    #     "label": "Distil Large(v3)",
+    #     "value": "ggml-distil-large-v3.bin",
+    #     "size": "1.52 GB",
+    #     "downloadLink": "https://huggingface.co/distil-whisper/distil-large-v3-ggml/resolve/main/ggml-distil-large-v3.bin?download=true",
+    #     "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-distil-large-v3.bin"
+    # }
 ]
 
 class DownloadThread(QThread):

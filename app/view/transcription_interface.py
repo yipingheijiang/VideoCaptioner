@@ -18,6 +18,7 @@ from ..common.config import cfg
 from ..core.entities import LANGUAGES, Task, VideoInfo
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
 from ..core.thread.transcript_thread import TranscriptThread
+from ..core.entities import TranscribeModelEnum
 
 DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
@@ -139,13 +140,6 @@ class VideoInfoCard(CardWidget):
         dialog = WhisperSettingDialog(self.window())
         if dialog.exec_():
             if dialog.check_whisper_model():
-                InfoBar.success(
-                    self.tr("找到模型文件"),
-                    self.tr("Whisper设置已更新"),
-                    duration=2000,
-                    parent=self,
-                    position=InfoBarPosition.BOTTOM_RIGHT
-                )
                 return True
             else:
                 InfoBar.error(
@@ -160,7 +154,7 @@ class VideoInfoCard(CardWidget):
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         if self.task.status == Task.Status.TRANSCRIBING:
-            if self.task.transcribe_model == Task.whisper_model and not self.show_whisper_settings():
+            if self.task.transcribe_model == TranscribeModelEnum.WHISPER and not self.show_whisper_settings():
                 return
         self.progress_ring.show()
         self.progress_ring.setValue(100)
@@ -199,7 +193,6 @@ class VideoInfoCard(CardWidget):
         """更新转录进度"""
         self.start_button.setText(message)
         self.progress_ring.setValue(value)
-        self.start_button.setEnabled(True)
 
 
     def on_transcript_error(self, error):
@@ -210,7 +203,7 @@ class VideoInfoCard(CardWidget):
         InfoBar.error(
             self.tr("转录失败"),
             self.tr(error),
-            duration=1500,
+            duration=3000,
             parent=self
         )
 
@@ -232,6 +225,11 @@ class VideoInfoCard(CardWidget):
         self.task = task
         self.update_info(self.task.video_info)
         self.reset_ui()
+    
+    def stop(self):
+        if hasattr(self, 'transcript_thread'):
+            self.transcript_thread.stop()
+
 
 
 class TranscriptionInterface(QWidget):
@@ -270,7 +268,7 @@ class TranscriptionInterface(QWidget):
         InfoBar.success(
             self.tr("转录完成"),
             self.tr("开始字幕优化..."),
-            duration=2000,
+            duration=3000,
             position=InfoBarPosition.BOTTOM,
             parent=self.parent()
         )
@@ -331,7 +329,7 @@ class TranscriptionInterface(QWidget):
                 InfoBar.success(
                     self.tr("导入成功"),
                     self.tr("开始语音转文字"),
-                    duration=1500,
+                    duration=3000,
                     parent=self
                 )
                 break
@@ -343,6 +341,9 @@ class TranscriptionInterface(QWidget):
                     parent=self
                 )
 
+    def closeEvent(self, event):
+        self.video_info_card.stop()
+        super().closeEvent(event)
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

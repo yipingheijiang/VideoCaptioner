@@ -66,6 +66,7 @@ VideoCaptioner 是一款功能强大的视频字幕配制软件。操作简单�
 
 4. 拖拽视频文件到软件窗口，即可全自动处理
 
+提示：每一个步骤均支持单独处理，均支持文件拖拽。
 
 <details>
 <summary>MacOS 用户</summary>

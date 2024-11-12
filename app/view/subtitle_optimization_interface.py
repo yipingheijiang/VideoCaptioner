@@ -240,7 +240,7 @@ class SubtitleOptimizationInterface(QWidget):
         InfoBar.success(
             self.tr("优化完成"),
             self.tr("优化完成字幕..."),
-            duration=2000,
+            duration=3000,
             position=InfoBarPosition.BOTTOM,
             parent=self.parent()
         )
@@ -284,7 +284,7 @@ class SubtitleOptimizationInterface(QWidget):
             InfoBar.warning(
                 self.tr("警告"),
                 self.tr("请先加载字幕文件"),
-                duration=2000,
+                duration=3000,
                 parent=self
             )
             return
@@ -312,7 +312,7 @@ class SubtitleOptimizationInterface(QWidget):
             InfoBar.success(
                 self.tr("保存成功"),
                 self.tr(f"字幕已保存至:") + file_path,
-                duration=2000,
+                duration=3000,
                 parent=self
             )
         except Exception as e:
@@ -325,7 +325,7 @@ class SubtitleOptimizationInterface(QWidget):
 
     def on_open_folder_clicked(self):
         if not self.task:
-            InfoBar.warning(self.tr("警告"), self.tr("请先加载字幕文件"), duration=2000, parent=self)
+            InfoBar.warning(self.tr("警告"), self.tr("请先加载字幕文件"), duration=3000, parent=self)
             return
         os.startfile(os.path.dirname(self.task.original_subtitle_save_path))
 
@@ -357,7 +357,7 @@ class SubtitleOptimizationInterface(QWidget):
                 InfoBar.success(
                     self.tr("导入成功"),
                     self.tr(f"成功导入") + os.path.basename(file_path),
-                    duration=2000,
+                    duration=3000,
                     parent=self
                 )
                 break
@@ -365,7 +365,7 @@ class SubtitleOptimizationInterface(QWidget):
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
                     self.tr(f"支持的字幕格式:") + supported_formats,
-                    duration=2000,
+                    duration=3000,
                     parent=self
                 )
         event.accept()

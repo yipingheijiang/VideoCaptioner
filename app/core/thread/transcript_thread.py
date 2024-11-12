@@ -67,8 +67,8 @@ class TranscriptThread(QThread):
             if self.task.transcribe_model == TranscribeModelEnum.WHISPER:
                 args["language"] = self.task.transcribe_language
                 args["whisper_model"] = self.task.whisper_model
-            asr = asr_class(self.task.audio_save_path, **args)
-            asr_data = asr.run(callback=self.progress_callback)
+            self.asr = asr_class(self.task.audio_save_path, **args)
+            asr_data = self.asr.run(callback=self.progress_callback)
 
             # 保存字幕文件
             original_subtitle_path = Path(self.task.original_subtitle_save_path)
@@ -86,3 +86,11 @@ class TranscriptThread(QThread):
     def progress_callback(self, value, message):
         progress = min(30 + (value // 100) * 70, 100)
         self.progress.emit(progress, message)
+    
+    def stop(self):
+        print("transcript thread stop")
+        if hasattr(self, 'asr'):
+            if hasattr(self.asr, 'stop'):
+                print("try asr stop")
+                self.asr.stop()
+        self.terminate()

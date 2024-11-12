@@ -133,6 +133,7 @@ class VersionManager(QObject):
                 self.settings.setValue(f'announcement/shown_announcement_{announcement_id}', True)
                 self.announcementAvailable.emit(content)
                 logger.info("Announcement shown: %s", announcement_id)
+            self.settings.sync()
 
     def performCheck(self):
         """执行版本和公告检查"""

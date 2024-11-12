@@ -15,7 +15,7 @@ logger = setup_logger("whisper_asr")
 class WhisperASR(BaseASR):
     def __init__(self, audio_path, language="en", whisper_cpp_path="whisper-cpp", whisper_model=None,
                  use_cache: bool = False, need_word_time_stamp: bool = False):
-        super().__init__(audio_path, use_cache)
+        super().__init__(audio_path, False)
         # 如果指定了 whisper_model，则在 models 目录下查找对应模型
         if whisper_model:
             models_dir = Path(MODEL_PATH)
@@ -31,6 +31,8 @@ class WhisperASR(BaseASR):
         self.whisper_cpp_path = Path(whisper_cpp_path)
         self.need_word_time_stamp = need_word_time_stamp
         self.language = language
+
+        self.process = None
 
     def _make_segments(self, resp_data: str) -> list[ASRDataSeg]:
         return from_srt(resp_data)
@@ -55,9 +57,9 @@ class WhisperASR(BaseASR):
 
         cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt"]
         try:
-            callback(5, "Whisper 转换")
+            callback(5, "正在 Whisper")
             logger.info("开始执行命令: %s", " ".join(cmd))
-            process = subprocess.Popen(
+            self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -73,7 +75,7 @@ class WhisperASR(BaseASR):
 
             while True:
                 try:
-                    line = process.stdout.readline()
+                    line = self.process.stdout.readline()
                 except UnicodeDecodeError:
                     continue
 
@@ -89,13 +91,13 @@ class WhisperASR(BaseASR):
                     if callback:
                         progress = int(min(current_time / total_duration * 100, 98))
                         callback(progress, f"{progress}% 正在转换")
-                        logger.debug("当前进度: %d%%", progress)
+                        logger.info("当前进度: %d%%", progress)
 
             callback(100, "转换完成")
             logger.info("转换完成")
 
-            if process.wait() != 0:
-                error_message = process.stderr.read()
+            if self.process.wait() != 0:
+                error_message = self.process.stderr.read()
                 logger.error("生成 SRT 文件失败: %s", error_message)
                 raise RuntimeError(f"生成 SRT 文件失败: {error_message}")
 
@@ -123,6 +125,20 @@ class WhisperASR(BaseASR):
         except Exception as e:
             logger.exception("获取音频时长时出错: %s", str(e))
             return 600
+
+    def stop(self):
+        """停止 ASR 语音识别处理
+        - 终止进程及其子进程
+        """
+        if self.process:
+            logger.info("终止 Whisper ASR 进程")
+            if os.name == 'nt':  # Windows系统
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
+                             capture_output=True)
+            else:  # Linux/Mac系统
+                import signal
+                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+            self.process = None
 
 
 if __name__ == '__main__':

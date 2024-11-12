@@ -44,6 +44,7 @@ class SubtitleOptimizationThread(QThread):
             subtitle_style_srt = self.task.subtitle_style_srt
             subtitle_layout = self.task.subtitle_layout
             # TODO: 开启字幕总结功能
+            split_path = str(Path(result_subtitle_save_path).parent / f"{Path(result_subtitle_save_path).stem}_智能断句.srt")
 
             # 检查
             assert str_path is not None, self.tr("字幕文件路径为空")
@@ -101,8 +102,6 @@ class SubtitleOptimizationThread(QThread):
                 self.progress.emit(5, self.tr("字幕断句..."))
                 logger.info("字幕断句...")
                 asr_data = merge_segments(asr_data, model=llm_model, num_threads=thread_num)
-                split_path = str(
-                    Path(result_subtitle_save_path).parent / f"{Path(result_subtitle_save_path).stem}_split.srt")
                 asr_data.save(save_path=split_path)
                 self.update_all.emit(asr_data.to_json())
 
@@ -170,4 +169,5 @@ class SubtitleOptimizationThread(QThread):
     def stop(self):
         if hasattr(self, 'optimizer'):
             self.optimizer.stop()
+            logger.info("关闭字幕优化线程")
         self.terminate()

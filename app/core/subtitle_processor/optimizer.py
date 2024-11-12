@@ -79,7 +79,11 @@ class SubtitleOptimizer:
                     logger.error(f"翻译失败，使用单条翻译：{e}")
                     result = self.translate_single(chunk)
             else:
-                result = self.optimize(chunk)
+                try:
+                    result = self.optimize(chunk)
+                except Exception as e:
+                    logger.error(f"优化失败：{e}")
+                    result = chunk
             if callback:
                 callback(result)
             return result
@@ -196,6 +200,7 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     text_aligner = SubtitleAligner()
     aligned_source, aligned_target = text_aligner.align_texts(list1, list2)
 
+    assert len(aligned_source) == len(aligned_target), "对齐后字幕长度不一致"
     # 验证是否匹配
     similar_list = calculate_similarity_list(aligned_source, aligned_target)
     if similar_list.count(True) / len(similar_list) >= 0.8:

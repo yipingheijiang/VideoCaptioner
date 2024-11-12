@@ -208,10 +208,11 @@ class VideoSynthesisInterface(QWidget):
         InfoBar.success(
             self.tr("成功"),
             self.tr("视频合成已完成"),
-            duration=2000,
+            duration=3000,
             position=InfoBarPosition.TOP,
             parent=self
         )
+        self.task.status = Task.Status.COMPLETED
 
     def on_video_synthesis_progress(self, progress, message):
         self.progress_bar.setValue(progress)
@@ -223,7 +224,7 @@ class VideoSynthesisInterface(QWidget):
         InfoBar.error(
             self.tr("错误"),
             str(error),
-            duration=2000,
+            duration=3000,
             position=InfoBarPosition.TOP,
             parent=self
         )
@@ -261,7 +262,7 @@ class VideoSynthesisInterface(QWidget):
                 InfoBar.success(
                     self.tr("导入成功"),
                     self.tr("字幕文件已放入输入框"),
-                    duration=1500,
+                    duration=2000,
                     parent=self
                 )
                 break
@@ -270,7 +271,7 @@ class VideoSynthesisInterface(QWidget):
                 InfoBar.success(
                     self.tr("导入成功"),
                     self.tr("视频文件已输入框"),
-                    duration=1500,
+                    duration=2000,
                     parent=self
                 )
                 break
@@ -278,7 +279,7 @@ class VideoSynthesisInterface(QWidget):
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
                     self.tr("请拖入视频或者字幕文件"),
-                    duration=1500,
+                    duration=2000,
                     parent=self
                 )
 

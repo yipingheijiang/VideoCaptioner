@@ -381,6 +381,10 @@ class BatchProcessInterface(QWidget):
                     parent=self
                 )
 
+    def closeEvent(self, event):
+        """关闭事件处理"""
+        self.cancel_batch_process()
+        super().closeEvent(event)
 
 class TaskInfoCard(CardWidget):
     finished = pyqtSignal(Task)
@@ -598,9 +602,9 @@ class TaskInfoCard(CardWidget):
     def stop(self):
         """停止转录"""
         if self.transcript_thread and self.transcript_thread.isRunning():
-            self.transcript_thread.terminate()
+            self.transcript_thread.stop()
         if self.subtitle_thread and self.subtitle_thread.isRunning():
-            self.subtitle_thread.terminate()
+            self.subtitle_thread.stop()
         self.reset_ui()
 
         InfoBar.success(
