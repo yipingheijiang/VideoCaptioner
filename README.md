@@ -1,14 +1,14 @@
 <div align="center">
   <img src="./docs/images/logo.png"alt="VideoCaptioner Logo" width="100">
+  <p>卡卡字幕助手</p>
   <h1>VideoCaptioner</h1>
   <p>一款基于大语言模型(LLM)的智能视频字幕处理助手，支持字幕生成、断句、优化、翻译全流程处理</p>
-
-  简体中文 / [English](./docs/README_EN.md)
+  <p>简体中文 / [English](./docs/README_EN.md)</p>
 </div>
 
 ## 📖 项目介绍
 
-VideoCaptioner 是一款功能强大的视频字幕配制软件。操作简单且无需高配置，利用大语言模型进行字幕智能断句、校正、优化、翻译，一键为视频配上效果惊艳的字幕。
+卡卡字幕助手（VideoCaptioner）是一款功能强大的视频字幕配制软件。操作简单且无需高配置，利用大语言模型进行字幕智能断句、校正、优化、翻译，一键为视频配上效果惊艳的字幕。
 
 - 🎯 无需GPU即可使用强大的语音识别引擎，自动生成精准字幕
 - ✂️ 基于 LLM 的智能分割与断句，字幕阅读更自然流畅
