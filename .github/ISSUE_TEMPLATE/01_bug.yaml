@@ -23,8 +23,8 @@ body:
   attributes:
     label: 日志信息（可选）Logs (Optional)
     description: |
-      请打开根目录下的 AppData/logs/app.log 文件，复制最近一次运行错误的日志信息。
-      Please open the AppData/logs/app.log file in the root directory and copy the log information from the most recent run error.
+      （可选）如果你在生成字幕视频过程遇到了错误，请打开根目录下的 AppData/logs/app.log 文件，复制最近一次运行错误的日志信息。帮助我排查。
+      (Optional) Please open the AppData/logs/app.log file in the root directory and copy the log information from the most recent run error.
     render: shell
   validations:
     required: false
