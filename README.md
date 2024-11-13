@@ -22,11 +22,11 @@
 ## 📸 界面预览
 
 <div align="center">
-  <img src="./docs/images/main.png" alt="软件界面预览" width="90%" style="border-radius: 5px;">
+  <img src="https://h1.appinn.me/file/1731487405884_main.png" alt="软件界面预览" width="90%" style="border-radius: 5px;">
 </div>
 
-![页面预览](./docs/images/preview1.png)
-![页面预览](./docs/images/preview2.png)
+![页面预览](https://h1.appinn.me/file/1731487410170_preview1.png)
+![页面预览](https://h1.appinn.me/file/1731487410832_preview2.png)
 
 
 ## 🚀 快速开始
