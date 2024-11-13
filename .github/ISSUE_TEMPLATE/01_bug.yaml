@@ -1,12 +1,12 @@
 name: Bug 错误
 description: Report bugs 报告错误
-labels: "bug"
+labels: ["bug"]
 body:
 - type: markdown
   attributes:
     value: |
-      感谢您报告问题！请提供以下信息帮助我更好地解决问题。使用英文或者中文。
-      Thank you for reporting the issue! Using English or Chinese.
+      感谢您报告问题！请提供以下信息以帮助我们更好地解决问题。
+      Thank you for reporting the issue! Please provide the following information to help us better resolve the problem.
 
 - type: textarea
   id: description
@@ -16,7 +16,8 @@ body:
       请详细描述您遇到的问题，包括您执行的操作和期望的结果。
       Please describe in detail the problem you encountered, including what you did and what you expected.
     placeholder: |
-      
+      例如：当我尝试处理视频字幕时，程序突然崩溃了...
+      For example: When I tried to process video subtitles, the program suddenly crashed...
   validations:
     required: true
 
