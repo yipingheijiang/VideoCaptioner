@@ -110,7 +110,8 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
                 substr = ''.join(asr_texts[start:start + window_size])
                 substr_proc = preprocess_text(substr)
                 ratio = difflib.SequenceMatcher(None, sentence_proc, substr_proc).ratio()
-
+                # logger.debug(f"-----")
+                # logger.debug(f"sentence_proc: {sentence_proc}, substr_proc: {substr_proc}, ratio: {ratio}")
 
                 if ratio > best_ratio:
                     best_ratio = ratio
@@ -289,7 +290,7 @@ def optimize_subtitles(asr_data):
         prev_seg = segments[i - 1]
 
         # 判断前一个段落的词数是否小于等于4且时间相邻
-        if abs(seg.start_time - prev_seg.end_time) < 500 and count_words(seg.text) + count_words(prev_seg.text) <= 15:
+        if abs(seg.start_time - prev_seg.end_time) < 300 and count_words(seg.text) + count_words(prev_seg.text) <= 12:
             asr_data.merge_with_next_segment(i - 1)
             logger.debug(f"优化：合并相邻分段: {prev_seg.text} --- {seg.text} -> {abs(seg.start_time - prev_seg.end_time)}")
 

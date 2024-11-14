@@ -3,6 +3,7 @@ import os
 import re
 from pathlib import Path
 
+import requests
 import yt_dlp
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -114,7 +115,6 @@ class CreateTaskThread(QThread):
         video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value,
                                                                                        self.progress_hook)
         self.progress.emit(100, self.tr("下载视频完成"))
-        logger.info("视频下载完成")
 
         video_info = VideoInfo(
             file_name=Path(video_file_path).stem,
@@ -138,6 +138,7 @@ class CreateTaskThread(QThread):
         result_subtitle_save_path = task_work_dir / "subtitle" / f"【优化字幕】result.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(video_file_path).name}"
 
+        # raise Exception("test")
         if cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN]:
             need_word_time_stamp = True
         else:
@@ -299,7 +300,6 @@ class CreateTaskThread(QThread):
 
             self.progress.emit(int(float(clean_percent)),
                                f'{self.tr("下载进度")}: {clean_percent}%  {self.tr("速度")}: {clean_speed}')
-            logger.info("下载进度: %s%% 速度: %s", clean_percent, clean_speed)
 
 
 def sanitize_filename(name, replacement="_"):
@@ -382,14 +382,19 @@ def download(url, work_dir, progress_hook):
         # 设置动态下载文件夹为视频标题
         video_title = sanitize_filename(info_dict.get('title', 'MyVideo'))
         video_work_dir = Path(work_dir) / sanitize_filename(video_title)
-
+        subtitle_language = info_dict.get('language', None)
+        try:
+            subtitle_download_link = info_dict['automatic_captions'][subtitle_language][-1]['url']
+        except Exception as e:
+            subtitle_download_link = None
+        
         # 设置 yt-dlp 下载选项
         ydl_opts = {
             'paths': {
                 'home': str(video_work_dir),
                 'subtitle': str(video_work_dir / "subtitle"),
                 'thumbnail': str(video_work_dir),
-            }
+            },
         }
         # 更新 yt-dlp 的配置
         ydl.params.update(ydl_opts)
@@ -408,8 +413,16 @@ def download(url, work_dir, progress_hook):
         subtitle_file_path = None
         for file in video_work_dir.glob("**/【原始字幕】*"):
             subtitle_file_path = str(file)
+            if subtitle_language and subtitle_language not in subtitle_file_path:
+                logger.info("字幕语言错误，重新下载字幕: %s", subtitle_download_link)
+                os.remove(subtitle_file_path)
+                if subtitle_download_link:
+                    response = requests.get(subtitle_download_link)
+                    subtitle_file_path = video_work_dir / "subtitle" / f"【原始字幕】{subtitle_language}.vtt"
+                    with open(subtitle_file_path, 'w', encoding="utf-8") as f:
+                        f.write(response.text)
             break
-
+        
         # 缩略图文件路径 video_work_dir 下遍历寻找 thumbnail.jpg
         thumbnail_file_path = None
         for file in video_work_dir.glob("**/thumbnail*"):

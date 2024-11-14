@@ -244,6 +244,7 @@ class SubtitleOptimizationInterface(QWidget):
             position=InfoBarPosition.BOTTOM,
             parent=self.parent()
         )
+    
     def on_subtitle_optimization_error(self, error):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
