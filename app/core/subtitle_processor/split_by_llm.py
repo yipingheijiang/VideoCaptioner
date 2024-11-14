@@ -9,6 +9,9 @@ import retry
 
 from app.config import CACHE_PATH
 from .subtitle_config import SPLIT_SYSTEM_PROMPT
+from ..utils.logger import setup_logger
+
+logger = setup_logger("split_by_llm")
 
 MAX_WORD_COUNT = 20  # 英文单词或中文字符的最大数量
 
@@ -60,17 +63,17 @@ def set_cache(text: str, model: str, result: List[str]) -> None:
         pass
 
 
-def split_by_llm(*args, **kwargs) -> List[str]:
+def split_by_llm(text: str, model: str = "gpt-4o-mini", use_cache: bool = False) -> List[str]:
     """
     包装 split_by_llm_retry 函数，确保在重试全部失败后返回空列表
     """
     try:
-        return split_by_llm_retry(*args, **kwargs)
+        return split_by_llm_retry(text, model, use_cache)
     except Exception as e:
-        return []
+        logger.error(f"断句失败: {e}")
+        return [text]
+        #TODO: 断句失败后。。。自己断句
 
-
-# 设置次数
 @retry.retry(tries=3)
 def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = False) -> List[str]:
     """
@@ -79,8 +82,9 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
     if use_cache:
         cached_result = get_cache(text, model)
         if cached_result:
+            logger.info(f"从缓存中获取断句结果")
             return cached_result
-
+    logger.info(f"未命中缓存，开始断句")
     prompt = f"Please use multiple <br> tags to separate the following sentence:\n{text}"
     # 初始化OpenAI客户端
     client = openai.OpenAI()

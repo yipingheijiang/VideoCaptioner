@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
+import shutil
 import subprocess
+import tempfile
 from typing import Literal
 
 from ..utils.logger import setup_logger
@@ -99,6 +101,13 @@ def add_subtitles(
     assert Path(input_file).is_file(), "输入文件不存在"
     assert Path(subtitle_file).is_file(), "字幕文件不存在"
 
+    # 移动到临时文件  Fix: 路径错误
+    temp_dir = Path(tempfile.gettempdir()) / "VideoCaptioner"
+    temp_dir.mkdir(exist_ok=True)
+    temp_subtitle = temp_dir / "temp_subtitle.ass"
+    shutil.copy2(subtitle_file, temp_subtitle)
+    subtitle_file = str(temp_subtitle)
+
     # 如果是WebM格式，强制使用硬字幕
     if Path(output).suffix.lower() == '.webm':
         soft_subtitle = False
@@ -149,8 +158,9 @@ def add_subtitles(
             output
         ])
 
-        logger.info(f"执行命令: {' '.join(cmd)}")
         cmd_str = subprocess.list2cmdline(cmd)
+        logger.info(f"执行命令: {cmd_str}")
+
         process = subprocess.Popen(
             cmd, 
             stdout=subprocess.PIPE, 
@@ -158,7 +168,8 @@ def add_subtitles(
             text=True, 
             encoding='utf-8',
             errors='replace',
-            shell=True
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            close_fds=True
         )
         # 实时读取输出并调用回调函数
         total_duration = None
@@ -194,10 +205,13 @@ def add_subtitles(
         # 检查进程的返回码
         return_code = process.wait()
         if return_code != 0:
-            logger.error(f"视频合成失败，返回码: {return_code}")
+            error_info = process.stderr.read()
+            logger.error(f"视频合成失败， {error_info}")
             raise Exception(return_code)
         logger.info("视频合成完成")
 
+    # 删除临时文件
+    temp_subtitle.unlink()
 
 def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
     logger.info(f"获取视频信息: {filepath}")

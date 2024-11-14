@@ -1,5 +1,6 @@
 import difflib
 import re
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
@@ -12,7 +13,7 @@ logger = setup_logger("subtitle_spliter")
 SEGMENT_THRESHOLD = 1000  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
 SPLIT_RANGE = 30  # 在分割点前后寻找最大时间间隔的范围
-
+MAX_GAP = 2000.0  # 最大时间间隔 ms
 
 def is_pure_punctuation(s: str) -> bool:
     """
@@ -23,12 +24,47 @@ def is_pure_punctuation(s: str) -> bool:
 
 def count_words(text: str) -> int:
     """
-    统计混合文本中英文单词数和中文字符数的总和
+    统计多语言文本中的字符/单词数
+    支持:
+    - 英文（按空格分词）
+    - CJK文字（中日韩统一表意文字）
+    - 韩文/谚文
+    - 泰文
+    - 阿拉伯文
+    - 俄文西里尔字母
+    - 希伯来文
+    - 越南文
+    每个字符都计为1个单位，英文按照空格分词计数
     """
-    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', text))
-    english_text = re.sub(r'[\u4e00-\u9fff]', ' ', text)
-    english_words = len(english_text.strip().split())
-    return english_words + chinese_chars
+    # 定义各种语言的Unicode范围
+    patterns = [
+        r'[\u4e00-\u9fff]',           # 中日韩统一表意文字
+        r'[\u3040-\u309f]',           # 平假名
+        r'[\u30a0-\u30ff]',           # 片假名
+        r'[\uac00-\ud7af]',           # 韩文音节
+        r'[\u0e00-\u0e7f]',           # 泰文
+        r'[\u0600-\u06ff]',           # 阿拉伯文
+        r'[\u0400-\u04ff]',           # 西里尔字母（俄文等）
+        r'[\u0590-\u05ff]',           # 希伯来文
+        r'[\u1e00-\u1eff]',           # 越南文
+        r'[\u3130-\u318f]',           # 韩文兼容字母
+    ]
+    
+    # 统计所有非英文字符
+    non_english_chars = 0
+    remaining_text = text
+    
+    for pattern in patterns:
+        # 计算当前语言的字符数
+        chars = len(re.findall(pattern, remaining_text))
+        non_english_chars += chars
+        # 从文本中移除已计数的字符
+        remaining_text = re.sub(pattern, ' ', remaining_text)
+    
+    # 计算英文单词数（处理剩余的文本）
+    english_words = len(remaining_text.strip().split())
+    
+    return non_english_chars + english_words
 
 
 def preprocess_text(s: str) -> str:
@@ -50,8 +86,12 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
 
     new_segments = []
 
+    logger.debug(f"ASR分段: {asr_texts}")
+
     for sentence in sentences:
+        logger.debug(f"==========")
         logger.debug(f"处理句子: {sentence}")
+
         sentence_proc = preprocess_text(sentence)
         word_count = count_words(sentence_proc)
         best_ratio = 0.0
@@ -61,8 +101,8 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
         # 滑动窗口大小，优先考虑接近句子词数的窗口
         max_window_size = min(word_count * 2, asr_len - asr_index)
         min_window_size = max(1, word_count // 2)
-
         window_sizes = sorted(range(min_window_size, max_window_size + 1), key=lambda x: abs(x - word_count))
+        logger.debug(f"window_sizes: {window_sizes}")
 
         for window_size in window_sizes:
             max_start = min(asr_index + max_shift + 1, asr_len - window_size + 1)
@@ -70,6 +110,8 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
                 substr = ''.join(asr_texts[start:start + window_size])
                 substr_proc = preprocess_text(substr)
                 ratio = difflib.SequenceMatcher(None, sentence_proc, substr_proc).ratio()
+
+
                 if ratio > best_ratio:
                     best_ratio = ratio
                     best_pos = start
@@ -82,29 +124,61 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
         if best_ratio >= threshold and best_pos is not None:
             start_seg_index = best_pos
             end_seg_index = best_pos + best_window_size - 1
+            
+            segs_to_merge = asr_data.segments[start_seg_index:end_seg_index + 1]
+            seg_groups = check_time_gaps(segs_to_merge)
+            logger.debug(f"分段组: {len(seg_groups)}")
 
-            # 合并分段
-            merged_text = ''.join(asr_texts[start_seg_index:end_seg_index + 1])
-            merged_start_time = asr_data.segments[start_seg_index].start_time
-            merged_end_time = asr_data.segments[end_seg_index].end_time
-            merged_seg = ASRDataSeg(merged_text, merged_start_time, merged_end_time)
-
-            logger.debug(f"合并分段: {merged_seg.text}")
-
-            # 拆分超过最大词数的分段
-            if count_words(merged_text) > MAX_WORD_COUNT:
-                segs_to_merge = asr_data.segments[start_seg_index:end_seg_index + 1]
-                split_segs = split_long_segment(merged_text, segs_to_merge)
-                new_segments.extend(split_segs)
-            else:
-                new_segments.append(merged_seg)
-
+            for group in seg_groups:
+                merged_text = ''.join(seg.text for seg in group)
+                merged_start_time = group[0].start_time
+                merged_end_time = group[-1].end_time
+                merged_seg = ASRDataSeg(merged_text, merged_start_time, merged_end_time)
+                
+                logger.debug(f"合并分段: {merged_seg.text}")
+                
+                # 只有当分段没有时间间隔问题时，才考虑最大词数的拆分
+                if count_words(merged_text) > MAX_WORD_COUNT:
+                    split_segs = split_long_segment(merged_text, group)
+                    new_segments.extend(split_segs)
+                else:
+                    new_segments.append(merged_seg)
+            
             asr_index = end_seg_index + 1  # 移动到下一个未处理的分段
         else:
             logger.warning(f"无法匹配句子: {sentence}")
             asr_index += 1
 
     return ASRData(new_segments)
+
+
+def check_time_gaps(segments: List[ASRDataSeg], max_gap: float = MAX_GAP) -> List[List[ASRDataSeg]]:
+    """
+    检查分段之间的时间间隔，如果超过阈值则分段
+    Args:
+        segments: 待检查的分段列表
+        max_gap: 最大允许的时间间隔（秒）
+    Returns:
+        分段后的列表的列表
+    """
+    if not segments:
+        return []
+    
+    result = []
+    current_group = [segments[0]]
+    
+    for i in range(1, len(segments)):
+        time_gap = segments[i].start_time - segments[i-1].end_time
+        if time_gap > max_gap:
+            logger.debug(f"时间间隔超过阈值: {time_gap} > {max_gap}")
+            result.append(current_group)
+            current_group = []
+        current_group.append(segments[i])
+    
+    if current_group:
+        result.append(current_group)
+    
+    return result
 
 
 def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> List[ASRDataSeg]:
@@ -202,6 +276,22 @@ def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
 
     return segments
 
+def optimize_subtitles(asr_data):
+    """
+    优化字幕分割，合并词数少于等于3且时间相邻的段落。
+
+    参数:
+        asr_data (ASRData): 包含字幕段落的 ASRData 对象。
+    """
+    segments = asr_data.segments
+    for i in range(len(segments) - 1, 0, -1):
+        seg = segments[i]
+        prev_seg = segments[i - 1]
+
+        # 判断前一个段落的词数是否小于等于4且时间相邻
+        if abs(seg.start_time - prev_seg.end_time) < 500 and count_words(seg.text) + count_words(prev_seg.text) <= 15:
+            asr_data.merge_with_next_segment(i - 1)
+            logger.debug(f"优化：合并相邻分段: {prev_seg.text} --- {seg.text} -> {abs(seg.start_time - prev_seg.end_time)}")
 
 def determine_num_segments(word_count: int, threshold: int = 1000) -> int:
     """
@@ -248,6 +338,7 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     all_sentences = [item for sublist in all_sentences for item in sublist]
 
     logger.info(f"总共提取到 {len(all_sentences)} 句")
+    logger.debug(f"句子列表: {all_sentences}")
 
     # 基于LLM已经分段的句子，对ASR分段进行合并
     logger.info("正在合并ASR分段基于句子列表...")
@@ -257,6 +348,10 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     merged_asr_data.segments.sort(key=lambda seg: seg.start_time)
     final_asr_data = ASRData(merged_asr_data.segments)
 
+    # 优化字幕分割
+    optimize_subtitles(final_asr_data)
+
+    # print(f"合并后：{final_asr_data.to_txt()}")
     return final_asr_data
 
 def main():
