@@ -35,7 +35,20 @@ class WhisperASR(BaseASR):
         self.process = None
 
     def _make_segments(self, resp_data: str) -> list[ASRDataSeg]:
-        return from_srt(resp_data)
+        asr_data = from_srt(resp_data)
+        # 过滤掉纯音乐标记
+        filtered_segments = []
+        for seg in asr_data.segments:
+            text = seg.text.strip()
+            # 保留不以【、[、(、（开头的文本
+            if not (text.startswith('【') or 
+                   text.startswith('[') or 
+                   text.startswith('(') or 
+                   text.startswith('（')):
+                filtered_segments.append(seg)
+        
+        asr_data.segments = filtered_segments
+        return asr_data
 
     def _run(self, callback=None) -> str:
         if callback is None:
