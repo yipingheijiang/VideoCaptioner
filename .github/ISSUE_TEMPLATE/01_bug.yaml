@@ -13,7 +13,7 @@ body:
   attributes:
     label: 问题描述 Problem Description
     description: |
-      请详细描述您遇到的问题。
+      描述您遇到的问题。如果能提供一个复现步骤将帮我更好定位修复问题。
       Please describe in detail the problem you encountered.
   validations:
     required: true
