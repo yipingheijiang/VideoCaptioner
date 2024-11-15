@@ -1,5 +1,5 @@
 name: 问题咨询 Question
-description: 向作者咨询软件使用、配置或操作相关的问题 | Consult about software usage, configuration or operation issues
+description: 向作者咨询软件使用或配置相关的问题 | Consult about software usage or configuration
 
 labels: ["question"]
 
