@@ -52,10 +52,18 @@ class CreateTaskThread(QThread):
         video_info = get_video_info(file_path, thumbnail_path=thumbnail_path)
         video_info = VideoInfo(**video_info)
 
+
+        if cfg.need_optimize.value:
+            result_subtitle_type = "【优化字幕】"
+        elif cfg.need_translate.value:
+            result_subtitle_type = "【翻译字幕】"
+        else:
+            result_subtitle_type = ""
+
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(file_path).stem}.mp3"
         original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}.srt"
-        result_subtitle_save_path = task_work_dir / "subtitle" / "【优化字幕】result.ass"
+        result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 
         ass_style_name = cfg.subtitle_style_name.value
@@ -132,13 +140,19 @@ class CreateTaskThread(QThread):
         # 使用 Path 对象处理路径
         task_work_dir = Path(video_file_path).parent
 
+        if cfg.need_optimize.value:
+            result_subtitle_type = "【优化字幕】"
+        elif cfg.need_translate.value:
+            result_subtitle_type = "【翻译字幕】"
+        else:
+            result_subtitle_type = ""
+
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(video_file_path).stem}.mp3"
         original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}.srt" if not subtitle_file_path else subtitle_file_path
-        result_subtitle_save_path = task_work_dir / "subtitle" / f"【优化字幕】result.ass"
+        result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(video_file_path).name}"
 
-        # raise Exception("test")
         if cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN]:
             need_word_time_stamp = True
         else:
@@ -232,8 +246,15 @@ class CreateTaskThread(QThread):
         logger.info("开始创建字幕优化任务")
         task_work_dir = Path(file_path.strip()).parent
 
+        if cfg.need_optimize.value:
+            result_subtitle_type = "【优化字幕】"
+        elif cfg.need_translate.value:
+            result_subtitle_type = "【翻译字幕】"
+        else:
+            result_subtitle_type = ""
+
         original_subtitle_save_path = task_work_dir / file_path
-        result_subtitle_save_path = task_work_dir / f"【优化字幕】result_{cfg.model.value}.srt"
+        result_subtitle_save_path = task_work_dir / f"{result_subtitle_type}.ass"
 
         ass_style_name = cfg.subtitle_style_name.value
         ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"

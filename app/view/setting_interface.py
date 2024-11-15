@@ -383,7 +383,19 @@ class SettingInterface(ScrollArea):
             self.modelCard.comboBox.currentText()
         )
         self.connection_thread.finished.connect(self.onConnectionCheckFinished)
+        self.connection_thread.error.connect(self.onConnectionCheckError)
         self.connection_thread.start()
+    
+    def onConnectionCheckError(self, message):
+        """ 处理连接检查错误事件 """
+        self.checkLLMConnectionCard.button.setEnabled(True)
+        self.checkLLMConnectionCard.button.setText(self.tr("检查连接"))
+        InfoBar.error(
+            self.tr('LLM 连接测试错误'),
+            message,
+            duration=3000,
+            parent=self
+        )
 
     def onConnectionCheckFinished(self, is_success, message, models):
         """ 处理连接检查完成事件 """
@@ -419,6 +431,7 @@ class SettingInterface(ScrollArea):
 
 class LLMConnectionThread(QThread):
     finished = pyqtSignal(bool, str, list)
+    error = pyqtSignal(str)
 
     def __init__(self, api_base, api_key, model):
         super().__init__()
@@ -428,6 +441,10 @@ class LLMConnectionThread(QThread):
 
     def run(self):
         """ 查 LLM 连接并获取模型列表 """
-        is_success, message = test_openai(self.api_base, self.api_key, self.model)
-        models = get_openai_models(self.api_base, self.api_key)
-        self.finished.emit(is_success, message, models)
+        try:
+            is_success, message = test_openai(self.api_base, self.api_key, self.model)
+            models = get_openai_models(self.api_base, self.api_key)
+            print(models)
+            self.finished.emit(is_success, message, models)
+        except Exception as e:
+            self.error.emit(str(e))

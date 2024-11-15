@@ -152,6 +152,10 @@ class SubtitleOptimizationThread(QThread):
                                   layout=subtitle_layout)
                 logger.info(f"无需优化翻译，直接保存 {result_subtitle_save_path}")
 
+            # 删除断句文件
+            if os.path.exists(split_path):
+                os.remove(split_path)
+                
             self.progress.emit(100, self.tr("优化完成"))
             logger.info("优化完成")
             self.finished.emit(self.task)
