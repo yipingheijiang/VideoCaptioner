@@ -65,14 +65,14 @@ WHISPER_MODELS = [
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v2.bin",
         "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v2.bin"
-    }
-    # {
-    #     "label": "Large(v3)",
-    #     "value": "ggml-large-v3.bin",
-    #     "size": "3.09 GB",
-    #     "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
-    #     "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin"
-    # },
+    },
+    {
+        "label": "Large(v3)",
+        "value": "ggml-large-v3.bin",
+        "size": "3.09 GB",
+        "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
+        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin"
+    },
     # {
     #     "label": "Distil Large(v3)",
     #     "value": "ggml-distil-large-v3.bin",
@@ -130,7 +130,8 @@ class DownloadThread(QThread):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 universal_newlines=True,
-                shell=True
+                encoding='utf-8',
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
             
             while True:
