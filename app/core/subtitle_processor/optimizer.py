@@ -112,7 +112,6 @@ class SubtitleOptimizer:
             messages=message,
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
-        print(response_content)
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
         # 在 translations 中查找对应的翻译  文本-翻译 映射

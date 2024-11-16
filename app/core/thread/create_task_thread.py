@@ -58,7 +58,7 @@ class CreateTaskThread(QThread):
         elif cfg.need_translate.value:
             result_subtitle_type = "【翻译字幕】"
         else:
-            result_subtitle_type = ""
+            result_subtitle_type = "【字幕】"
 
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(file_path).stem}.mp3"
@@ -245,16 +245,18 @@ class CreateTaskThread(QThread):
     def create_subtitle_optimization_task(file_path):
         logger.info("开始创建字幕优化任务")
         task_work_dir = Path(file_path.strip()).parent
+        file_name = Path(file_path.strip()).stem
 
         if cfg.need_optimize.value:
             result_subtitle_type = "【优化字幕】"
         elif cfg.need_translate.value:
             result_subtitle_type = "【翻译字幕】"
         else:
-            result_subtitle_type = ""
+            result_subtitle_type = "【字幕】"
+        logger.info(f"字幕类型: {result_subtitle_type}")
 
         original_subtitle_save_path = task_work_dir / file_path
-        result_subtitle_save_path = task_work_dir / f"{result_subtitle_type}.ass"
+        result_subtitle_save_path = task_work_dir / f"{result_subtitle_type}{file_name}.ass"
 
         ass_style_name = cfg.subtitle_style_name.value
         ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"

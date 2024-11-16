@@ -16,7 +16,7 @@ from ..core.bk_asr.ASRData import from_subtitle_file, from_json
 from ..core.entities import OutputSubtitleFormatEnum, SupportedSubtitleFormats
 from ..core.entities import Task
 from ..core.thread.create_task_thread import CreateTaskThread
-
+from ..common.signal_bus import signalBus
 
 class SubtitleTableModel(QAbstractTableModel):
     def __init__(self, data):
@@ -127,16 +127,25 @@ class SubtitleOptimizationInterface(QWidget):
     def _setup_top_layout(self):
         self.top_layout = QHBoxLayout()
 
-        # 左侧布局
+        # =========左侧布局==========
+        # 保存按钮
         self.left_layout = QHBoxLayout()
         self.save_button = PushButton(self.tr("保存"), self, icon=FIF.SAVE)
+        
+        # 字幕格式下拉框
         self.format_combobox = ComboBox(self)
         self.format_combobox.addItems([format.value for format in OutputSubtitleFormatEnum])
 
+        # 添加字幕排布下拉框
+        self.layout_combobox = ComboBox(self)
+        self.layout_combobox.addItems(["译文在上", "原文在上", "仅译文", "仅原文"])
+        self.layout_combobox.setCurrentText(cfg.subtitle_layout.value)
+
         self.left_layout.addWidget(self.save_button)
         self.left_layout.addWidget(self.format_combobox)
+        self.left_layout.addWidget(self.layout_combobox)
 
-        # 右侧布局
+        # =========右侧布局==========
         self.right_layout = QHBoxLayout()
         self.file_select_button = PushButton(self.tr("选择SRT文件"), self, icon=FIF.FOLDER_ADD)
         self.open_folder_button = PushButton(self.tr("打开文件夹"), self, icon=FIF.FOLDER)
@@ -183,6 +192,12 @@ class SubtitleOptimizationInterface(QWidget):
         self.file_select_button.clicked.connect(self.on_file_select)
         self.save_button.clicked.connect(self.on_save_clicked)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
+        self.layout_combobox.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
+        signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
+
+    def on_subtitle_layout_changed(self, layout: str):
+        cfg.subtitle_layout.value = layout
+        self.layout_combobox.setCurrentText(layout)
 
     def create_task(self, file_path):
         """创建任务"""
@@ -304,12 +319,13 @@ class SubtitleOptimizationInterface(QWidget):
         try:
             # 转换并保存字幕
             asr_data = from_json(self.model._data)
+            layout = cfg.subtitle_layout.value
+
             if file_path.endswith(".ass"):
                 style_str = self.task.subtitle_style_srt
-                layout = cfg.subtitle_layout.value
                 asr_data.to_ass(style_str, layout, file_path)
             else:
-                asr_data.save(file_path)
+                asr_data.save(file_path, layout=layout)
             InfoBar.success(
                 self.tr("保存成功"),
                 self.tr(f"字幕已保存至:") + file_path,

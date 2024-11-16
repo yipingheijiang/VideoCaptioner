@@ -14,7 +14,7 @@ from ..components.MySettingCard import SpinBoxSettingCard, ComboBoxSettingCard, 
     DoubleSpinBoxSettingCard
 from ..core.utils.subtitle_preview import generate_preview
 from ..config import SUBTITLE_STYLE_PATH
-
+from ..common.signal_bus import signalBus
 
 PERVIEW_TEXTS = {
     "长文本": ("This is a long text used for testing subtitle preview.",
@@ -364,6 +364,15 @@ class SubtitleStyleInterface(QWidget):
         self.styleNameComboBox.currentTextChanged.connect(self.loadStyle)
         self.newStyleButton.clicked.connect(self.createNewStyle)
         self.openStyleFolderButton.clicked.connect(lambda: os.startfile(SUBTITLE_STYLE_PATH))
+
+        # 连接字幕排布信号
+        self.layoutCard.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
+        signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
+
+
+    def on_subtitle_layout_changed(self, layout: str):
+        cfg.subtitle_layout.value = layout
+        self.layoutCard.setCurrentText(layout)
 
     def onSettingChanged(self):
         """当任何设置改变时调用"""

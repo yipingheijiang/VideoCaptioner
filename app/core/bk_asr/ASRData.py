@@ -93,10 +93,9 @@ class ASRData:
         """Save the ASRData to a file"""
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         if save_path.endswith('.srt'):
-            self.to_srt(save_path=save_path)
+            self.to_srt(save_path=save_path, layout=layout)
         elif save_path.endswith('.txt'):
-            with open(save_path, 'w', encoding='utf-8') as f:
-                f.write(self.to_txt())
+            self.to_txt(save_path=save_path, layout=layout)
         elif save_path.endswith('.json'):
             with open(save_path, 'w', encoding='utf-8') as f:
                 json.dump(self.to_json(), f, ensure_ascii=False)
@@ -105,15 +104,59 @@ class ASRData:
         else:
             raise ValueError(f"Unsupported file extension: {save_path}")
 
-    def to_txt(self) -> str:
+    def to_txt(self, save_path=None, layout: str = "原文在上") -> str:
         """Convert to plain text subtitle format (without timestamps)"""
-        return "\n".join(seg.transcript for seg in self.segments)
+        result = []
+        for seg in self.segments:
+            # 检查是否有换行符
+            if "\n" in seg.transcript:
+                original, translated = seg.transcript.split("\n", 1)
+            else:
+                original, translated = seg.transcript, ""
 
-    def to_srt(self, save_path=None) -> str:
+            # 根据字幕类型组织文本
+            if layout == "原文在上":
+                text = f"{original}\n{translated}" if translated else original
+            elif layout == "译文在上":
+                text = f"{translated}\n{original}" if translated else original
+            elif layout == "仅原文":
+                text = original
+            elif layout == "仅译文":
+                text = translated if translated else original
+            else:
+                text = seg.transcript
+            result.append(text)
+        text = "\n".join(result)
+        if save_path:
+            with open(save_path, 'w', encoding='utf-8') as f:
+                f.write("\n".join(result))
+        return text
+
+    def to_srt(self, layout: str = "原文在上", save_path=None) -> str:
         """Convert to SRT subtitle format"""
-        srt_text = "\n".join(
-            f"{n}\n{seg.to_srt_ts()}\n{seg.transcript}\n"
-            for n, seg in enumerate(self.segments, 1))
+        srt_lines = []
+        for n, seg in enumerate(self.segments, 1):
+            # 检查是否有换行符
+            if "\n" in seg.transcript:
+                original, translated = seg.transcript.split("\n", 1)
+            else:
+                original, translated = seg.transcript, ""
+
+            # 根据字幕类型组织文本
+            if layout == "原文在上":
+                text = f"{original}\n{translated}" if translated else original
+            elif layout == "译文在上":
+                text = f"{translated}\n{original}" if translated else original
+            elif layout == "仅原文":
+                text = original
+            elif layout == "仅译文":
+                text = translated if translated else original
+            else:
+                text = seg.transcript
+
+            srt_lines.append(f"{n}\n{seg.to_srt_ts()}\n{text}\n")
+
+        srt_text = "\n".join(srt_lines)
         if save_path:
             with open(save_path, 'w', encoding='utf-8') as f:
                 f.write(srt_text)
