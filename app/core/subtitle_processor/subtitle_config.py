@@ -57,9 +57,11 @@ OPTIMIZER_PROMPT = """
 
 2. 删除无意义的填充词或语气词。
 
-3. 验证并校正字幕中的标点符号、英文单词、公式和代码片段​。字幕末尾可以不必都加标点符号
+3. 验证并校正字幕中的标点符号、英文单词、公式和代码片段​。
 
 4. 保持字幕结构，确保每个字幕编号与其文本严格一一对应，不要将多个字幕合并为一个或者拆分成多个部分
+
+5. 句子末尾不要添加标点符号
 
 ## 返回格式
 
@@ -154,9 +156,11 @@ You need to optimize and correct the original subtitles while translating.
 
 - **Remove Unnecessary Filler Words**: Delete filler or interjection words that have no actual meaning. For example, sounds of laughter, coughing, etc.
 
-- **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. There is no need to add punctuation at the end of each subtitle. Certain words or names may require formatting corrections due to specific expressions.
+- **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. Certain words or names may require formatting corrections due to specific expressions.
 
 - **Maintain Subtitle Structure**: Each subtitle corresponds one-to-one with its number; do not merge or split subtitles.
+
+- There is no need to add punctuation at the end of each subtitle
 
 #### 2. Subtitle Translation
 
@@ -218,9 +222,9 @@ These subtitles may contain errors, and you need to correct the original subtitl
 1. Original Subtitle correction:
     - **Contextual Correction**: Correct erroneous words based on context and provided terminology, maintaining the original sentence structure and expression.
     - **Remove Unnecessary Filler Words**: Delete filler or interjection words that have no actual meaning. For example, sounds of laughter, coughing, etc.
-    - **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. There is no need to add punctuation at the end of each subtitle. Certain words or names may require formatting corrections due to specific expressions.
+    - **Punctuation and Formatting**: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. Certain words or names may require formatting corrections due to specific expressions.
     - **Maintain Subtitle Structure**: Each subtitle corresponds one-to-one with its number; do not merge or split subtitles.
-
+    - Commas and periods do not need to be added at the end of each subtitle.
 
 2. Translation process:
    a) Translation into [TargetLanguage]:
