@@ -28,6 +28,10 @@ class SubtitleOptimizationThread(QThread):
         self.task: Task = task
         self.subtitle_length = 0
         self.finished_subtitle_length = 0
+        self.custom_prompt_text = ""
+    
+    def set_custom_prompt_text(self, text: str):
+        self.custom_prompt_text = text
 
     def run(self):
         try:
@@ -109,9 +113,9 @@ class SubtitleOptimizationThread(QThread):
             subtitle_json = {str(k): v["original_subtitle"] for k, v in asr_data.to_json().items()}
             self.subtitle_length = len(subtitle_json)
             if need_translate or need_optimize:
-                summarize_result = ""
+                summarize_result = self.custom_prompt_text.strip()
                 self.progress.emit(20, self.tr("总结字幕..."))
-                if need_summarize:
+                if need_summarize and not summarize_result:
                     summarizer = SubtitleSummarizer(model=llm_model)
                     summarize_result = summarizer.summarize(asr_data.to_txt())
                 logger.info(f"总结字幕:{summarize_result}")

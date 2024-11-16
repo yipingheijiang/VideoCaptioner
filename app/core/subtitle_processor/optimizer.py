@@ -145,7 +145,7 @@ class SubtitleOptimizer:
     def _create_translate_message(self, original_subtitle: Dict[int, str]):
         input_content = f"correct the original subtitles, and translate them into {self.target_language}:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
-            input_content += f"\nBelow is a summary of the subtitle content and related keywords:\n<summary>{self.summary_content}</summary>\n"
+            input_content += f"\nThe following is the relevant subtitle content, based on which the subtitles will be corrected, optimized, and translated:\n<summary>{self.summary_content}</summary>\n"
         example_input = f'correct the original subtitles and translate them into Chinese: {{"1": "If you\'re a developer", "2": "Then you probably cannot get around the Cursor IDE right now."}}'
         example_output = ('{"1": {"optimized_subtitle": "If you\'re a developer", "translate": "如果你是开发者", '
                           '"revise_suggestions": "the translation is accurate and fluent.", "revised_translate": '
@@ -161,7 +161,7 @@ class SubtitleOptimizer:
         return message
 
     def _create_optimizer_message(self, original_subtitle):
-        input_content = f"Please correct the input_subtitle:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
+        input_content = f"The following is the relevant subtitle content, based on which the subtitles will be corrected and optimized.:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
             input_content += f"\nBelow is a summary of the subtitle content and related keywords:\n<summary>{self.summary_content}</summary>\n"
         example_input = '{"0": "调用现成的start方法","1": "才能成功开启现成啊","2": "而且stread这个类","3": "很多业务罗技和这个代码","4": "全部都给掺到一块去了"}'

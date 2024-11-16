@@ -4,10 +4,10 @@ import sys
 from pathlib import Path
 
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
+from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QColor
 from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHeaderView, QFileDialog
-from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView
+from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase
 from qfluentwidgets import FluentIcon as FIF, InfoBarPosition
 
 from ..core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
@@ -111,9 +111,11 @@ class SubtitleOptimizationInterface(QWidget):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.task = None
+        self.custom_prompt_text = ""  # 添加提示文本属性
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._init_ui()
         self._setup_signals()
+        self._update_prompt_button_style()
 
     def _init_ui(self):
         self.main_layout = QVBoxLayout(self)
@@ -147,14 +149,16 @@ class SubtitleOptimizationInterface(QWidget):
 
         # =========右侧布局==========
         self.right_layout = QHBoxLayout()
+        self.open_folder_button = ToolButton(FIF.FOLDER, self)
         self.file_select_button = PushButton(self.tr("选择SRT文件"), self, icon=FIF.FOLDER_ADD)
-        self.open_folder_button = PushButton(self.tr("打开文件夹"), self, icon=FIF.FOLDER)
+        self.prompt_button = PushButton(self.tr("文稿提示"), self, icon=FIF.DOCUMENT)
         self.start_button = PrimaryPushButton(self.tr("开始"), self, icon=FIF.PLAY)
-        self.right_layout.addWidget(self.file_select_button)
+        
         self.right_layout.addWidget(self.open_folder_button)
+        self.right_layout.addWidget(self.file_select_button)
+        self.right_layout.addWidget(self.prompt_button)
         self.right_layout.addWidget(self.start_button)
 
-        # 添加到主布局
         self.top_layout.addLayout(self.left_layout)
         self.top_layout.addStretch(1)
         self.top_layout.addLayout(self.right_layout)
@@ -192,8 +196,22 @@ class SubtitleOptimizationInterface(QWidget):
         self.file_select_button.clicked.connect(self.on_file_select)
         self.save_button.clicked.connect(self.on_save_clicked)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
+        self.prompt_button.clicked.connect(self.show_prompt_dialog)
         self.layout_combobox.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
         signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
+
+    def show_prompt_dialog(self):
+        dialog = PromptDialog(self, self.custom_prompt_text)
+        if dialog.exec_():  # 注意这里改用MessageBoxBase.Accepted
+            self.custom_prompt_text = dialog.get_prompt()
+            self._update_prompt_button_style()
+
+    def _update_prompt_button_style(self):
+        if self.custom_prompt_text.strip():
+            green_icon = FIF.DOCUMENT.colored(QColor(76,255,165), QColor(76,255,165))
+            self.prompt_button.setIcon(green_icon)
+        else:
+            self.prompt_button.setIcon(FIF.DOCUMENT)
 
     def on_subtitle_layout_changed(self, layout: str):
         cfg.subtitle_layout.value = layout
@@ -219,6 +237,8 @@ class SubtitleOptimizationInterface(QWidget):
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(self.tr("已加载文件"))
+        self.custom_prompt_text = ""
+        self._update_prompt_button_style()
 
     def process(self):
         """主处理函数"""
@@ -233,6 +253,7 @@ class SubtitleOptimizationInterface(QWidget):
         self.subtitle_optimization_thread.update.connect(self.update_data)
         self.subtitle_optimization_thread.update_all.connect(self.update_all)
         self.subtitle_optimization_thread.error.connect(self.on_subtitle_optimization_error)
+        self.subtitle_optimization_thread.set_custom_prompt_text(self.custom_prompt_text)
         self.subtitle_optimization_thread.start()
         InfoBar.info(self.tr("开始优化"), self.tr("开始优化字幕"), duration=3000, parent=self)
 
@@ -352,6 +373,8 @@ class SubtitleOptimizationInterface(QWidget):
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(self.tr("已加载文件"))
+        self.custom_custom_prompt_text = ""
+        self._update_prompt_button_style()
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         event.accept() if event.mimeData().hasUrls() else event.ignore()
@@ -392,6 +415,34 @@ class SubtitleOptimizationInterface(QWidget):
             self.subtitle_optimization_thread.stop()
         super().closeEvent(event)
 
+class PromptDialog(MessageBoxBase):
+    def __init__(self, parent=None, current_prompt=""):
+        super().__init__(parent)
+        self.custom_prompt_text = current_prompt
+        self.setup_ui()
+        self.setWindowTitle(self.tr('文稿提示'))
+        
+    def setup_ui(self):
+        self.titleLabel = BodyLabel(self.tr('文稿提示'), self)
+        
+        # 添加文本编辑框
+        self.text_edit = TextEdit(self)
+        self.text_edit.setPlaceholderText(self.tr("请输入文稿提示（优化字幕或者翻译字幕的提示参考）"))
+        self.text_edit.setText(self.custom_prompt_text)
+        self.text_edit.setMinimumWidth(400)
+        self.text_edit.setMinimumHeight(200)
+        
+        # 添加到布局
+        self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.text_edit)
+        self.viewLayout.setSpacing(10)
+        
+        # 设置按钮文本
+        self.yesButton.setText(self.tr('确定'))
+        self.cancelButton.setText(self.tr('取消'))
+        
+    def get_prompt(self):
+        return self.text_edit.toPlainText()
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
@@ -402,3 +453,4 @@ if __name__ == "__main__":
     window = SubtitleOptimizationInterface()
     window.show()
     sys.exit(app.exec_())
+
