@@ -8,7 +8,7 @@ body:
         ✨ 感谢您提出功能建议！请描述您希望的新功能，对于有用可行的建议我会努力实现的。
         
         🌟 Thank you for your feature suggestion! Please describe the new feature you expect. Using English or Chinese.
-
+1
   - type: textarea
     id: feature
     attributes:
