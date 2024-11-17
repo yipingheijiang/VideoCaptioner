@@ -145,6 +145,15 @@ class SubtitleStyleInterface(QWidget):
             texts=["译文在上", "原文在上", "仅译文", "仅原文"]
         )
 
+        # 垂直间距
+        self.verticalSpacingCard = SpinBoxSettingCard(
+            FIF.ALIGNMENT,
+            self.tr("垂直间距"),
+            self.tr("设置字幕的垂直间距"),
+            minimum=8,
+            maximum=666,
+        )
+
         # 主字幕样式设置
         self.mainFontCard = ComboBoxSettingCard(
             FIF.FONT,
@@ -262,7 +271,7 @@ class SubtitleStyleInterface(QWidget):
         """初始化布局"""
         # 添加卡片到组
         self.layoutGroup.addSettingCard(self.layoutCard)
-
+        self.layoutGroup.addSettingCard(self.verticalSpacingCard)
         self.mainGroup.addSettingCard(self.mainFontCard)
         self.mainGroup.addSettingCard(self.mainSizeCard)
         self.mainGroup.addSettingCard(self.mainSpacingCard)
@@ -339,6 +348,8 @@ class SubtitleStyleInterface(QWidget):
         self.layoutCard.currentTextChanged.connect(self.onSettingChanged)
         self.layoutCard.currentTextChanged.connect(
             lambda: cfg.set(cfg.subtitle_layout, self.layoutCard.comboBox.currentText()))
+        # 垂直间距
+        self.verticalSpacingCard.spinBox.valueChanged.connect(self.onSettingChanged)
 
         # 主字幕样式
         self.mainFontCard.currentTextChanged.connect(self.onSettingChanged)
@@ -403,7 +414,12 @@ class SubtitleStyleInterface(QWidget):
         """生成 ASS 样式字符串"""
         style_format = "Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding"
 
+
         # 从控件获取当前设置
+
+        # 获取垂直间距
+        vertical_spacing = int(self.verticalSpacingCard.spinBox.value())  # 转换为ASS单位
+
         # 提取主字幕样式元素
         main_font = self.mainFontCard.comboBox.currentText()
         main_size = self.mainSizeCard.spinBox.value()
@@ -429,8 +445,8 @@ class SubtitleStyleInterface(QWidget):
         sub_outline_size = self.subOutlineSizeCard.spinBox.value()
 
         # 生成样式字符串
-        main_style = f"Style: Default,{main_font},{main_size},{main_color},&H000000FF,{main_outline_color},&H00000000,-1,0,0,0,100,100,{main_spacing},0,1,{main_outline_size},0,2,10,10,10,1"
-        sub_style = f"Style: Secondary,{sub_font},{sub_size},{sub_color},&H000000FF,{sub_outline_color},&H00000000,-1,0,0,0,100,100,{sub_spacing},0,1,{sub_outline_size},0,2,10,10,10,1"
+        main_style = f"Style: Default,{main_font},{main_size},{main_color},&H000000FF,{main_outline_color},&H00000000,-1,0,0,0,100,100,{main_spacing},0,1,{main_outline_size},0,2,10,10,{vertical_spacing},1"
+        sub_style = f"Style: Secondary,{sub_font},{sub_size},{sub_color},&H000000FF,{sub_outline_color},&H00000000,-1,0,0,0,100,100,{sub_spacing},0,1,{sub_outline_size},0,2,10,10,{vertical_spacing},1"
 
         return f"[V4+ Styles]\n{style_format}\n{main_style}\n{sub_style}"
 
@@ -501,6 +517,11 @@ class SubtitleStyleInterface(QWidget):
                 parts = line.split(',')
                 self.mainFontCard.setCurrentText(parts[1])
                 self.mainSizeCard.spinBox.setValue(int(parts[2]))
+                
+                vertical_spacing = int(parts[21])
+                print(vertical_spacing)
+                self.verticalSpacingCard.spinBox.setValue(vertical_spacing)
+
                 # 将 &HAARRGGBB 格式转换为 QColor
                 primary_color = parts[3].strip()
                 if primary_color.startswith('&H'):
