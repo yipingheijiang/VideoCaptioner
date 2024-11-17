@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 YEAR = 2024
 APP_NAME = "VideoCaptioner"
 AUTHOR = "Weifeng"

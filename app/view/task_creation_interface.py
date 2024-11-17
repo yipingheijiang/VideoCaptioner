@@ -15,7 +15,7 @@ from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButt
 from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
 from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from ..core.thread.create_task_thread import CreateTaskThread
-from ..config import ASSETS_PATH, MODEL_PATH
+from ..config import ASSETS_PATH, VERSION
 from ..components.WhisperSettingDialog import WhisperSettingDialog
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
@@ -191,7 +191,7 @@ class TaskCreationInterface(QWidget):
         self.main_layout.addLayout(self.status_layout)
 
     def setup_info_label(self):
-        self.info_label = BodyLabel(self.tr("© 2024 VideoCaptioner • By Weifeng"), self)
+        self.info_label = BodyLabel(self.tr(f"©VideoCaptioner v{VERSION} • By Weifeng"), self)
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 12px; color: #888888;")
         self.main_layout.addStretch()
