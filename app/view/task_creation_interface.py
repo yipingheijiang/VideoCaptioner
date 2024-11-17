@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from PyQt5.QtCore import pyqtSignal, Qt, QStandardPaths
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
-from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel, ToolButton
+from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel, ToolButton, HyperlinkButton
 from qfluentwidgets import FluentIcon, FluentStyleSheet
 
 from ..common.config import cfg
@@ -17,6 +17,7 @@ from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..config import ASSETS_PATH, VERSION
 from ..components.WhisperSettingDialog import WhisperSettingDialog
+from .log_window import LogWindow
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 
@@ -28,11 +29,13 @@ class TaskCreationInterface(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.task = None
+        self.log_window = None
 
         self.setObjectName("TaskCreationInterface")
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAcceptDrops(True)
-        self.task = None
+
         self.setup_ui()
         self.setup_values()
         self.setup_signals()
@@ -191,15 +194,38 @@ class TaskCreationInterface(QWidget):
         self.main_layout.addLayout(self.status_layout)
 
     def setup_info_label(self):
+        # 创建底部容器
+        bottom_container = QWidget()
+        bottom_layout = QHBoxLayout(bottom_container)
+        bottom_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # 创建日志按钮
+        self.log_button = HyperlinkButton(url="", text=self.tr("查看日志"), parent=self)
+        self.log_button.setStyleSheet(self.log_button.styleSheet() + """
+            QPushButton {
+                font-size: 12px;
+                color: #2F8D63;
+                text-decoration: underline;
+            }
+        """)
+        # 添加版权信息标签
         self.info_label = BodyLabel(self.tr(f"©VideoCaptioner v{VERSION} • By Weifeng"), self)
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 12px; color: #888888;")
+        
+        # 将组件添加到底部布局
+        bottom_layout.addStretch()
+        bottom_layout.addWidget(self.info_label)
+        bottom_layout.addWidget(self.log_button)
+        bottom_layout.addStretch()
+        
         self.main_layout.addStretch()
-        self.main_layout.addWidget(self.info_label)
+        self.main_layout.addWidget(bottom_container)
 
     def setup_signals(self):
         self.start_button.clicked.connect(self.on_start_clicked)
         self.search_input.textChanged.connect(self.on_search_input_changed)
+        self.log_button.clicked.connect(self.show_log_window)
 
     def setup_values(self):
         self.transcription_model_card.setValue(cfg.transcribe_model.value.value)
@@ -394,7 +420,15 @@ class TaskCreationInterface(QWidget):
                 parent=self
             )
 
-        
+    def show_log_window(self):
+        """显示日志窗口"""
+        if self.log_window is None:
+            self.log_window = LogWindow()
+        if self.log_window.isHidden():
+            self.log_window.show()
+        else:
+            self.log_window.activateWindow()
+
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
