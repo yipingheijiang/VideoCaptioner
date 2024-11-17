@@ -1,3 +1,4 @@
+import datetime
 import logging
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -19,6 +20,8 @@ class VideoSynthesisThread(QThread):
 
     def run(self):
         try:
+            logger.info(f"\n===========视频合成任务开始===========")
+            logger.info(f"时间：{datetime.datetime.now()}")
             video_file = self.task.file_path
             result_subtitle_save_path = self.task.result_subtitle_save_path
             video_save_path = self.task.video_save_path
@@ -31,7 +34,7 @@ class VideoSynthesisThread(QThread):
             logger.info(f"视频合成完成: {video_save_path}")
             self.finished.emit(self.task)
         except Exception as e:
-            logger.error(f"视频合成失败: {e}")
+            logger.exception(f"视频合成失败: {e}")
             self.error.emit(str(e))
             self.progress.emit(100, self.tr("视频合成失败"))
 

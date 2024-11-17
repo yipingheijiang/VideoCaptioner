@@ -36,7 +36,6 @@ class VersionManager(QObject):
         # 修改 QSettings 的初始化方式，指定完整的组织和应用名称，并设置为 IniFormat
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
                                   'VideoCaptioner', 'VideoCaptioner')
-        logger.debug("VersionManager initialized with current version: %s", self.currentVersion)
 
     def getLatestVersionInfo(self):
         """获取最新版本信息"""
@@ -48,9 +47,8 @@ class VersionManager(QObject):
         try:
             response = requests.get(url, timeout=30, headers=headers)
             response.raise_for_status()
-            logger.debug("Successfully fetched version info from %s", url)
         except requests.RequestException as e:
-            logger.error("Failed to fetch version info: %s", e)
+            logger.exception("Failed to fetch version info: %s", e)
             return {}
 
         # 解析 JSON
@@ -80,7 +78,7 @@ class VersionManager(QObject):
             if not version_data:
                 return False
         except requests.RequestException:
-            logger.error("Network error occurred while checking for new version")
+            logger.exception("Network error occurred while checking for new version")
             return False
 
         # 检查历史版本中当前版本是否可用
@@ -109,7 +107,6 @@ class VersionManager(QObject):
                 self.downloadURL
             )
             return True
-        logger.debug("No new version available")
         return False
 
     def checkAnnouncement(self):
@@ -122,7 +119,6 @@ class VersionManager(QObject):
                 "%Y-%m-%d")
             # 检查是否已经显示过
             if self.settings.value(f'announcement/shown_announcement_{announcement_id}', False, type=bool):
-                logger.debug("Announcement already shown: %s", announcement_id)
                 return
             start_date = datetime.strptime(ann.get('start_date'), "%Y-%m-%d").date()
             end_date = datetime.strptime(ann.get('end_date'), "%Y-%m-%d").date()
@@ -137,8 +133,6 @@ class VersionManager(QObject):
 
     def performCheck(self):
         """执行版本和公告检查"""
-        logger.debug("Performing version and announcement check")
         self.hasNewVersion()
         self.checkAnnouncement()
         self.checkCompleted.emit()
-        logger.debug("Check completed")

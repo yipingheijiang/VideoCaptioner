@@ -203,7 +203,7 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     # 验证是否匹配
     similar_list = calculate_similarity_list(aligned_source, aligned_target)
     if similar_list.count(True) / len(similar_list) >= 0.8:
-        logger.info(f"修复成功！序列匹配相似度：{similar_list.count(True) / len(similar_list):.2f}")
+        # logger.info(f"修复成功！序列匹配相似度：{similar_list.count(True) / len(similar_list):.2f}")
         start_id = next(iter(dict1.keys()))
         modify_dict = {str(int(start_id) + i): value for i, value in enumerate(aligned_target)}
         return modify_dict

@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -27,6 +28,8 @@ class TranscriptThread(QThread):
 
     def run(self):
         try:
+            logger.info(f"\n===========转录任务开始===========")
+            logger.info(f"时间：{datetime.datetime.now()}")
             # 检查是否已经存在字幕文件
             if Path(self.task.original_subtitle_save_path).exists():
                 logger.info("字幕文件已存在，跳过转录")
@@ -79,7 +82,7 @@ class TranscriptThread(QThread):
             self.progress.emit(100, self.tr("转录完成"))
             self.finished.emit(self.task)
         except Exception as e:
-            logger.error("转录过程中发生错误: %s", str(e))
+            logger.exception("转录过程中发生错误: %s", str(e))
             self.error.emit(str(e))
             self.progress.emit(100, self.tr("转录失败"))
 

@@ -37,7 +37,7 @@ def video2audio(input_file: str, output: str = "") -> bool:
             check=True, 
             encoding='utf-8', 
             errors='replace', 
-            shell=True
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
             )
         if result.returncode == 0 and Path(output).is_file():
             logger.info("音频转换成功")
@@ -46,7 +46,7 @@ def video2audio(input_file: str, output: str = "") -> bool:
             logger.error("音频转换失败")
             return False
     except Exception as e:
-        logger.error(f"音频转换出错: {str(e)}")
+        logger.exception(f"音频转换出错: {str(e)}")
         return False
 
 
@@ -59,7 +59,8 @@ def check_cuda_available() -> bool:
             ['ffmpeg', '-hwaccels'], 
             capture_output=True, 
             text=True,
-            shell=True
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
+
         )
         if 'cuda' not in result.stdout.lower():
             logger.info("CUDA不在支持的硬件加速器列表中")
@@ -82,7 +83,7 @@ def check_cuda_available() -> bool:
         return True
         
     except Exception as e:
-        logger.error(f"检查CUDA出错: {str(e)}")
+        logger.exception(f"检查CUDA出错: {str(e)}")
         return False
 
 
@@ -91,7 +92,7 @@ def add_subtitles(
         subtitle_file: str,
         output: str,
         quality: Literal[
-            'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'] = 'ultrafast',
+            'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'] = 'medium',
         vcodec: str = 'libx264',
         soft_subtitle: bool = False,
         progress_callback: callable = None
@@ -133,7 +134,7 @@ def add_subtitles(
             text=True, 
             encoding='utf-8', 
             errors='replace',
-            shell=True
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
             )
     else:
         logger.info("使用硬字幕")
@@ -152,6 +153,7 @@ def add_subtitles(
         cmd.extend([
             '-i', input_file,
             '-acodec', 'copy',
+            '-vcodec', vcodec,  # 先设置编码器
             '-preset', quality,
             '-vf', vf,
             '-y',  # 覆盖输出文件
@@ -168,8 +170,7 @@ def add_subtitles(
             text=True, 
             encoding='utf-8',
             errors='replace',
-            creationflags=subprocess.CREATE_NO_WINDOW,
-            close_fds=True
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
         )
         # 实时读取输出并调用回调函数
         total_duration = None
@@ -250,7 +251,6 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
         # 提取比特率
         if bitrate_match := re.search(r'bitrate: (\d+) kb/s', info):
             video_info['bitrate_kbps'] = int(bitrate_match.group(1))
-            logger.info(f"视频码率: {video_info['bitrate_kbps']}kb/s")
 
         # 提取视频流信息
         if video_stream_match := re.search(r'Stream #\d+:\d+.*Video: (\w+).*?, (\d+)x(\d+).*?, ([\d.]+) (?:fps|tb)',
@@ -261,7 +261,6 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
                 'height': int(video_stream_match.group(3)),
                 'fps': float(video_stream_match.group(4))
             })
-            logger.info(f"视频编码: {video_info['video_codec']}, 分辨率: {video_info['width']}x{video_info['height']}, FPS: {video_info['fps']}")
             
             if thumbnail_path:
                 if extract_thumbnail(filepath, video_info['duration_seconds'] * 0.3, thumbnail_path):
@@ -276,11 +275,10 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
                 'audio_codec': audio_stream_match.group(1),
                 'audio_sampling_rate': int(audio_stream_match.group(2))
             })
-            logger.info(f"音频编码: {video_info['audio_codec']}, 采样率: {video_info['audio_sampling_rate']}Hz")
 
         return video_info
     except Exception as e:
-        logger.error(f"获取视频信息时出错: {str(e)}")
+        logger.exception(f"获取视频信息时出错: {str(e)}")
         return {k: '' if isinstance(v, str) else 0 for k, v in video_info.items()}
 
 
@@ -292,9 +290,7 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
     :param seek_time: 提取缩略图的时间点（秒）
     :param thumbnail_path: 输出缩略图文件的路径
     :return: True 表示成功，False 表示失败
-    """
-    logger.info(f"开始提取缩略图")
-    
+    """    
     if not Path(video_path).is_file():
         logger.error(f"视频文件不存在: {video_path}")
         return False
@@ -328,14 +324,10 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
             shell=True
         )
         success = result.returncode == 0
-        if success:
-            logger.info("缩略图提取成功")
-        else:
-            logger.error("缩略图提取失败")
         return success
 
     except Exception as e:
-        logger.error(f"提取缩略图时出错: {str(e)}")
+        logger.exception(f"提取缩略图时出错: {str(e)}")
         return False
 
 

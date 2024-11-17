@@ -76,7 +76,7 @@ class SettingInterface(ScrollArea):
             self.llmGroup
         )
         self.checkLLMConnectionCard = PushSettingCard(
-            self.tr("获取模型列表"),
+            self.tr("检查连接"),
             FIF.LINK,
             self.tr("检查 LLM 连接"),
             self.tr("点击检查 API 连接是否正常，并获取模型列表填充到上面"),

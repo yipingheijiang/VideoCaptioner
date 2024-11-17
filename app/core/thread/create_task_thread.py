@@ -38,12 +38,12 @@ class CreateTaskThread(QThread):
             elif self.task_type == 'synthesis':
                 self.create_video_synthesis_task()
         except Exception as e:
-            logger.error("创建任务失败: %s", str(e))
+            logger.exception("创建任务失败: %s", str(e))
             self.progress.emit(0, self.tr("创建任务失败"))
             self.error.emit(str(e))
 
     def create_file_task(self, file_path):
-        logger.info("开始创建文件任务")
+        logger.info(f"开始创建文件任务：{file_path}")
         # 使用 Path 对象处理路径
         task_work_dir = Path(cfg.work_dir.value) / Path(file_path).stem
 
@@ -114,10 +114,10 @@ class CreateTaskThread(QThread):
         )
         self.finished.emit(task)
         self.progress.emit(100, self.tr("创建任务完成"))
-        logger.info("文件任务创建完成")
+        logger.info(f"文件任务创建完成：{task}")
 
     def create_url_task(self, url):
-        logger.info("开始创建URL任务")
+        logger.info(f"开始创建URL任务：{url}")
         self.progress.emit(5, self.tr("正在获取视频信息"))
         # 下载视频。保存到 cfg.work_dir.value 下
         video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value,
@@ -200,10 +200,10 @@ class CreateTaskThread(QThread):
             subtitle_style_srt=subtitle_style_srt
         )
         self.finished.emit(task)
-        logger.info("URL任务创建完成")
+        logger.info(f"URL任务创建完成：{task}")
 
     def create_transcription_task(self, file_path):
-        logger.info("开始创建转录任务")
+        logger.info(f"开始创建转录任务：{file_path}")
         # 使用 Path 对象处理路径
         task_work_dir = Path(file_path).parent
 
@@ -240,10 +240,10 @@ class CreateTaskThread(QThread):
             original_subtitle_save_path=str(original_subtitle_save_path),
         )
         self.finished.emit(task)
-        logger.info("转录任务创建完成")
+        logger.info(f"转录任务创建完成：{task}")
 
     def create_subtitle_optimization_task(file_path):
-        logger.info("开始创建字幕优化任务")
+        logger.info(f"开始创建字幕优化任务：{file_path}")
         task_work_dir = Path(file_path.strip()).parent
         file_name = Path(file_path.strip()).stem
 
@@ -286,11 +286,11 @@ class CreateTaskThread(QThread):
             subtitle_layout=cfg.subtitle_layout.value,
             subtitle_style_srt=subtitle_style_srt
         )
-        logger.info("字幕优化任务创建完成")
+        logger.info(f"字幕优化任务创建完成：{task}")
         return task
 
     def create_video_synthesis_task(subtitle_file, video_file):
-        logger.info("开始创建视频合成任务")
+        logger.info(f"开始创建视频合成任务：{subtitle_file} {video_file}")
         subtitle_file = Path(subtitle_file.strip()).as_posix()
         video_file = Path(video_file.strip()).as_posix()
         task_work_dir = Path(video_file.strip()).parent
@@ -309,7 +309,7 @@ class CreateTaskThread(QThread):
             video_save_path=str(video_save_path),
             soft_subtitle=cfg.soft_subtitle.value,
         )
-        logger.info("视频合成任务创建完成")
+        logger.info(f"视频合成任务创建完成：{task}")
         return task
 
     def progress_hook(self, d):
@@ -451,6 +451,6 @@ def download(url, work_dir, progress_hook):
         for file in video_work_dir.glob("**/thumbnail*"):
             thumbnail_file_path = str(file)
             break
-
-        logger.info("视频下载完成: %s", video_file_path)
+            
+        logger.info(f"视频下载完成: {video_file_path}")
         return video_file_path, subtitle_file_path, thumbnail_file_path, info_dict

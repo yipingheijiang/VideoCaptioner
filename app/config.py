@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 
 VERSION = "1.1.0"
@@ -31,7 +32,7 @@ MODEL_PATH = APPDATA_PATH / "models"
 
 
 # 日志配置
-LOG_LEVEL = "INFO"
+LOG_LEVEL = logging.INFO
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # 环境变量添加 bin 路径

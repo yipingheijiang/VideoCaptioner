@@ -421,10 +421,6 @@ class TaskInfoCard(CardWidget):
                                              position=InfoBadgePosition.TOP_RIGHT)
 
     def setup_thumbnail(self):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        # TODO: 使用默认缩略图
-        default_thumbnail_path = os.path.join(current_dir, "..", "resource", "default_thumbnail.jpg")
-
         self.video_thumbnail = QLabel(self)
         self.video_thumbnail.setFixedSize(208, 117)
         self.video_thumbnail.setStyleSheet("background-color: #1E1F22;")

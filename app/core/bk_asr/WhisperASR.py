@@ -47,8 +47,7 @@ class WhisperASR(BaseASR):
                    text.startswith('（')):
                 filtered_segments.append(seg)
         
-        asr_data.segments = filtered_segments
-        return asr_data
+        return filtered_segments
 
     def _run(self, callback=None) -> str:
         if callback is None:
@@ -80,7 +79,7 @@ class WhisperASR(BaseASR):
                 encoding='utf-8',
                 bufsize=1,
                 universal_newlines=True,
-                shell=True
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
             )
 
             total_duration = self.get_audio_duration(str(temp_audio))
@@ -95,16 +94,25 @@ class WhisperASR(BaseASR):
                 if not line:
                     break
 
-                # 解析时间戳
-                if '[' in line and ']' in line:
-                    time_str = line.split('[')[1].split(' -->')[0].strip()
-                    hours, minutes, seconds = map(float, time_str.split(':'))
-                    current_time = hours * 3600 + minutes * 60 + seconds
+                # 修改时间戳解析逻辑
+                try:
+                    if '[' in line and ']' in line and ' -->' in line:
+                        time_str = line.split('[')[1].split(' -->')[0].strip()
+                        if time_str and ':' in time_str:  # 确保时间戳格式正确
+                            try:
+                                hours, minutes, seconds = map(float, time_str.split(':'))
+                                current_time = hours * 3600 + minutes * 60 + seconds
 
-                    if callback:
-                        progress = int(min(current_time / total_duration * 100, 98))
-                        callback(progress, f"{progress}% 正在转换")
-                        logger.info("当前进度: %d%%", progress)
+                                if callback:
+                                    progress = int(min(current_time / total_duration * 100, 98))
+                                    callback(progress, f"{progress}% 正在转换")
+                                    logger.info("当前进度: %d%%", progress)
+                            except ValueError:
+                                logger.warning(f"无法解析时间戳: {time_str}")
+                                continue
+                except Exception as e:
+                    logger.warning(f"处理输出行时出错: {str(e)}")
+                    continue
 
             callback(100, "转换完成")
             logger.info("转换完成")
@@ -121,7 +129,7 @@ class WhisperASR(BaseASR):
         return output_path.read_text(encoding='utf-8')
 
     def _get_key(self):
-        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}"
+        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}-{self.language}"
 
     def get_audio_duration(self, filepath: str) -> int:
         try:
@@ -139,19 +147,19 @@ class WhisperASR(BaseASR):
             logger.exception("获取音频时长时出错: %s", str(e))
             return 600
 
-    def stop(self):
-        """停止 ASR 语音识别处理
-        - 终止进程及其子进程
-        """
-        if self.process:
-            logger.info("终止 Whisper ASR 进程")
-            if os.name == 'nt':  # Windows系统
-                subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
-                             capture_output=True)
-            else:  # Linux/Mac系统
-                import signal
-                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-            self.process = None
+    # def stop(self):
+    #     """停止 ASR 语音识别处理
+    #     - 终止进程及其子进程
+    #     """
+    #     if self.process:
+    #         logger.info("终止 Whisper ASR 进程")
+    #         if os.name == 'nt':  # Windows系统
+    #             subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
+    #                          capture_output=True)
+    #         else:  # Linux/Mac系统
+    #             import signal
+    #             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+    #         self.process = None
 
 
 if __name__ == '__main__':

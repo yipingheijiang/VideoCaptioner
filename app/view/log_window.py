@@ -47,9 +47,9 @@ class LogWindow(QWidget):
         self.log_path = LOG_PATH / "app.log"
         try:
             self.log_file = open(self.log_path, 'r', encoding='utf-8')
-            self.load_last_lines(10240)
+            self.load_last_lines(20480)
             self.log_text.moveCursor(QTextCursor.End)
-            self.log_text.insertPlainText("\n=======以上是历史日志=======\n\n")
+            self.log_text.insertPlainText(f"\n{'='*25}以上是历史日志{'='*25}\n\n")
         except Exception as e:
             self.log_file = None
             self.log_text.setPlainText(f"打开日志文件失败: {str(e)}")
