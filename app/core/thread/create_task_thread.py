@@ -54,15 +54,20 @@ class CreateTaskThread(QThread):
 
 
         if cfg.need_optimize.value:
-            result_subtitle_type = "【优化字幕】"
+            result_subtitle_type = "【修正字幕】"
         elif cfg.need_translate.value:
             result_subtitle_type = "【翻译字幕】"
         else:
             result_subtitle_type = "【字幕】"
 
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
+            whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        else:
+            whisper_type = ""
+
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(file_path).stem}.mp3"
-        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}.srt"
+        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}-{whisper_type}.srt"
         result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 
@@ -147,9 +152,14 @@ class CreateTaskThread(QThread):
         else:
             result_subtitle_type = ""
 
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
+            whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        else:
+            whisper_type = ""
+
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(video_file_path).stem}.mp3"
-        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}.srt" if not subtitle_file_path else subtitle_file_path
+        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}-{whisper_type}.srt" if not subtitle_file_path else subtitle_file_path
         result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(video_file_path).name}"
 
@@ -212,9 +222,14 @@ class CreateTaskThread(QThread):
         video_info = get_video_info(file_path, thumbnail_path=str(thumbnail_path))
         video_info = VideoInfo(**video_info)
 
-        # 定义各个路径
+        # 定义各个路径        
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
+            whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        else:
+            whisper_type = ""
+
         audio_save_path = task_work_dir / f"{Path(file_path).stem}.mp3"
-        original_subtitle_save_path = task_work_dir / f"【原始字幕】{cfg.transcribe_model.value.value}.srt"
+        original_subtitle_save_path = task_work_dir / f"【原始字幕】{cfg.transcribe_model.value.value}{whisper_type}.srt"
 
         # 创建 Task 对象
         task = Task(
