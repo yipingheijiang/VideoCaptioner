@@ -62,6 +62,8 @@ class CreateTaskThread(QThread):
 
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
+            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
@@ -99,6 +101,10 @@ class CreateTaskThread(QThread):
             target_language=cfg.target_language.value.value,
             transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             whisper_model=cfg.whisper_model.value.value,
+            whisper_api_key=cfg.whisper_api_key.value,
+            whisper_api_base=cfg.whisper_api_base.value,
+            whisper_api_model=cfg.whisper_api_model.value,
+            whisper_api_prompt=cfg.whisper_api_prompt.value,
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
@@ -154,6 +160,8 @@ class CreateTaskThread(QThread):
 
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
+            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
@@ -195,6 +203,10 @@ class CreateTaskThread(QThread):
             transcribe_model=cfg.transcribe_model.value,
             transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             whisper_model=cfg.whisper_model.value.value,
+            whisper_api_key=cfg.whisper_api_key.value,
+            whisper_api_base=cfg.whisper_api_base.value,
+            whisper_api_model=cfg.whisper_api_model.value,
+            whisper_api_prompt=cfg.whisper_api_prompt.value,
             use_asr_cache=cfg.use_asr_cache.value,
             need_word_time_stamp=need_word_time_stamp,
             original_subtitle_save_path=str(original_subtitle_save_path),
@@ -225,6 +237,8 @@ class CreateTaskThread(QThread):
         # 定义各个路径        
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
+            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
@@ -247,6 +261,10 @@ class CreateTaskThread(QThread):
             target_language=cfg.target_language.value.value,
             transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             whisper_model=cfg.whisper_model.value.value,
+            whisper_api_key=cfg.whisper_api_key.value,
+            whisper_api_base=cfg.whisper_api_base.value,
+            whisper_api_model=cfg.whisper_api_model.value,
+            whisper_api_prompt=cfg.whisper_api_prompt.value,
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),

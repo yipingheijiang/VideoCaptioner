@@ -17,6 +17,7 @@ from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..config import ASSETS_PATH, VERSION
 from ..components.WhisperSettingDialog import WhisperSettingDialog
+from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from .log_window import LogWindow
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
@@ -79,7 +80,8 @@ class TaskCreationInterface(QWidget):
         self.whisper_setting_button.setFixedSize(32, 32)
         self.whisper_setting_button.clicked.connect(self.show_whisper_settings)
         self.whisper_setting_button.setVisible(
-            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value
+            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value or
+            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value
         )
         transcription_layout.addWidget(self.transcription_model_card)
         transcription_layout.addWidget(self.whisper_setting_button)
@@ -238,16 +240,22 @@ class TaskCreationInterface(QWidget):
     def on_transcription_model_changed(self, value):
         """当转录模型改变时触发"""
         cfg.set(cfg.transcribe_model, TranscribeModelEnum(value))
-        self.whisper_setting_button.setVisible(value == TranscribeModelEnum.WHISPER.value)
+        self.whisper_setting_button.setVisible(
+            value == TranscribeModelEnum.WHISPER.value or
+            value == TranscribeModelEnum.WHISPER_API.value
+        )
 
     def show_whisper_settings(self):
         """显示Whisper设置对话框"""
-        dialog = WhisperSettingDialog(self.window())
-        if dialog.exec_():
-            if dialog.check_whisper_model():
+        if self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value:
+            dialog = WhisperSettingDialog(self.window())
+            if dialog.exec_():
+                if dialog.check_whisper_model():
+                    return True
+        else:  # WHISPER_API
+            dialog = WhisperAPISettingDialog(self.window())
+            if dialog.exec_():
                 return True
-            else:
-                return False
         return False
 
     def on_subtitle_optimization_clicked(self, checked):
@@ -255,7 +263,7 @@ class TaskCreationInterface(QWidget):
             InfoBar.warning(
                 self.tr("警告，将使用自带小模型API"),
                 self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
-                duration=5000,
+                duration=8000,
                 parent=self,
                 position=InfoBarPosition.BOTTOM_RIGHT
             )
@@ -268,7 +276,7 @@ class TaskCreationInterface(QWidget):
             InfoBar.warning(
                 self.tr("警告，将使用自带小模型API"),
                 self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
-                duration=10000,
+                duration=8000,
                 parent=self,
                 position=InfoBarPosition.BOTTOM_RIGHT
             )
@@ -292,8 +300,8 @@ class TaskCreationInterface(QWidget):
             if file_path:
                 self.search_input.setText(file_path)
             return
-        
-        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER and not self.show_whisper_settings():
+        need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER, TranscribeModelEnum.WHISPER_API]
+        if need_whisper_settings and not self.show_whisper_settings():
             return
 
         self.process()

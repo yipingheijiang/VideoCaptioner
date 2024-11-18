@@ -11,9 +11,10 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     ProgressRing, InfoBarPosition
 
-from app.components.WhisperSettingDialog import WhisperSettingDialog
-from app.config import RESOURCE_PATH
-from app.core.thread.create_task_thread import CreateTaskThread
+from ..components.WhisperSettingDialog import WhisperSettingDialog
+from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
+from ..config import RESOURCE_PATH
+from ..core.thread.create_task_thread import CreateTaskThread
 from ..common.config import cfg
 from ..core.entities import LANGUAGES, Task, VideoInfo
 from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
@@ -137,24 +138,22 @@ class VideoInfoCard(CardWidget):
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
 
     def show_whisper_settings(self):
-        dialog = WhisperSettingDialog(self.window())
-        if dialog.exec_():
-            if dialog.check_whisper_model():
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER.value:
+            dialog = WhisperSettingDialog(self.window())
+            if dialog.exec_():
+                if dialog.check_whisper_model():
+                    return True
+        else:  # WHISPER_API
+            dialog = WhisperAPISettingDialog(self.window())
+            if dialog.exec_():
                 return True
-            else:
-                InfoBar.error(
-                    self.tr("错误"),
-                    self.tr("该模型文件不存在"),
-                    duration=5000,
-                    parent=self
-                )
-                return False
         return False
 
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         if self.task.status == Task.Status.TRANSCRIBING:
-            if self.task.transcribe_model == TranscribeModelEnum.WHISPER and not self.show_whisper_settings():
+            need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER, TranscribeModelEnum.WHISPER_API]
+            if need_whisper_settings and not self.show_whisper_settings():
                 return
         self.progress_ring.show()
         self.progress_ring.setValue(100)

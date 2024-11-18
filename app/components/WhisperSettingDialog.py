@@ -350,7 +350,7 @@ class WhisperSettingDialog(MessageBoxBase):
                 self.tr("Whisper设置已更新"),
                 duration=3000,
                 parent=self.window(),
-                position=InfoBarPosition.BOTTOM_RIGHT
+                position=InfoBarPosition.BOTTOM
             )
         else:
             InfoBar.error(
@@ -358,5 +358,5 @@ class WhisperSettingDialog(MessageBoxBase):
                 content=self.tr('模型文件不存在'),
                 parent=self.window(),
                 duration=3000,
-                position=InfoBarPosition.BOTTOM_RIGHT
+                position=InfoBarPosition.BOTTOM
             )

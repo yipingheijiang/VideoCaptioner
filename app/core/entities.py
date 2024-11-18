@@ -75,8 +75,8 @@ class TranscribeModelEnum(Enum):
     BIJIAN = "B 接口"
     JIANYING = "J 接口"
     # KUAISHOU = "K j接口"
-    WHISPER = "Whisper[本地]"
-    WHISPER_API = "Whisper[API]"
+    WHISPER = "Whisper [本地]"
+    WHISPER_API = "Whisper [API]"
 
 
 
@@ -186,6 +186,10 @@ class Task:
     need_word_time_stamp: bool = False
     original_subtitle_save_path: Optional[str] = None
     whisper_model: Optional[WhisperModelEnum] = None
+    whisper_api_key: Optional[str] = None
+    whisper_api_base: Optional[str] = None
+    whisper_api_model: Optional[str] = None
+    whisper_api_prompt: Optional[str] = None
 
     # LLM（优化翻译模型）
     base_url: Optional[str] = None

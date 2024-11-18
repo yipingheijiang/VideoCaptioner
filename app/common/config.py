@@ -55,8 +55,15 @@ class Config(QConfig):
                                             OptionsValidator(TranscribeLanguageEnum),
                                             EnumSerializer(TranscribeLanguageEnum))
     # Whisper 配置
-    whisper_model = OptionsConfigItem("Whisper", "Model", WhisperModelEnum.TINY.value,
+    whisper_model = OptionsConfigItem("Whisper", "WhisperModel", WhisperModelEnum.TINY.value,
                                       OptionsValidator(WhisperModelEnum), EnumSerializer(WhisperModelEnum))
+
+    # Whisper API 配置
+    whisper_api_base = ConfigItem("WhisperAPI", "WhisperApiBase", "")
+    whisper_api_key = ConfigItem("WhisperAPI", "WhisperApiKey", "")
+    whisper_api_model = OptionsConfigItem("WhisperAPI", "WhisperApiModel", "")
+    whisper_api_prompt = ConfigItem("WhisperAPI", "WhisperApiPrompt", "")
+    
 
     # 字幕配置
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
@@ -83,6 +90,7 @@ class Config(QConfig):
 
     # 更新
     checkUpdateAtStartUp = ConfigItem("Update", "CheckUpdateAtStartUp", True, BoolValidator())
+
 
 
 cfg = Config()

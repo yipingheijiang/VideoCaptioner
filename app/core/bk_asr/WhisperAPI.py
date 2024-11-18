@@ -13,7 +13,8 @@ logger = setup_logger("whisper_api")
 class WhisperAPI(BaseASR):
     def __init__(self, 
                  audio_path: str,
-                 model: str,
+                 whisper_model: str,
+                 need_word_time_stamp: bool = False,
                  language: str = "zh",
                  prompt: str = "",
                  base_url: Optional[str] = None,
@@ -40,11 +41,11 @@ class WhisperAPI(BaseASR):
         if not self.base_url or not self.api_key:
             raise ValueError("必须设置 OPENAI_BASE_URL 和 OPENAI_API_KEY")
             
-        self.model = model
+        self.model = whisper_model
         self.language = language
         self.prompt = prompt
         
-        logger.info(f"初始化 WhisperASR: model={model}, language={language}")
+        logger.info(f"初始化 WhisperASR: model={whisper_model}, language={language}, prompt={prompt}")
         self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
 
     def _run(self, callback=None) -> dict:
@@ -79,20 +80,7 @@ class WhisperAPI(BaseASR):
                 language=self.language
             )
             logger.info("音频识别完成")
-            print(completion)
-            print("-"*100)
-            print(completion.to_dict())
             return completion.to_dict()
         except Exception as e:
             logger.exception(f"音频识别失败: {str(e)}")
             raise e
-
-
-if __name__ == '__main__':
-    # Example usage
-    os.environ['OPENAI_BASE_URL'] = "https://api.groq.com/openai/v1"
-    os.environ['OPENAI_API_KEY'] = "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"
-    audio_file = r"C:\Users\weifeng\Music\output_001.mp3"
-    asr = WhisperASR(audio_file, model="whisper-large-v3", language="zh", prompt="", use_cache=False)
-    asr_data = asr.run()
-    print(asr_data)

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from ..bk_asr import JianYingASR, KuaiShouASR, BcutASR, WhisperASR
+from ..bk_asr import JianYingASR, KuaiShouASR, BcutASR, WhisperASR, WhisperAPI
 from ..entities import Task, TranscribeModelEnum
 from ..utils.video_utils import video2audio
 from ..utils.logger import setup_logger
@@ -20,6 +20,7 @@ class TranscriptThread(QThread):
         # TranscribeModelEnum.KUAISHOU: KuaiShouASR,
         TranscribeModelEnum.BIJIAN: BcutASR,
         TranscribeModelEnum.WHISPER: WhisperASR,
+        TranscribeModelEnum.WHISPER_API: WhisperAPI,
     }
 
     def __init__(self, task: Task):
@@ -70,7 +71,21 @@ class TranscriptThread(QThread):
             if self.task.transcribe_model == TranscribeModelEnum.WHISPER:
                 args["language"] = self.task.transcribe_language
                 args["whisper_model"] = self.task.whisper_model
-            self.asr = asr_class(self.task.audio_save_path, **args)
+                self.asr = WhisperASR(self.task.audio_save_path, **args)
+            elif self.task.transcribe_model == TranscribeModelEnum.WHISPER_API:
+                args["language"] = self.task.transcribe_language
+                args["whisper_model"] = self.task.whisper_api_model
+                args["api_key"] = self.task.whisper_api_key
+                args["base_url"] = self.task.whisper_api_base
+                args["prompt"] = self.task.whisper_api_prompt
+                self.asr = WhisperAPI(self.task.audio_save_path, **args)
+            elif self.task.transcribe_model == TranscribeModelEnum.BIJIAN:
+                self.asr = BcutASR(self.task.audio_save_path, **args)
+            elif self.task.transcribe_model == TranscribeModelEnum.JIANYING:
+                self.asr = JianYingASR(self.task.audio_save_path, **args)
+            else:
+                raise ValueError(self.tr("无效的转录模型: ") + str(self.task.transcribe_model))
+            
             asr_data = self.asr.run(callback=self.progress_callback)
 
             # 保存字幕文件
