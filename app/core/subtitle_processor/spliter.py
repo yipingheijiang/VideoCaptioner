@@ -82,7 +82,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     asr_len = len(asr_texts)
     asr_index = 0  # 当前分段索引位置
     threshold = 0.5  # 相似度阈值
-    max_shift = 10  # 滑动窗口的最大偏移量
+    max_shift = 100  # 滑动窗口的最大偏移量
 
     new_segments = []
 
