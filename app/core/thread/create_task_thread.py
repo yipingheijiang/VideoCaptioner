@@ -420,7 +420,7 @@ def download(url, work_dir, progress_hook):
             'subtitle': '【原始字幕】.%(ext)s',
             'thumbnail': 'thumbnail',
         },
-        # 'format': 'worst',                   # 下载质量最差的视频和音频
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',  # 优先下载mp4格式
         'progress_hooks': [progress_hook],  # 下载进度钩子
         # 'overwrites': True,                   # 覆盖已存在的文件
         'quiet': True,  # 禁用日志输出
