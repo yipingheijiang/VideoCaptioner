@@ -231,7 +231,7 @@ I will also provide reference content for the subtitles (such as context or summ
 2. Translation process:
    a) Translation into [TargetLanguage]:
       Provide an accurate translation of the original subtitle. Follow these translation guidelines:
-      - Natural translation: Use paraphrasing to avoid stiff machine translations, ensuring it conforms to Chinese grammar and expression habits.
+      - Natural translation: Use paraphrasing to avoid stiff machine translations, ensuring it conforms to [TargetLanguage] grammar and expression habits.
       - Retain key terms: Technical terms, proper nouns, and abbreviations should remain untranslated.
       - Cultural relevance: Appropriately use idioms, proverbs, and modern expressions that fit the target language's cultural background.
       - Do not isolate a sentence; ensure coherence with the previous sentence's context, and do not add or omit content for a single sentence.
