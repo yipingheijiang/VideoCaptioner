@@ -404,7 +404,7 @@ class SubtitleOptimizationInterface(QWidget):
             else:
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
-                    self.tr(f"支持的字幕格式:") + supported_formats,
+                    self.tr(f"支持的字幕格式:") + str(supported_formats),
                     duration=3000,
                     parent=self
                 )

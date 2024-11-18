@@ -8,7 +8,7 @@ import uuid
 import requests
 from PyQt5.QtCore import QVersionNumber, QObject, pyqtSignal, QSettings
 
-from app.config import VERSION
+from ...config import VERSION, ROOT_PATH
 from ..utils.logger import setup_logger
 
 # 配置日志
@@ -86,7 +86,10 @@ class VersionManager(QObject):
         for version_info in self.history:
             if version_info['version'].lstrip('v') == self.currentVersion.lower():
                 if version_info['update_code']:
-                    exec(version_info['update_code'])
+                    try:
+                        exec(version_info['update_code'])
+                    except Exception as e:
+                        logger.exception("Failed to execute update code: %s", e)
                 current_version_available = version_info.get('available', True)
                 break
 

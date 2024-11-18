@@ -76,6 +76,8 @@ class TranscribeModelEnum(Enum):
     JIANYING = "J 接口"
     # KUAISHOU = "K j接口"
     WHISPER = "Whisper[本地]"
+    WHISPER_API = "Whisper[API]"
+
 
 
 class TargetLanguageEnum(Enum):

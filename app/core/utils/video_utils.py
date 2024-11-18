@@ -22,8 +22,10 @@ def video2audio(input_file: str, output: str = "") -> bool:
     cmd = [
         'ffmpeg',
         '-i', input_file,
+        '-map', '0:a',
         '-ac', '1',
         '-f', 'mp3',
+        '-ar', '16000',
         '-af', 'aresample=async=1',
         '-y',
         output
