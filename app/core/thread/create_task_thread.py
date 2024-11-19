@@ -11,7 +11,7 @@ from ..entities import Task, TranscribeModelEnum, VideoInfo, LANGUAGES
 from ..utils.video_utils import get_video_info
 from ...common.config import cfg
 from ..utils.logger import setup_logger
-from ...config import SUBTITLE_STYLE_PATH
+from ...config import SUBTITLE_STYLE_PATH, APPDATA_PATH
 
 logger = setup_logger("create_task_thread")
 
@@ -69,8 +69,8 @@ class CreateTaskThread(QThread):
 
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(file_path).stem}.mp3"
-        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}-{whisper_type}.srt"
-        result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}.ass"
+        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}{whisper_type}.srt"
+        result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}样式字幕.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(file_path).name}"
 
         ass_style_name = cfg.subtitle_style_name.value
@@ -131,8 +131,7 @@ class CreateTaskThread(QThread):
         logger.info(f"开始创建URL任务：{url}")
         self.progress.emit(5, self.tr("正在获取视频信息"))
         # 下载视频。保存到 cfg.work_dir.value 下
-        video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value,
-                                                                                       self.progress_hook)
+        video_file_path, subtitle_file_path, thumbnail_file_path, info_dict = download(url, cfg.work_dir.value, self.progress_hook)
         self.progress.emit(100, self.tr("下载视频完成"))
 
         video_info = VideoInfo(
@@ -152,7 +151,7 @@ class CreateTaskThread(QThread):
         task_work_dir = Path(video_file_path).parent
 
         if cfg.need_optimize.value:
-            result_subtitle_type = "【优化字幕】"
+            result_subtitle_type = "【修正字幕】"
         elif cfg.need_translate.value:
             result_subtitle_type = "【翻译字幕】"
         else:
@@ -167,8 +166,8 @@ class CreateTaskThread(QThread):
 
         # 定义各个路径
         audio_save_path = task_work_dir / f"{Path(video_file_path).stem}.mp3"
-        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}-{whisper_type}.srt" if not subtitle_file_path else subtitle_file_path
-        result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}.ass"
+        original_subtitle_save_path = task_work_dir / "subtitle" / f"【原始字幕】{cfg.transcribe_model.value.value}{whisper_type}.srt" if not subtitle_file_path else subtitle_file_path
+        result_subtitle_save_path = task_work_dir / "subtitle" / f"{result_subtitle_type}样式字幕.ass"
         video_save_path = task_work_dir / f"【卡卡】{Path(video_file_path).name}"
 
         if cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN]:
@@ -281,7 +280,7 @@ class CreateTaskThread(QThread):
         file_name = Path(file_path.strip()).stem
 
         if cfg.need_optimize.value:
-            result_subtitle_type = "【优化字幕】"
+            result_subtitle_type = "【修正字幕】"
         elif cfg.need_translate.value:
             result_subtitle_type = "【翻译字幕】"
         else:
@@ -289,7 +288,7 @@ class CreateTaskThread(QThread):
         logger.info(f"字幕类型: {result_subtitle_type}")
 
         original_subtitle_save_path = task_work_dir / file_path
-        result_subtitle_save_path = task_work_dir / f"{result_subtitle_type}{file_name}.ass"
+        result_subtitle_save_path = task_work_dir / f"{result_subtitle_type}{file_name}.srt"
 
         ass_style_name = cfg.subtitle_style_name.value
         ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"
@@ -413,6 +412,11 @@ def sanitize_filename(name, replacement="_"):
 def download(url, work_dir, progress_hook):
     logger.info("开始下载视频: %s", url)
     # 设置工作目录
+    # 检查 APPDATA_PATH 下的 cookiefile 是否存在，不存在则创建
+    cookiefile_path = APPDATA_PATH / "cookies.txt"
+    if not cookiefile_path.exists():
+        cookiefile_path.touch()
+
     # 初始化 ydl 选项
     initial_ydl_opts = {
         'outtmpl': {
@@ -429,6 +433,7 @@ def download(url, work_dir, progress_hook):
         'writeautomaticsub': True,  # 下载自动生成的字幕
         'writethumbnail': True,  # 下载缩略图
         'thumbnail_format': 'jpg',  # 指定缩略图的格式
+        'cookiefile': str(cookiefile_path)
     }
 
     with yt_dlp.YoutubeDL(initial_ydl_opts) as ydl:
@@ -486,4 +491,5 @@ def download(url, work_dir, progress_hook):
             break
             
         logger.info(f"视频下载完成: {video_file_path}")
+        logger.info(f"字幕文件路径: {subtitle_file_path}")
         return video_file_path, subtitle_file_path, thumbnail_file_path, info_dict

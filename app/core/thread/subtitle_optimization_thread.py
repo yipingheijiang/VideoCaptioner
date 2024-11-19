@@ -17,14 +17,13 @@ from ..utils.logger import setup_logger
 # 配置日志
 logger = setup_logger("subtitle_optimization_thread")
 
-
 class SubtitleOptimizationThread(QThread):
     finished = pyqtSignal(Task)
     progress = pyqtSignal(int, str)
     update = pyqtSignal(dict)
     update_all = pyqtSignal(dict)
     error = pyqtSignal(str)
-    MAX_DAILY_LLM_CALLS = 17
+    MAX_DAILY_LLM_CALLS = 30
 
     def __init__(self, task: Task):
         super().__init__()
@@ -32,6 +31,7 @@ class SubtitleOptimizationThread(QThread):
         self.subtitle_length = 0
         self.finished_subtitle_length = 0
         self.custom_prompt_text = ""
+        self.llm_result_logger = None
 
     def set_custom_prompt_text(self, text: str):
         self.custom_prompt_text = text
@@ -52,7 +52,7 @@ class SubtitleOptimizationThread(QThread):
             subtitle_style_srt = self.task.subtitle_style_srt
             subtitle_layout = self.task.subtitle_layout
             # TODO: 开启字幕总结功能
-            split_path = str(Path(result_subtitle_save_path).parent / f"{Path(result_subtitle_save_path).stem}_智能断句.srt")
+            split_path = str(Path(result_subtitle_save_path).parent / f"智能断句-{Path(result_subtitle_save_path).stem}.srt")
 
             # 检查
             assert str_path is not None, self.tr("字幕文件路径为空")
@@ -103,10 +103,16 @@ class SubtitleOptimizationThread(QThread):
                     raise Exception(self.tr("自带的API配置暂时不可用，请配置自己的大模型API"))
                 
             logger.info(f"使用 {llm_model} 作为LLM模型")
-            
+
             os.environ['OPENAI_BASE_URL'] = base_url
             os.environ['OPENAI_API_KEY'] = api_key
 
+
+            self.llm_result_logger = setup_logger("llm_result", 
+                                                info_fmt="%(message)s",
+                                                log_file=str(Path(str_path).parent / 'llm_result.log'),
+                                                console_output=False)  # 设置不输出到控制台
+            print(self.llm_result_logger)
             asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
@@ -134,7 +140,7 @@ class SubtitleOptimizationThread(QThread):
                     need_reflect = False if "glm-4-flash" in llm_model.lower() else True
                     self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model,
                                                        target_language=target_language, batch_num=batch_size,
-                                                       thread_num=thread_num)
+                                                       thread_num=thread_num, llm_result_logger=self.llm_result_logger)
                     optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, translate=True,
                                                                              reflect=need_reflect,
                                                                              callback=self.callback)
@@ -142,7 +148,7 @@ class SubtitleOptimizationThread(QThread):
                     self.progress.emit(30, self.tr("优化字幕..."))
                     logger.info("正在优化字幕...")
                     self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model,
-                                                       batch_num=batch_size, thread_num=thread_num)
+                                                       batch_num=batch_size, thread_num=thread_num, llm_result_logger=self.llm_result_logger)
                     optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, callback=self.callback)
 
                 # 保存字幕
@@ -165,9 +171,13 @@ class SubtitleOptimizationThread(QThread):
                 logger.info(f"无需优化翻译，直接保存 {result_subtitle_save_path}")
 
             # 删除断句文件
-            if os.path.exists(split_path):
-                os.remove(split_path)
-                
+            # if os.path.exists(split_path):
+            #     os.remove(split_path)
+            # 保存srt文件
+            if self.task.video_info:
+                save_srt_path = Path(self.task.work_dir) / f"{Path(self.task.video_info.file_name).stem}.srt"
+                asr_data.to_srt(save_path=str(save_srt_path))
+
             self.progress.emit(100, self.tr("优化完成"))
             logger.info("优化完成")
             self.finished.emit(self.task)

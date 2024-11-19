@@ -13,7 +13,8 @@ def setup_logger(name: str,
                 info_fmt: str = '%(message)s',  # INFO级别使用简化格式
                 default_fmt: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # 其他级别使用详细格式
                 datefmt: str = '%Y-%m-%d %H:%M:%S',
-                log_file: str = str(LOG_PATH / 'app.log')) -> logging.Logger:
+                log_file: str = str(LOG_PATH / 'app.log'),
+                console_output: bool = True) -> logging.Logger:
     """
     创建并配置一个日志记录器，INFO级别使用简化格式。
 
@@ -25,7 +26,7 @@ def setup_logger(name: str,
     - datefmt: 时间格式字符串
     - log_file: 日志文件路径
     """
-
+    
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
@@ -41,11 +42,12 @@ def setup_logger(name: str,
 
         level_formatter = LevelSpecificFormatter(default_fmt, datefmt=datefmt)
 
-        # 控制台处理器
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(level)
-        console_handler.setFormatter(level_formatter)
-        logger.addHandler(console_handler)
+        # 只在console_output为True时添加控制台处理器
+        if console_output:
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(level)
+            console_handler.setFormatter(level_formatter)
+            logger.addHandler(console_handler)
 
         # 文件处理器
         if log_file:

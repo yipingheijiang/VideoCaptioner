@@ -1,4 +1,5 @@
 import difflib
+import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
@@ -27,7 +28,7 @@ class SubtitleOptimizer:
     """A class for optimize and translating subtitles using OpenAI's API."""
 
     def __init__(self, model: str = DEFAULT_MODEL, summary_content="", thread_num=MAX_THREADS, batch_num=BATCH_SIZE,
-                 target_language="Chinese") -> None:
+                 target_language="Chinese", llm_result_logger: logging.Logger = None) -> None:
         base_url = os.getenv('OPENAI_BASE_URL')
         api_key = os.getenv('OPENAI_API_KEY')
         assert base_url and api_key, "环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置"
@@ -41,6 +42,7 @@ class SubtitleOptimizer:
         self.batch_num = batch_num
         self.thread_num = thread_num
         self.executor = ThreadPoolExecutor(max_workers=thread_num)  # 创建类级别的线程池
+        self.llm_result_logger = llm_result_logger
 
     def stop(self):
         self.executor.shutdown(wait=False)
@@ -115,9 +117,15 @@ class SubtitleOptimizer:
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
         # 在 translations 中查找对应的翻译  文本-翻译 映射
-        translations = {item["optimized_subtitle"]: item["revised_translate"] for item in response_content.values()}
+        translations = {item["optimized_subtitle"]: item["revised_translation"] for item in response_content.values()}
         translated_subtitle = {k: f"{v}\n{translations.get(v, ' ')}" for k, v in aligned_subtitle.items()}
-
+        print(self.llm_result_logger)
+        if self.llm_result_logger:
+            for k, v in response_content.items():
+                self.llm_result_logger.info(f"原字幕：{v['optimized_subtitle']}")
+                self.llm_result_logger.info(f"翻译后字幕：{v['translation']}")
+                self.llm_result_logger.info(f"反思后字幕：{v['revised_translation']}")
+                self.llm_result_logger.info("===========")
         return translated_subtitle
 
     def _normal_translate(self, original_subtitle: Dict[int, str]):

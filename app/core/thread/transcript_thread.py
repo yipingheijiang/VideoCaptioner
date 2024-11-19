@@ -94,6 +94,12 @@ class TranscriptThread(QThread):
             asr_data.to_srt(save_path=str(original_subtitle_path))
             logger.info("字幕文件已保存到: %s", str(original_subtitle_path))
 
+            # 删除音频文件 和 封面
+            audio_save_path.unlink()
+            thumbnail_path = Path(self.task.video_info.thumbnail_path)
+            if thumbnail_path.exists():
+                thumbnail_path.unlink()
+
             self.progress.emit(100, self.tr("转录完成"))
             self.finished.emit(self.task)
         except Exception as e:
