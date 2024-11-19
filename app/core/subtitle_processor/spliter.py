@@ -10,7 +10,7 @@ from ..utils.logger import setup_logger
 
 logger = setup_logger("subtitle_spliter")
 
-SEGMENT_THRESHOLD = 1000  # 每个分段的最大字数
+SEGMENT_THRESHOLD = 600  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
 SPLIT_RANGE = 30  # 在分割点前后寻找最大时间间隔的范围
 MAX_GAP = 2000.0  # 最大时间间隔 ms
@@ -91,6 +91,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     for sentence in sentences:
         logger.debug(f"==========")
         logger.debug(f"处理句子: {sentence}")
+        logger.debug("后续句子:" + " ".join(asr_texts[asr_index: asr_index+10]))
 
         sentence_proc = preprocess_text(sentence)
         word_count = count_words(sentence_proc)
@@ -102,7 +103,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
         max_window_size = min(word_count * 2, asr_len - asr_index)
         min_window_size = max(1, word_count // 2)
         window_sizes = sorted(range(min_window_size, max_window_size + 1), key=lambda x: abs(x - word_count))
-        logger.debug(f"window_sizes: {window_sizes}")
+        # logger.debug(f"window_sizes: {window_sizes}")
 
         for window_size in window_sizes:
             max_start = min(asr_index + max_shift + 1, asr_len - window_size + 1)
@@ -128,7 +129,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
             
             segs_to_merge = asr_data.segments[start_seg_index:end_seg_index + 1]
             seg_groups = check_time_gaps(segs_to_merge)
-            logger.debug(f"分段组: {len(seg_groups)}")
+            # logger.debug(f"分段组: {len(seg_groups)}")
 
             for group in seg_groups:
                 merged_text = ''.join(seg.text for seg in group)
@@ -144,10 +145,11 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
                     new_segments.extend(split_segs)
                 else:
                     new_segments.append(merged_seg)
-            
+            max_shift = 50
             asr_index = end_seg_index + 1  # 移动到下一个未处理的分段
         else:
             logger.warning(f"无法匹配句子: {sentence}")
+            max_shift = 1000
             asr_index += 1
 
     return ASRData(new_segments)
@@ -339,7 +341,7 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     all_sentences = [item for sublist in all_sentences for item in sublist]
 
     logger.info(f"总共提取到 {len(all_sentences)} 句")
-    logger.debug(f"句子列表: {all_sentences}")
+    # logger.debug(f"句子列表: {all_sentences}")
 
     # 基于LLM已经分段的句子，对ASR分段进行合并
     logger.info("正在合并ASR分段基于句子列表...")

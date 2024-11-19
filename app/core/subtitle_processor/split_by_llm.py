@@ -94,7 +94,7 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
             {"role": "system", "content": SPLIT_SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.1
+        temperature=0.7
     )
     result = response.choices[0].message.content
     # 清理结果中的多余换行符
