@@ -13,7 +13,7 @@ from ..utils.logger import setup_logger
 
 logger = setup_logger("split_by_llm")
 
-MAX_WORD_COUNT = 20  # 英文单词或中文字符的最大数量
+MAX_WORD_COUNT = 18  # 英文单词或中文字符的最大数量
 
 
 def count_words(text: str) -> int:
@@ -94,7 +94,7 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
             {"role": "system", "content": SPLIT_SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.7
+        temperature=0.2
     )
     result = response.choices[0].message.content
     # 清理结果中的多余换行符

@@ -13,7 +13,7 @@ logger = setup_logger("subtitle_spliter")
 SEGMENT_THRESHOLD = 600  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
 SPLIT_RANGE = 30  # 在分割点前后寻找最大时间间隔的范围
-MAX_GAP = 2000.0  # 最大时间间隔 ms
+MAX_GAP = 1500.0  # 允许每个词语之间的最大时间间隔 ms
 
 def is_pure_punctuation(s: str) -> bool:
     """
@@ -82,7 +82,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     asr_len = len(asr_texts)
     asr_index = 0  # 当前分段索引位置
     threshold = 0.5  # 相似度阈值
-    max_shift = 100  # 滑动窗口的最大偏移量
+    max_shift = 50  # 滑动窗口的最大偏移量
 
     new_segments = []
 
@@ -139,7 +139,7 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
                 
                 logger.debug(f"合并分段: {merged_seg.text}")
                 
-                # 只有当分段没有时间间隔问题时，才考虑最大词数的拆分
+                # 考虑最大词数的拆分
                 if count_words(merged_text) > MAX_WORD_COUNT:
                     split_segs = split_long_segment(merged_text, group)
                     new_segments.extend(split_segs)
@@ -186,7 +186,7 @@ def check_time_gaps(segments: List[ASRDataSeg], max_gap: float = MAX_GAP) -> Lis
 
 def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> List[ASRDataSeg]:
     """
-    基于最大时间间隔拆分长分段，尽可能避免拆分语义连续的英文单词
+    基于最大时间间隔拆分长分段，尽可能避免拆分时间连续的英文单词
     """
     result_segs = []
     logger.debug(f"正在拆分长分段: {merged_text}")

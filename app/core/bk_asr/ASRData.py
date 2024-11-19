@@ -227,7 +227,7 @@ class ASRData:
         for seg in self.segments:
             start_time, end_time = seg.to_ass_ts()
             if "\n" in seg.text:
-                original, translate = seg.text.split("\n")
+                original, translate = seg.text.split("\n", 1)
                 if layout == "译文在上" and translate:
                     ass_content += dialogue_template.format(start_time, end_time, "Secondary", original)
                     ass_content += dialogue_template.format(start_time, end_time, "Default", translate)
