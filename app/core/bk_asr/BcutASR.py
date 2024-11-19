@@ -30,7 +30,7 @@ class BcutASR(BaseASR):
         'User-Agent': 'Bilibili/1.0.0 (https://www.bilibili.com)',
         'Content-Type': 'application/json'
     }
-    MAX_DAILY_CALLS = 40
+    MAX_DAILY_CALLS = 23
 
     def __init__(self, audio_path: str | bytes, use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, use_cache=use_cache)
@@ -157,7 +157,6 @@ class BcutASR(BaseASR):
             raise Exception(f"请明天再试")
         self.settings.setValue('bcutasr/daily_calls', daily_calls + 1)
         self.settings.sync()  # 强制写入
-        print("写入")
         print(self.settings.value('bcutasr/daily_calls', 0))
 
         callback(0, "上传中")

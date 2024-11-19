@@ -1,9 +1,10 @@
 import datetime
 import os
 from pathlib import Path
+import time
 from typing import Dict
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal, QSettings
 
 from ..subtitle_processor.optimizer import SubtitleOptimizer
 from ..subtitle_processor.summarizer import SubtitleSummarizer
@@ -23,6 +24,7 @@ class SubtitleOptimizationThread(QThread):
     update = pyqtSignal(dict)
     update_all = pyqtSignal(dict)
     error = pyqtSignal(str)
+    MAX_DAILY_LLM_CALLS = 17
 
     def __init__(self, task: Task):
         super().__init__()
@@ -30,7 +32,7 @@ class SubtitleOptimizationThread(QThread):
         self.subtitle_length = 0
         self.finished_subtitle_length = 0
         self.custom_prompt_text = ""
-    
+
     def set_custom_prompt_text(self, text: str):
         self.custom_prompt_text = text
 
@@ -85,6 +87,8 @@ class SubtitleOptimizationThread(QThread):
                 logger.info("尝试使用自带的API配置")
                 # 遍历配置字典找到第一个可用的API
                 for config in api_configs.values():
+                    if not self.valid_limit():
+                        raise Exception(self.tr("公益服务有限！请配置自己的API!"))
                     if test_openai(config["base_url"], config["api_key"], config["llm_model"])[0]:
                         base_url = config["base_url"]
                         api_key = config["api_key"] 
@@ -92,8 +96,11 @@ class SubtitleOptimizationThread(QThread):
                         thread_num = config["thread_num"]
                         batch_size = config["batch_size"]
                         break
+                    self.set_limit()
+
                 else:
-                    raise Exception(self.tr("自带的API配置暂时不可用，请配置自己的API"))
+                    logger.error("自带的API配置暂时不可用，请配置自己的API")
+                    raise Exception(self.tr("自带的API配置暂时不可用，请配置自己的大模型API"))
                 
             logger.info(f"使用 {llm_model} 作为LLM模型")
             
@@ -110,7 +117,7 @@ class SubtitleOptimizationThread(QThread):
                 asr_data.save(save_path=split_path)
                 self.update_all.emit(asr_data.to_json())
 
-            # 制作成请求llm接口的格式 {"1": {"original_subtitle": "字幕内容"},...}
+            # 制作成请求llm接口的格式 {{"1": "original_subtitle"},...}
             subtitle_json = {str(k): v["original_subtitle"] for k, v in asr_data.to_json().items()}
             self.subtitle_length = len(subtitle_json)
             if need_translate or need_optimize:
@@ -168,6 +175,27 @@ class SubtitleOptimizationThread(QThread):
             logger.exception(f"优化失败: {str(e)}")
             self.error.emit(str(e))
             self.progress.emit(100, self.tr("优化失败"))
+
+    def set_limit(self):
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
+                                  'VideoCaptioner', 'VideoCaptioner')
+        current_date = time.strftime('%Y-%m-%d')
+        last_date = self.settings.value('llm/last_date', '')
+        if current_date != last_date:
+            self.settings.setValue('llm/last_date', current_date)
+            self.settings.setValue('llm/daily_calls', 0)
+            self.settings.sync()  # 强制写入
+    
+    def valid_limit(self):
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
+                                  'VideoCaptioner', 'VideoCaptioner')
+        daily_calls = int(self.settings.value('llm/daily_calls', 0))
+        if daily_calls >= self.MAX_DAILY_LLM_CALLS:
+            return False
+        self.settings.setValue('llm/daily_calls', daily_calls + 1)
+        self.settings.sync()  # 强制写入
+        print(self.settings.value('llm/daily_calls', 0))
+        return True
 
     def callback(self, result: Dict):
         self.finished_subtitle_length += len(result)

@@ -34,7 +34,7 @@ class SubtitleSummarizer:
             )
             return str(json_repair.loads(response.choices[0].message.content))
         except Exception as e:
-            logger.error(f"摘要化字幕内容失败: {e}")
+            logger.exception(f"摘要化字幕内容失败: {e}")
             return ""
     
     
