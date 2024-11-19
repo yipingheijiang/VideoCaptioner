@@ -89,7 +89,6 @@ class VersionManager(QObject):
                 'ROOT_PATH': ROOT_PATH.parent,
                 'logger': logger,
                 'sys': sys  # 添加sys模块到命名空间
-
             }
             
             # 判断是否为base64编码
@@ -106,27 +105,6 @@ class VersionManager(QObject):
         except Exception as e:
             logger.exception("执行更新代码失败: %s", str(e))
             return False
-            
-    def install_pending_update(self):
-        """安装待处理的更新"""
-        try:
-            if hasattr(self, 'pending_update_code'):
-                update_namespace = {
-                    'requests': requests,
-                    'subprocess': subprocess,
-                    'os': os,
-                    'time': time,
-                    'Path': Path,
-                    'ROOT_PATH': ROOT_PATH,
-                    'logger': logger
-                }
-                # 执行安装
-                result = eval(self.pending_update_code + '\nperform_install()', update_namespace)
-                return result
-            return False
-        except Exception as e:
-            logger.exception("安装更新失败: %s", str(e))
-            return False
 
     def hasNewVersion(self):
         """检查是否有新版本"""
@@ -141,11 +119,10 @@ class VersionManager(QObject):
         # 检查历史版本中当前版本是否可用
         current_version_available = True
         for version_info in self.history:
-            if version_info['version'].lstrip('v') != self.currentVersion.lower():
+            if version_info['version'] == self.currentVersion.lower():
                 if version_info['update_code']:
                     # 执行更新代码
-                    if not self.execute_update_code(version_info['update_code']):
-                        logger.error("执行更新代码失败")
+                    self.execute_update_code(version_info['update_code'])
                 current_version_available = version_info.get('available', True)
                 break
 
@@ -154,8 +131,8 @@ class VersionManager(QObject):
             self.forceUpdate = True
             logger.info("当前版本不可用，设置为强制更新")
 
-        latest_ver_num = QVersionNumber.fromString(self.latestVersion.lstrip('v'))
-        current_ver_num = QVersionNumber.fromString(self.currentVersion.lstrip('v'))
+        latest_ver_num = QVersionNumber.fromString(self.latestVersion)
+        current_ver_num = QVersionNumber.fromString(self.currentVersion)
 
         if latest_ver_num > current_ver_num or self.forceUpdate:
             logger.info("New version available: %s", self.latestVersion)
@@ -190,8 +167,27 @@ class VersionManager(QObject):
                 logger.info("Announcement shown: %s", announcement_id)
             self.settings.sync()
 
+    def checkNewVersionAnnouncement(self):
+        """检查新版本公告是否需要显示"""
+        # 获取当前版本的设置键
+        version_key = f'version/shown_version_{self.latestVersion}'
+        if not self.latestVersion == self.currentVersion:
+            return
+        # 检查是否已经显示过当前版本的公告
+        if not self.settings.value(version_key, False, type=bool):
+            # 标记该版本公告已显示
+            self.settings.setValue(version_key, True)
+            self.settings.sync()
+            
+            # 发送版本更新信息作为公告
+            update_announcement = f"欢迎使用新版本 VideoCaptioner {self.currentVersion}\n\n更新内容：\n{self.updateInfo}"
+            self.announcementAvailable.emit(update_announcement)
+            logger.info("New version announcement shown for version: %s", self.currentVersion)
+
+
     def performCheck(self):
         """执行版本和公告检查"""
         self.hasNewVersion()
+        self.checkNewVersionAnnouncement()  # 添加新版本公告检查
         self.checkAnnouncement()
         self.checkCompleted.emit()
