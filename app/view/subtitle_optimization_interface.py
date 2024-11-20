@@ -357,7 +357,7 @@ class SubtitleOptimizationInterface(QWidget):
             InfoBar.error(
                 self.tr("保存失败"),
                 self.tr("保存字幕文件失败: ") + str(e),
-                duration=3000,
+                duration=5000,
                 parent=self
             )
 

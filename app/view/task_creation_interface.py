@@ -15,7 +15,7 @@ from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButt
 from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
 from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from ..core.thread.create_task_thread import CreateTaskThread
-from ..config import ASSETS_PATH, VERSION
+from ..config import APPDATA_PATH, ASSETS_PATH, VERSION
 from ..components.WhisperSettingDialog import WhisperSettingDialog
 from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from .log_window import LogWindow
@@ -342,7 +342,7 @@ class TaskCreationInterface(QWidget):
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
                     self.tr("不支持该文件格式"),
-                    duration=1500,
+                    duration=3000,
                     parent=self
                 )
 
@@ -356,7 +356,7 @@ class TaskCreationInterface(QWidget):
             InfoBar.error(
                 self.tr("错误"),
                 self.tr("请输入有效的文件路径或视频URL"),
-                duration=1500,
+                duration=3000,
                 parent=self
             )
 
@@ -374,6 +374,15 @@ class TaskCreationInterface(QWidget):
         self.create_task_thread.start()
 
     def _process_url(self, url):
+        # 检测 cookies.txt 文件
+        cookiefile_path = APPDATA_PATH / "cookies.txt"
+        if not cookiefile_path.exists():
+            InfoBar.warning(
+                self.tr("警告"),
+                self.tr("建议配置cookies.txt文件，以可以下载高清视频"),
+                duration=5000,
+                parent=self
+            )
         self.create_task_thread = CreateTaskThread(url, 'url')
         self.create_task_thread.finished.connect(self.on_create_task_finished)
         self.create_task_thread.progress.connect(self.on_create_task_progress)
@@ -424,7 +433,7 @@ class TaskCreationInterface(QWidget):
             InfoBar.error(
                 self.tr("错误"),
                 self.tr("请输入音视频文件路径或URL"),
-                duration=1500,
+                duration=3000,
                 parent=self
             )
 

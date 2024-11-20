@@ -158,7 +158,7 @@ class VideoSynthesisInterface(QWidget):
             InfoBar.error(
                 self.tr("错误"),
                 self.tr("请选择字幕文件和视频文件"),
-                duration=2000,
+                duration=3000,
                 position=InfoBarPosition.TOP,
                 parent=self
             )
@@ -197,7 +197,7 @@ class VideoSynthesisInterface(QWidget):
             InfoBar.error(
                 self.tr("错误"),
                 self.tr("无法创建任务"),
-                duration=2000,
+                duration=3000,
                 position=InfoBarPosition.TOP,
                 parent=self
             )
@@ -279,7 +279,7 @@ class VideoSynthesisInterface(QWidget):
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
                     self.tr("请拖入视频或者字幕文件"),
-                    duration=2000,
+                    duration=3000,
                     parent=self
                 )
 

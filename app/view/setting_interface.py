@@ -367,7 +367,7 @@ class SettingInterface(ScrollArea):
             InfoBar.error(
                 self.tr('错误'),
                 self.tr('请输入正确的 API Base, 含有 /v1'),
-                duration=1500,
+                duration=3000,
                 parent=self
             )
             return

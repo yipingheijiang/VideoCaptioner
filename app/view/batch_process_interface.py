@@ -216,7 +216,7 @@ class BatchProcessInterface(QWidget):
         InfoBar.error(
             self.tr("任务出错"),
             self.tr("任务出错:") + error,
-            duration=2000,
+            duration=5000,
             parent=self
         )
         # 查找下一个未完成的任务
@@ -377,7 +377,7 @@ class BatchProcessInterface(QWidget):
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
                     self.tr("请拖入音频或视频文件"),
-                    duration=1500,
+                    duration=3000,
                     parent=self
                 )
 
@@ -681,7 +681,7 @@ class TaskInfoCard(CardWidget):
         InfoBar.error(
             self.tr("转录失败"),
             self.tr(error),
-            duration=1500,
+            duration=5000,
             parent=self
         )
 

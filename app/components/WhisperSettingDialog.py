@@ -265,10 +265,10 @@ class DownloadDialog(MessageBoxBase):
         
     def download_error(self, error):
         InfoBar.error(
-            title=self.tr('错误'),
+            title=self.tr('下载错误'),
             content=error,
             parent=self.window(),
-            duration=3000
+            duration=5000
         )
         self.download_button.setEnabled(True)
         self.progress_label.hide()
@@ -357,7 +357,7 @@ class WhisperSettingDialog(MessageBoxBase):
                 title=self.tr('错误'),
                 content=self.tr('模型文件不存在'),
                 parent=self.window(),
-                duration=3000,
+                duration=5000,
                 position=InfoBarPosition.BOTTOM
             )
             if cfg.transcribe_language.value == TranscribeLanguageEnum.JAPANESE:

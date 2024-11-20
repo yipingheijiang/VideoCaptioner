@@ -336,7 +336,7 @@ class TranscriptionInterface(QWidget):
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
                     self.tr(f"请拖入音频或视频文件"),
-                    duration=1500,
+                    duration=3000,
                     parent=self
                 )
 
