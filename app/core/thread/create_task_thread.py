@@ -412,11 +412,6 @@ def sanitize_filename(name, replacement="_"):
 def download(url, work_dir, progress_hook):
     logger.info("开始下载视频: %s", url)
     # 设置工作目录
-    # 检查 APPDATA_PATH 下的 cookiefile 是否存在，不存在则创建
-    cookiefile_path = APPDATA_PATH / "cookies.txt"
-    if not cookiefile_path.exists():
-        cookiefile_path.touch()
-
     # 初始化 ydl 选项
     initial_ydl_opts = {
         'outtmpl': {
@@ -433,8 +428,11 @@ def download(url, work_dir, progress_hook):
         'writeautomaticsub': True,  # 下载自动生成的字幕
         'writethumbnail': True,  # 下载缩略图
         'thumbnail_format': 'jpg',  # 指定缩略图的格式
-        'cookiefile': str(cookiefile_path)
     }
+    # 检查 APPDATA_PATH 下的 cookiefile 是否存在
+    cookiefile_path = APPDATA_PATH / "cookies.txt"
+    if cookiefile_path.exists():
+        initial_ydl_opts['cookiefile'] = str(cookiefile_path)
 
     with yt_dlp.YoutubeDL(initial_ydl_opts) as ydl:
         # 提取视频信息（不下载）
