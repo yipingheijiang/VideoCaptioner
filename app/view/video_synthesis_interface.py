@@ -3,6 +3,7 @@
 import os
 import sys
 from pathlib import Path
+import subprocess
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QDropEvent
@@ -233,7 +234,14 @@ class VideoSynthesisInterface(QWidget):
         if self.task and self.task.work_dir:
             file_path = Path(self.task.video_save_path)
             target_path = str(file_path.parent if file_path.exists() else Path(self.task.work_dir))
-            os.startfile(target_path)
+            
+            # Cross-platform folder opening
+            if sys.platform == "win32":
+                os.startfile(target_path)
+            elif sys.platform == "darwin":  # macOS
+                subprocess.run(["open", target_path])
+            else:  # Linux
+                subprocess.run(["xdg-open", target_path])
         else:
             InfoBar.warning(
                 self.tr("警告"),
