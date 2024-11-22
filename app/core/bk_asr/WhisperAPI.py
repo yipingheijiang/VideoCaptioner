@@ -44,6 +44,7 @@ class WhisperAPI(BaseASR):
         self.model = whisper_model
         self.language = language
         self.prompt = prompt
+        self.need_word_time_stamp = need_word_time_stamp
         
         logger.info(f"初始化 WhisperASR: model={whisper_model}, language={language}, prompt={prompt}")
         self.client = OpenAI(base_url=self.base_url, api_key=self.api_key)
@@ -70,6 +71,9 @@ class WhisperAPI(BaseASR):
     def _submit(self) -> dict:
         """提交音频进行识别"""
         try:
+            args = {}
+            if self.need_word_time_stamp:
+                args["timestamp_granularities"] = ["word", "segment"]
             logger.info("开始识别音频...")
             completion = self.client.audio.transcriptions.create(
                 model=self.model,
@@ -77,7 +81,8 @@ class WhisperAPI(BaseASR):
                 response_format="verbose_json",
                 file=("audio.mp3", self.file_binary, "audio/mp3"),
                 prompt=self.prompt,
-                language=self.language
+                language=self.language,
+                **args
             )
             logger.info("音频识别完成")
             return completion.to_dict()
