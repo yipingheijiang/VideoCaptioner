@@ -227,7 +227,6 @@ def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> Lis
 
     return result_segs
 
-
 def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
     """
     根据ASR分段中的时间间隔，将ASRData拆分成多个部分。
@@ -288,13 +287,20 @@ def optimize_subtitles(asr_data):
     """
     segments = asr_data.segments
     for i in range(len(segments) - 1, 0, -1):
-        seg = segments[i]
+        current_seg = segments[i]
         prev_seg = segments[i - 1]
 
-        # 判断前一个段落的词数是否小于等于4且时间相邻
-        if abs(seg.start_time - prev_seg.end_time) < 300 and count_words(seg.text) + count_words(prev_seg.text) <= 12:
+        # 判断是否需要合并:
+        # 1. 时间间隔小于300ms
+        # 2. 当前段落词数小于5
+        # 3. 合并后总词数不超过12
+        time_gap = abs(current_seg.start_time - prev_seg.end_time)
+        current_words = count_words(current_seg.text)
+        total_words = current_words + count_words(prev_seg.text)
+
+        if time_gap < 300 and current_words < 5 and total_words <= 12:
             asr_data.merge_with_next_segment(i - 1)
-            logger.debug(f"优化：合并相邻分段: {prev_seg.text} --- {seg.text} -> {abs(seg.start_time - prev_seg.end_time)}")
+            logger.debug(f"优化：合并相邻分段: {prev_seg.text} --- {current_seg.text} -> {time_gap}")
 
 def determine_num_segments(word_count: int, threshold: int = 1000) -> int:
     """

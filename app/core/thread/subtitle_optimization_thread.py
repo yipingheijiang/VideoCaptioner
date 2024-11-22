@@ -52,7 +52,7 @@ class SubtitleOptimizationThread(QThread):
             subtitle_style_srt = self.task.subtitle_style_srt
             subtitle_layout = self.task.subtitle_layout
             # TODO: 开启字幕总结功能
-            split_path = str(Path(result_subtitle_save_path).parent / f"智能断句-{Path(str_path).stem}.srt")
+            split_path = str(Path(result_subtitle_save_path).parent / f"【智能断句】{Path(str_path).stem}.srt")
 
             # 检查
             assert str_path is not None, self.tr("字幕文件路径为空")
@@ -110,11 +110,13 @@ class SubtitleOptimizationThread(QThread):
 
             self.llm_result_logger = setup_logger("llm_result", 
                                                 info_fmt="%(message)s",
-                                                log_file=str(Path(str_path).parent / 'llm_result.log'),
+                                                log_file=str(Path(str_path).parent / '优化日志.log'),
                                                 console_output=False)  # 设置不输出到控制台
             asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
+            if not asr_data.is_word_timestamp():
+                asr_data.split_to_word_segments()
             if asr_data.is_word_timestamp():
                 self.progress.emit(5, self.tr("字幕断句..."))
                 logger.info("正在字幕断句...")
@@ -156,7 +158,7 @@ class SubtitleOptimizationThread(QThread):
                     seg.text = subtitle_text
 
                 if result_subtitle_save_path.endswith(".ass"):
-                    asr_data.to_ass(subtitle_style_srt, subtitle_layout, result_subtitle_save_path)
+                    asr_data.to_ass(style_str=subtitle_style_srt, layout=subtitle_layout, save_path=result_subtitle_save_path)
                 else:
                     asr_data.save(save_path=result_subtitle_save_path, ass_style=subtitle_style_srt,
                                   layout=subtitle_layout)
@@ -174,8 +176,8 @@ class SubtitleOptimizationThread(QThread):
             #     os.remove(split_path)
             # 保存srt文件
             if self.task.video_info:
-                save_srt_path = Path(self.task.work_dir) / f"{Path(self.task.video_info.file_name).stem}.srt"
-                asr_data.to_srt(save_path=str(save_srt_path))
+                save_srt_path = Path(self.task.work_dir) / f"【卡卡】{Path(self.task.video_info.file_name).stem}.srt"
+                asr_data.to_srt(save_path=str(save_srt_path), layout=subtitle_layout)
 
             self.progress.emit(100, self.tr("优化完成"))
             logger.info("优化完成")

@@ -2,6 +2,7 @@ import json
 import re
 from typing import List, Tuple
 from pathlib import Path
+import math
 
 class ASRDataSeg:
     def __init__(self, text: str, start_time: int, end_time: int):
@@ -87,6 +88,52 @@ class ASRData:
             if (len(text.split()) == 1 and text.isascii()) or len(text.strip()) <= 4:
                 valid_segments += 1
         return (valid_segments / total_segments) >= 0.8
+
+    def split_to_word_segments(self) -> 'ASRData':
+        """
+        将当前ASRData中的每个segment按字词分割，并按音素计算时间戳
+        每4个字符视为一个音素单位进行时间分配
+        
+        Returns:
+            ASRData: 包含分割后字词级别segments的新ASRData实例
+        """
+        CHARS_PER_PHONEME = 4  # 每个音素包含的字符数
+        new_segments = []
+        
+        for seg in self.segments:
+            text = seg.text
+            duration = seg.end_time - seg.start_time
+            
+            # 匹配所有有效字符（包括数字）
+            pattern = r'[a-zA-Z]+|\d+|[\u4e00-\u9fff]|[\u3040-\u309f]|[\u30a0-\u30ff]|[\uac00-\ud7af]|[\u0e00-\u0e7f]|[\u0600-\u06ff]|[\u0400-\u04ff]|[\u0590-\u05ff]|[\u1e00-\u1eff]|[\u3130-\u318f]'
+            words = re.finditer(pattern, text)
+            words_list = list(words)
+            
+            if not words_list:
+                continue
+                
+            # 计算总音素数
+            total_phonemes = sum(math.ceil(len(w.group()) / CHARS_PER_PHONEME) for w in words_list)
+            time_per_phoneme = duration / max(total_phonemes, 1)  # 防止除零
+            
+            current_time = seg.start_time
+            for word_match in words_list:
+                word = word_match.group()
+                # 计算当前词的音素数
+                word_phonemes = math.ceil(len(word) / CHARS_PER_PHONEME)
+                word_duration = int(time_per_phoneme * word_phonemes)
+                
+                # 创建新的字词级segment
+                word_end_time = min(current_time + word_duration, seg.end_time)
+                new_segments.append(ASRDataSeg(
+                    text=word,
+                    start_time=current_time,
+                    end_time=word_end_time
+                ))
+                
+                current_time = word_end_time
+        
+        self.segments = new_segments
 
 
     def save(self, save_path: str, ass_style: str = None, layout: str = "原文在上") -> None:

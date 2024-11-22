@@ -4,7 +4,7 @@ from typing import Optional
 from openai import OpenAI
 from ..utils.logger import setup_logger
 
-from .ASRData import ASRDataSeg
+from .ASRData import ASRData, ASRDataSeg
 from .BaseASR import BaseASR
 
 logger = setup_logger("whisper_api")
@@ -72,7 +72,7 @@ class WhisperAPI(BaseASR):
         """提交音频进行识别"""
         try:
             args = {}
-            if self.need_word_time_stamp:
+            if self.need_word_time_stamp and "groq" not in self.base_url:
                 args["timestamp_granularities"] = ["word", "segment"]
             logger.info("开始识别音频...")
             completion = self.client.audio.transcriptions.create(
