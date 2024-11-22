@@ -268,11 +268,11 @@ class BatchProcessInterface(QWidget):
         """创建新任务"""
         # 检查文件是否已存在
         for task in self.tasks:
-            if task.file_path == file_path:
+            if Path(task.file_path).resolve() == Path(file_path).resolve():
                 InfoBar.warning(
                     self.tr("添加失败"),
                     self.tr("该文件已存在于任务列表中"),
-                    duration=2000,
+                    duration=3000,
                     position=InfoBarPosition.BOTTOM,
                     parent=self
                 )
@@ -360,23 +360,19 @@ class BatchProcessInterface(QWidget):
 
             file_ext = os.path.splitext(file_path)[1][1:].lower()
 
-            # 检查文件格式是否支持
-            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in
-                                                                                SupportedAudioFormats}
-            is_supported = file_ext in supported_formats
-
-            if is_supported:
-                self.create_task(file_path)
-                InfoBar.success(
-                    self.tr("导入成功"),
-                    self.tr("开始处理"),
-                    duration=1500,
-                    parent=self
-                )
+            # 根据任务类型检查文件格式
+            if self.task_type_combo.currentText() == self.tr("视频加字幕"):
+                supported_formats = {fmt.value for fmt in SupportedVideoFormats}
             else:
+                supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in SupportedAudioFormats}
+
+            if file_ext in supported_formats:
+                self.create_task(file_path)
+            else:
+                error_msg = self.tr("请拖入视频文件") if self.task_type_combo.currentText() == self.tr("视频加字幕") else self.tr("请拖入音频或视频文件")
                 InfoBar.error(
                     self.tr(f"格式错误") + file_ext,
-                    self.tr("请拖入音频或视频文件"),
+                    error_msg,
                     duration=3000,
                     parent=self
                 )
@@ -470,7 +466,7 @@ class TaskInfoCard(CardWidget):
         self.button_layout = QVBoxLayout()
         self.preview_subtitle_button = PushButton(self.tr("预览字幕"), self)
         self.open_folder_button = PushButton(self.tr("打开文件夹"), self)
-        self.start_button = PrimaryPushButton(self.tr("开始转录"), self)
+        self.start_button = PrimaryPushButton(self.tr("未开始转录"), self)
         self.button_layout.addWidget(self.preview_subtitle_button)
         self.button_layout.addWidget(self.open_folder_button)
         self.button_layout.addWidget(self.start_button)
@@ -494,7 +490,7 @@ class TaskInfoCard(CardWidget):
         self.file_size_info.setText(self.tr("大小: ") + f"{file_size_mb:.1f} MB")
         duration = datetime.timedelta(seconds=int(video_info.duration_seconds))
         self.duration_info.setText(self.tr("时长: ") + str(duration))
-        self.start_button.setDisabled(False)
+        # self.start_button.setDisabled(False)
         self.update_thumbnail(video_info.thumbnail_path)
         self.update_tooltip()
 
@@ -598,11 +594,10 @@ class TaskInfoCard(CardWidget):
     def stop(self):
         """停止转录"""
         if self.transcript_thread and self.transcript_thread.isRunning():
-            self.transcript_thread.stop()
+            self.transcript_thread.terminate()
         if self.subtitle_thread and self.subtitle_thread.isRunning():
-            self.subtitle_thread.stop()
+            self.subtitle_thread.terminate()
         self.reset_ui()
-
         InfoBar.success(
             self.tr("已取消"),
             self.tr("任务已取消"),
@@ -624,7 +619,7 @@ class TaskInfoCard(CardWidget):
 
         self.progress_ring.show()
         self.progress_ring.setValue(100)
-        self.start_button.setDisabled(True)
+        # self.start_button.setDisabled(True)
         self.preview_subtitle_button.setDisabled(True)
         self.task_state.setLevel(InfoLevel.WARNING)
         self.task_state.setIcon(FIF.SYNC)
@@ -649,15 +644,11 @@ class TaskInfoCard(CardWidget):
     def on_open_folder_clicked(self):
         """打开文件夹按钮点击事件"""
         if self.task and self.task.work_dir:
-            original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
-            if original_subtitle_save_path.exists():
-                os.system(f'explorer /select,"{str(original_subtitle_save_path)}"')
-            else:
-                os.startfile(self.task.work_dir)
+            os.startfile(self.task.work_dir)
         else:
             InfoBar.warning(
                 self.tr("警告"),
-                self.tr("没有可用的字幕文件夹"),
+                self.tr("任务未开始"),
                 duration=2000,
                 parent=self
             )
@@ -697,8 +688,8 @@ class TaskInfoCard(CardWidget):
 
     def reset_ui(self):
         """重置UI状态"""
-        self.start_button.setEnabled(True)
-        self.start_button.setText(self.tr("开始转录"))
+        # self.start_button.setEnabled(True)
+        # self.start_button.setText(self.tr("开始转录"))
         self.preview_subtitle_button.setEnabled(True)
         self.progress_ring.setValue(100)
         self.task_state.setLevel(InfoLevel.INFOAMTION)
