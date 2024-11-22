@@ -99,22 +99,24 @@ class TargetLanguageEnum(Enum):
 class TranscribeLanguageEnum(Enum):
     """ 转录语言 """
     ENGLISH = "English"
-    CHINESE = "Chinese"
+    CHINESE = "Chinese" 
     JAPANESE = "Japanese"
     KOREAN = "Korean"
     SPANISH = "Spanish"
     FRENCH = "French"
     GERMAN = "German"
+    RUSSIAN = "Russian"
 
 
 LANGUAGES = {
     "English": "en",
     "Chinese": "zh",
-    "Japanese": "ja",
+    "Japanese": "ja", 
     "Korean": "ko",
     "Spanish": "es",
     "French": "fr",
     "German": "de",
+    "Russian": "ru",
 }
 
 @dataclass
