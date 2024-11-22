@@ -9,13 +9,16 @@ from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, OptionsSettingC
                             ComboBoxSettingCard, ExpandLayout, CustomColorSettingCard,
                             setTheme, setThemeColor, RangeSettingCard, MessageBox)
 
+from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL, RELEASE_URL
+from app.core.entities import TranscribeModelEnum
 from app.core.thread.version_manager_thread import VersionManager
 from ..common.config import cfg
 from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from ..components.LineEditSettingCard import LineEditSettingCard
 from ..core.utils.test_opanai import test_openai, get_openai_models
 from ..components.WhisperSettingDialog import WhisperSettingDialog
+from ..common.signal_bus import signalBus
 
 class SettingInterface(ScrollArea):
     """ 设置界面 """
@@ -109,7 +112,7 @@ class SettingInterface(ScrollArea):
         self.subtitleTranslateCard = SwitchSettingCard(
             FIF.LANGUAGE,
             self.tr('字幕翻译'),
-            self.tr('是否对生成的字幕进行翻译'),
+            self.tr('是否对生成的字幕进行翻译（包含校正过程）'),
             cfg.need_translate,
             self.translateGroup
         )
@@ -331,15 +334,24 @@ class SettingInterface(ScrollArea):
         # 关于
         self.aboutCard.clicked.connect(self.checkUpdate)
 
-
+        # 全局 signalBus
+        self.subtitleCorrectCard.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
+        self.subtitleTranslateCard.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
+        self.targetLanguageCard.comboBox.currentTextChanged.connect(signalBus.on_target_language_changed)
+        signalBus.subtitle_optimization_changed.connect(self.subtitleCorrectCard.setChecked)
+        signalBus.subtitle_translation_changed.connect(self.subtitleTranslateCard.setChecked)
+        signalBus.target_language_changed.connect(self.targetLanguageCard.comboBox.setCurrentText)
+    
     def show_whisper_settings(self):
         """显示Whisper设置对话框"""
-        dialog = WhisperSettingDialog(self.window())
-        if dialog.exec_():
-            if dialog.check_whisper_model():
+        if self.transcribeModelCard.comboBox.currentText() == TranscribeModelEnum.WHISPER.value:
+            dialog = WhisperSettingDialog(self.window())
+            if dialog.exec_():
                 return True
-            else:
-                return False
+        else:  # WHISPER_API
+            dialog = WhisperAPISettingDialog(self.window())
+            if dialog.exec_():
+                return True
         return False
     
     def __showRestartTooltip(self):

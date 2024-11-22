@@ -19,6 +19,8 @@ from ..config import APPDATA_PATH, ASSETS_PATH, VERSION
 from ..components.WhisperSettingDialog import WhisperSettingDialog
 from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from .log_window import LogWindow
+from ..common.signal_bus import signalBus
+
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 
@@ -70,13 +72,9 @@ class TaskCreationInterface(QWidget):
             [model.value for model in TranscribeModelEnum],
             self
         )
-        self.transcription_model_card.valueChanged.connect(
-            self.on_transcription_model_changed
-        )
         
         # 创建设置按钮
         self.whisper_setting_button = ToolButton(FluentIcon.SETTING)
-        # self.whisper_setting_button.setIcon(FluentIcon.SETTING)
         self.whisper_setting_button.setFixedSize(32, 32)
         self.whisper_setting_button.clicked.connect(self.show_whisper_settings)
         self.whisper_setting_button.setVisible(
@@ -92,15 +90,13 @@ class TaskCreationInterface(QWidget):
             self.tr("使用AI大模型进行字幕修正"),
             self
         )
-        self.subtitle_optimization_card.checkedChanged.connect(self.on_subtitle_optimization_clicked)
 
-        # 创建字幕翻译卡片
+        # 创建字幕修正+翻译卡片
         self.subtitle_translation_card = SwitchButtonSimpleSettingCard(
-            self.tr("字幕翻译"),
-            self.tr("使用AI大模型进行字幕修正和翻译"),
+            self.tr("字幕修正+翻译"),
+            self.tr("使用AI大模型进行字幕翻译（包含修正过程）"),
             self
         )
-        self.subtitle_translation_card.checkedChanged.connect(self.on_subtitle_translation_clicked)
 
         # 创建目标语言卡片
         self.target_language_card = ComboBoxSimpleSettingCard(
@@ -109,9 +105,7 @@ class TaskCreationInterface(QWidget):
             [model.value for model in TargetLanguageEnum],
             self
         )
-        self.target_language_card.valueChanged.connect(
-            lambda value: cfg.set(cfg.target_language, TargetLanguageEnum(value))
-        )
+
 
         self.config_layout.addWidget(transcription_container)
         self.config_layout.addWidget(self.subtitle_optimization_card)
@@ -228,6 +222,32 @@ class TaskCreationInterface(QWidget):
         self.start_button.clicked.connect(self.on_start_clicked)
         self.search_input.textChanged.connect(self.on_search_input_changed)
         self.log_button.clicked.connect(self.show_log_window)
+        self.transcription_model_card.valueChanged.connect(
+            self.on_transcription_model_changed
+        )
+
+        self.subtitle_optimization_card.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
+        self.subtitle_translation_card.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
+        self.target_language_card.valueChanged.connect(signalBus.on_target_language_changed)
+        signalBus.subtitle_optimization_changed.connect(self.on_subtitle_optimization_changed)
+        signalBus.subtitle_translation_changed.connect(self.on_subtitle_translation_changed)
+        signalBus.target_language_changed.connect(self.on_target_language_changed)
+
+    def on_subtitle_optimization_changed(self, optimization: bool):
+        """当字幕优化状态改变时触发"""
+        if self.subtitle_optimization_card.isChecked() != optimization:
+            self.subtitle_optimization_card.setChecked(optimization)
+
+    def on_subtitle_translation_changed(self, translation: bool):
+        if self.subtitle_translation_card.isChecked() != translation:
+            self.subtitle_translation_card.setChecked(translation)
+        if translation:
+            self.target_language_card.setEnabled(True)
+        else:
+            self.target_language_card.setEnabled(False)
+
+    def on_target_language_changed(self, language: str):
+        self.target_language_card.comboBox.setCurrentText(language)
 
     def setup_values(self):
         self.transcription_model_card.setValue(cfg.transcribe_model.value.value)
@@ -236,6 +256,13 @@ class TaskCreationInterface(QWidget):
         self.subtitle_translation_card.setChecked(cfg.need_translate.value)
         self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
         self.search_input.setText("")
+        InfoBar.warning(
+            self.tr("警告，将使用自带小模型API"),
+            self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
+            duration=8000,
+            parent=self,
+            position=InfoBarPosition.BOTTOM_RIGHT
+        )
 
     def on_transcription_model_changed(self, value):
         """当转录模型改变时触发"""
@@ -256,34 +283,6 @@ class TaskCreationInterface(QWidget):
             if dialog.exec_():
                 return True
         return False
-
-    def on_subtitle_optimization_clicked(self, checked):
-        if cfg.api_base.value == "" and checked:
-            InfoBar.warning(
-                self.tr("警告，将使用自带小模型API"),
-                self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
-                duration=8000,
-                parent=self,
-                position=InfoBarPosition.BOTTOM_RIGHT
-            )
-        if checked and self.subtitle_translation_card.isChecked():
-            self.subtitle_translation_card.setChecked(False)
-        cfg.set(cfg.need_optimize, checked)
-
-    def on_subtitle_translation_clicked(self, checked):
-        if cfg.api_base.value == "" and checked:
-            InfoBar.warning(
-                self.tr("警告，将使用自带小模型API"),
-                self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
-                duration=8000,
-                parent=self,
-                position=InfoBarPosition.BOTTOM_RIGHT
-            )
-        if checked and self.subtitle_optimization_card.isChecked():
-            self.subtitle_optimization_card.setChecked(False)
-
-        self.target_language_card.setEnabled(checked)
-        cfg.set(cfg.need_translate, checked)
 
     def on_start_clicked(self):
         if self.start_button._icon == FluentIcon.FOLDER:
