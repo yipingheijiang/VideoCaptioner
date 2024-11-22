@@ -250,8 +250,7 @@ class TaskCreationInterface(QWidget):
         if self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value:
             dialog = WhisperSettingDialog(self.window())
             if dialog.exec_():
-                if dialog.check_whisper_model():
-                    return True
+                return True
         else:  # WHISPER_API
             dialog = WhisperAPISettingDialog(self.window())
             if dialog.exec_():

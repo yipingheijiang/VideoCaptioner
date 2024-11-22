@@ -37,15 +37,14 @@ SUMMARIZER_PROMPT = """
 
 ## 输出格式
 
-以JSON格式返回结果，输出语言和原字幕语言相同。
+以JSON格式返回结果，请使用原字幕语言。例如，如果原字幕是英语，则返回结果也使用英语。
 
 JSON应包括两个字段：`summary`和`terms`
 
 - **summary**：视频内容的总结。给出翻译建议。
 - **terms**：
   - `entities`：人名、组织、物体、地点等名称。
-  - `technical_terms`：专业或技术术语。
-  - `keywords`：其他重要关键词或短语。使用原字幕语言。
+  - `keywords`：全部专业或技术术语，以及其他重要关键词或短语。不需要翻译。
 """
 
 OPTIMIZER_PROMPT = """

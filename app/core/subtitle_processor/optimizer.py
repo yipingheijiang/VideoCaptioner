@@ -94,7 +94,6 @@ class SubtitleOptimizer:
 
         # 合并结果
         optimizer_result = {k: v for result in results for k, v in result.items()}
-        logger.info("字幕优化完成")
         return optimizer_result
 
     @retry.retry(tries=2)
@@ -119,7 +118,6 @@ class SubtitleOptimizer:
         # 在 translations 中查找对应的翻译  文本-翻译 映射
         translations = {item["optimized_subtitle"]: item["revised_translation"] for item in response_content.values()}
         translated_subtitle = {k: f"{v}\n{translations.get(v, ' ')}" for k, v in aligned_subtitle.items()}
-        print(self.llm_result_logger)
         if self.llm_result_logger:
             for k, v in response_content.items():
                 self.llm_result_logger.info(f"原字幕：{v['optimized_subtitle']}")
@@ -166,6 +164,7 @@ class SubtitleOptimizer:
                 #    {"role": "user", "content": example_input},
                 #    {"role": "assistant", "content": example_output},
                    {"role": "user", "content": input_content}]
+        # print(prompt + "\n\n" + input_content)
         return message
 
     def _create_optimizer_message(self, original_subtitle):

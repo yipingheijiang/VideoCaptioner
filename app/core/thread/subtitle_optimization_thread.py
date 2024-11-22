@@ -23,7 +23,7 @@ class SubtitleOptimizationThread(QThread):
     update = pyqtSignal(dict)
     update_all = pyqtSignal(dict)
     error = pyqtSignal(str)
-    MAX_DAILY_LLM_CALLS = 30
+    MAX_DAILY_LLM_CALLS = 100
 
     def __init__(self, task: Task):
         super().__init__()
@@ -52,7 +52,7 @@ class SubtitleOptimizationThread(QThread):
             subtitle_style_srt = self.task.subtitle_style_srt
             subtitle_layout = self.task.subtitle_layout
             # TODO: 开启字幕总结功能
-            split_path = str(Path(result_subtitle_save_path).parent / f"智能断句-{Path(result_subtitle_save_path).stem}.srt")
+            split_path = str(Path(result_subtitle_save_path).parent / f"智能断句-{Path(str_path).stem}.srt")
 
             # 检查
             assert str_path is not None, self.tr("字幕文件路径为空")
@@ -66,7 +66,7 @@ class SubtitleOptimizationThread(QThread):
                     "base_url": "http://ddg.bkfeng.top/v1",
                     "api_key": "Hey-man-This-free-server-is-convenient-for-beginners-Please-do-not-use-for-personal-use-Server-just-has-limited-concurrency",
                     "llm_model": "gpt-4o-mini",
-                    "thread_num": 4,
+                    "thread_num": 5,
                     "batch_size": 10
                 },
                 "zhipu": {
@@ -112,7 +112,6 @@ class SubtitleOptimizationThread(QThread):
                                                 info_fmt="%(message)s",
                                                 log_file=str(Path(str_path).parent / 'llm_result.log'),
                                                 console_output=False)  # 设置不输出到控制台
-            print(self.llm_result_logger)
             asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
@@ -216,5 +215,4 @@ class SubtitleOptimizationThread(QThread):
     def stop(self):
         if hasattr(self, 'optimizer'):
             self.optimizer.stop()
-            logger.info("关闭字幕优化线程")
         self.terminate()

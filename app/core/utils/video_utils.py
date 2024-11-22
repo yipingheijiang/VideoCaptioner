@@ -99,8 +99,6 @@ def add_subtitles(
         soft_subtitle: bool = False,
         progress_callback: callable = None
 ) -> None:
-    logger.info(f"开始添加字幕: 输入文件={input_file}, 字幕文件={subtitle_file}")
-    
     assert Path(input_file).is_file(), "输入文件不存在"
     assert Path(subtitle_file).is_file(), "字幕文件不存在"
 
@@ -117,7 +115,6 @@ def add_subtitles(
         logger.info("WebM格式视频，强制使用硬字幕")
 
     if soft_subtitle:
-        logger.info("使用软字幕")
         # 添加软字幕
         cmd = [
             'ffmpeg',
@@ -129,7 +126,7 @@ def add_subtitles(
             output,
             '-y'
         ]
-        logger.info(f"执行命令: {' '.join(cmd)}")
+        logger.info(f"添加软字幕执行命令: {' '.join(cmd)}")
         result = subprocess.run(
             cmd, 
             capture_output=True, 
@@ -163,7 +160,7 @@ def add_subtitles(
         ])
 
         cmd_str = subprocess.list2cmdline(cmd)
-        logger.info(f"执行命令: {cmd_str}")
+        logger.info(f"添加硬字幕执行命令: {cmd_str}")
 
         process = subprocess.Popen(
             cmd, 

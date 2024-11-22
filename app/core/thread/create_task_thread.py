@@ -432,6 +432,7 @@ def download(url, work_dir, progress_hook):
     # 检查 APPDATA_PATH 下的 cookiefile 是否存在
     cookiefile_path = APPDATA_PATH / "cookies.txt"
     if cookiefile_path.exists():
+        logger.info(f"使用cookiefile: {cookiefile_path}")
         initial_ydl_opts['cookiefile'] = str(cookiefile_path)
 
     with yt_dlp.YoutubeDL(initial_ydl_opts) as ydl:
