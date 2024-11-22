@@ -46,7 +46,6 @@ class WhisperASR(BaseASR):
                    text.startswith('(') or 
                    text.startswith('（')):
                 filtered_segments.append(seg)
-        
         return filtered_segments
 
     def _run(self, callback=None) -> str:
@@ -106,7 +105,7 @@ class WhisperASR(BaseASR):
                                 if callback:
                                     progress = int(min(current_time / total_duration * 100, 98))
                                     callback(progress, f"{progress}% 正在转换")
-                                    logger.info("当前进度: %d%%", progress)
+                                    # logger.info("当前进度: %d%%", progress)
                             except ValueError:
                                 logger.warning(f"无法解析时间戳: {time_str}")
                                 continue

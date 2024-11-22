@@ -58,7 +58,11 @@ class SubtitleOptimizer:
             model=self.model,
             stream=False,
             messages=message)
-
+        
+        self.llm_result_logger.info(f"优化字幕：{original_subtitle}")
+        self.llm_result_logger.info(f"优化结果：{response.choices[0].message.content}")
+        self.llm_result_logger.info("===========")
+        
         optimized_text = json_repair.loads(response.choices[0].message.content)
 
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题

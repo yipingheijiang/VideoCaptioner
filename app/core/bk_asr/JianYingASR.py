@@ -133,7 +133,7 @@ class JianYingASR(BaseASR):
             'tdid': self.tdid
         }
         headers = {
-            'User-Agent': "v1.0.0",
+            'User-Agent': f"VideoCaptioner/{VERSION}",
             'tdid': self.tdid,
             't': current_time
         }

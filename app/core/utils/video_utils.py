@@ -11,9 +11,7 @@ logger = setup_logger("video_utils")
 
 
 def video2audio(input_file: str, output: str = "") -> bool:
-    """使用ffmpeg将视频转换为音频"""
-    logger.info(f"开始将视频转换为音频: {input_file}")
-    
+    """使用ffmpeg将视频转换为音频"""    
     # 创建output目录
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -30,7 +28,7 @@ def video2audio(input_file: str, output: str = "") -> bool:
         '-y',
         output
     ]
-    logger.info(f"执行命令: {' '.join(cmd)}")
+    logger.info(f"转换为音频执行命令: {' '.join(cmd)}")
     
     try:
         result = subprocess.run(
@@ -42,7 +40,6 @@ def video2audio(input_file: str, output: str = "") -> bool:
             creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
             )
         if result.returncode == 0 and Path(output).is_file():
-            logger.info("音频转换成功")
             return True
         else:
             logger.error("音频转换失败")
@@ -152,7 +149,7 @@ def add_subtitles(
         cmd.extend([
             '-i', input_file,
             '-acodec', 'copy',
-            '-vcodec', vcodec,  # 先设置编码器
+            '-vcodec', vcodec,
             '-preset', quality,
             '-vf', vf,
             '-y',  # 覆盖输出文件
@@ -214,10 +211,9 @@ def add_subtitles(
     temp_subtitle.unlink()
 
 def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
-    logger.info(f"获取视频信息: {filepath}")
     try:
         cmd = ["ffmpeg", "-i", filepath]
-        logger.info(f"执行命令: {' '.join(cmd)}")
+        logger.info(f"获取视频信息执行命令: {' '.join(cmd)}")
         result = subprocess.run(
             cmd, 
             capture_output=True, 

@@ -72,6 +72,7 @@ class TranscriptThread(QThread):
                 args["language"] = self.task.transcribe_language
                 args["whisper_model"] = self.task.whisper_model
                 args["use_cache"] = False
+                args["need_word_time_stamp"] = True
                 self.asr = WhisperASR(self.task.audio_save_path, **args)
             elif self.task.transcribe_model == TranscribeModelEnum.WHISPER_API:
                 args["language"] = self.task.transcribe_language
@@ -80,7 +81,7 @@ class TranscriptThread(QThread):
                 args["base_url"] = self.task.whisper_api_base
                 args["prompt"] = self.task.whisper_api_prompt
                 args["use_cache"] = False
-                # args["need_word_time_stamp"] = True
+                args["need_word_time_stamp"] = True
                 self.asr = WhisperAPI(self.task.audio_save_path, **args)
             elif self.task.transcribe_model == TranscribeModelEnum.BIJIAN:
                 self.asr = BcutASR(self.task.audio_save_path, **args)
@@ -113,9 +114,3 @@ class TranscriptThread(QThread):
     def progress_callback(self, value, message):
         progress = min(30 + (value // 100) * 70, 100)
         self.progress.emit(progress, message)
-    
-    def stop(self):
-        if hasattr(self, 'asr'):
-            if hasattr(self.asr, 'stop'):
-                self.asr.stop()
-        self.terminate()
