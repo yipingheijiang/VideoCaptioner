@@ -418,7 +418,7 @@ def download(url, work_dir, progress_hook):
     initial_ydl_opts = {
         'outtmpl': {
             'default': '%(title)s.%(ext)s',
-            'subtitle': '【原始字幕】.%(ext)s',
+            'subtitle': '【下载字幕】.%(ext)s',
             'thumbnail': 'thumbnail',
         },
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',  # 优先下载mp4格式
@@ -473,14 +473,14 @@ def download(url, work_dir, progress_hook):
 
         # 字幕文件路径， video_work_dir 下遍历所有文件寻找字幕文件，包括子文件夹 original.*
         subtitle_file_path = None
-        for file in video_work_dir.glob("**/【原始字幕】*"):
+        for file in video_work_dir.glob("**/【下载字幕】*"):
             subtitle_file_path = str(file)
             if subtitle_language and subtitle_language not in subtitle_file_path:
                 logger.info("字幕语言错误，重新下载字幕: %s", subtitle_download_link)
                 os.remove(subtitle_file_path)
                 if subtitle_download_link:
                     response = requests.get(subtitle_download_link)
-                    subtitle_file_path = video_work_dir / "subtitle" / f"【原始字幕】{subtitle_language}.vtt"
+                    subtitle_file_path = video_work_dir / "subtitle" / f"【下载字幕】{subtitle_language}.vtt"
                     with open(subtitle_file_path, 'w', encoding="utf-8") as f:
                         f.write(response.text)
             break

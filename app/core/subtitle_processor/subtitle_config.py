@@ -226,7 +226,7 @@ You may be provided reference content for the subtitles (such as context or summ
 
 1. Original Subtitle correction:
     - Contextual Correction: Use the context and the provided prompts to correct erroneous words without replacing the original words, structure, and expressions of the sentence, and do not use synonyms. Only replace words that are errors from speech recognition.
-    - Remove Unnecessary Filler Words: Delete filler or interjection words that have no actual meaning.
+    - Remove Unnecessary Filler Words: Delete filler or interjection words that have no actual meaning, such as laughter, coughing sounds, etc.
     - Punctuation and Formatting: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. Certain words or names may require formatting corrections due to specific expressions.
     - Maintain Subtitle Structure: Each subtitle corresponds one-to-one with its number; do not merge or split subtitles.
 

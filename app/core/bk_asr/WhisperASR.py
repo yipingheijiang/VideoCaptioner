@@ -3,6 +3,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+import time
 
 from .ASRData import ASRDataSeg, from_srt
 from .BaseASR import BaseASR
@@ -59,11 +60,17 @@ class WhisperASR(BaseASR):
         temp_dir.mkdir(parents=True, exist_ok=True)
         temp_audio = temp_dir / audio_path.name
 
-        if audio_path.exists():
+        try:
+            # 确保目标目录存在
+            os.makedirs(os.path.dirname(temp_audio), exist_ok=True)
+            # 复制文件
             shutil.copy(self.audio_path, temp_audio)
-        else:
-            logger.error(f"音频文件不存在: {self.audio_path}")
-            raise FileNotFoundError(f"音频文件不存在: {self.audio_path}")
+        except PermissionError:
+            temp_audio = temp_audio = temp_dir / audio_path.name + time.strftime("%Y%m%d%H%M%S")
+            shutil.copy(self.audio_path, temp_audio)
+        except Exception as e:
+            raise Exception(f"无法复制音频文件: {str(e)}")
+
         output_path = temp_dir / f"{audio_path.stem}.srt"
 
         cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt"]
