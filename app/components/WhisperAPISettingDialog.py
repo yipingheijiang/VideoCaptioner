@@ -120,7 +120,7 @@ class WhisperAPISettingDialog(MessageBoxBase):
                 InfoBar.warning(
                     self.tr("请注意身体！！"),
                     self.tr("小心肝儿,注意身体哦~"),
-                    duration=10000,
+                    duration=2000,
                     parent=self.window(),
                     position=InfoBarPosition.BOTTOM
                 )

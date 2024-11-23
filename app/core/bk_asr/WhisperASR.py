@@ -68,8 +68,8 @@ class WhisperASR(BaseASR):
 
         cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt"]
         try:
-            callback(5, "正在 Whisper")
-            logger.info("开始执行命令: %s", " ".join(cmd))
+            callback(5, "Whisper 识别")
+            logger.info("WhisperCPP 执行命令: %s", " ".join(cmd))
             self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -133,14 +133,12 @@ class WhisperASR(BaseASR):
     def get_audio_duration(self, filepath: str) -> int:
         try:
             cmd = ["ffmpeg", "-i", filepath]
-            logger.info("获取音频时长命令: %s", " ".join(cmd))
             result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', shell=True)
             info = result.stderr
             # 提取时长
             if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):
                 hours, minutes, seconds = map(float, duration_match.groups())
                 duration_seconds = hours * 3600 + minutes * 60 + seconds
-                logger.info("音频时长: %d 秒", duration_seconds)
                 return int(duration_seconds)
         except Exception as e:
             logger.exception("获取音频时长时出错: %s", str(e))

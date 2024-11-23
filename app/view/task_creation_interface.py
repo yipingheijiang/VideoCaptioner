@@ -77,10 +77,6 @@ class TaskCreationInterface(QWidget):
         self.whisper_setting_button = ToolButton(FluentIcon.SETTING)
         self.whisper_setting_button.setFixedSize(32, 32)
         self.whisper_setting_button.clicked.connect(self.show_whisper_settings)
-        self.whisper_setting_button.setVisible(
-            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value or
-            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value
-        )
         transcription_layout.addWidget(self.transcription_model_card)
         transcription_layout.addWidget(self.whisper_setting_button)
 
@@ -256,6 +252,10 @@ class TaskCreationInterface(QWidget):
         self.subtitle_translation_card.setChecked(cfg.need_translate.value)
         self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
         self.search_input.setText("")
+        self.whisper_setting_button.setVisible(
+            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value or
+            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value
+        )
         InfoBar.warning(
             self.tr("警告，将使用自带小模型API"),
             self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),

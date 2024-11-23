@@ -43,6 +43,7 @@ class CreateTaskThread(QThread):
             self.error.emit(str(e))
 
     def create_file_task(self, file_path):
+        logger.info("\n===================")
         logger.info(f"开始创建文件任务：{file_path}")
         # 使用 Path 对象处理路径
         task_work_dir = Path(cfg.work_dir.value) / Path(file_path).stem
@@ -128,6 +129,7 @@ class CreateTaskThread(QThread):
         logger.info(f"文件任务创建完成：{task}")
 
     def create_url_task(self, url):
+        logger.info("\n===================")
         logger.info(f"开始创建URL任务：{url}")
         self.progress.emit(5, self.tr("正在获取视频信息"))
         # 下载视频。保存到 cfg.work_dir.value 下

@@ -31,7 +31,7 @@ class VideoSynthesisThread(QThread):
             add_subtitles(video_file, result_subtitle_save_path, video_save_path, soft_subtitle=soft_subtitle,
                           progress_callback=self.progress_callback)
             self.progress.emit(100, self.tr("合成完成"))
-            logger.info(f"视频合成完成: {video_save_path}")
+            logger.info(f"视频合成完成，保存路径: {video_save_path}")
             self.finished.emit(self.task)
         except Exception as e:
             logger.exception(f"视频合成失败: {e}")
