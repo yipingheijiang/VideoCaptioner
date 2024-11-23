@@ -75,7 +75,7 @@ class Config(QConfig):
 
     # 字幕样式配置
     subtitle_style_name = ConfigItem("SubtitleStyle", "StyleName", "default")
-    subtitle_layout = ConfigItem("SubtitleStyle", "Layout", "仅译文")
+    subtitle_layout = ConfigItem("SubtitleStyle", "Layout", "译文在上")
     subtitle_preview_image = ConfigItem("SubtitleStyle", "PreviewImage", "")
 
     # 保存配置
