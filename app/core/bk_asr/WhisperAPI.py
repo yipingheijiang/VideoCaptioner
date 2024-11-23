@@ -71,6 +71,8 @@ class WhisperAPI(BaseASR):
     def _submit(self) -> dict:
         """提交音频进行识别"""
         try:
+            if self.language == "zh" and not self.prompt:
+                self.prompt = "你好，我们需要使用简体中文，以下是普通话的句子。"
             args = {}
             if self.need_word_time_stamp and "groq" not in self.base_url:
                 args["timestamp_granularities"] = ["word", "segment"]
