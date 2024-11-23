@@ -35,6 +35,10 @@ class WhisperASR(BaseASR):
 
         self.process = None
 
+        # 注册退出处理
+        import atexit
+        atexit.register(self.stop)
+
     def _make_segments(self, resp_data: str) -> list[ASRDataSeg]:
         asr_data = from_srt(resp_data)
         # 过滤掉纯音乐标记
@@ -58,20 +62,17 @@ class WhisperASR(BaseASR):
 
         temp_dir = Path(os.environ.get('TEMP')) / "bk_asr"
         temp_dir.mkdir(parents=True, exist_ok=True)
-        temp_audio = temp_dir / audio_path.name
+        temp_audio = temp_dir / (time.strftime("%Y%m%d%H%M%S") + audio_path.name)
 
         try:
             # 确保目标目录存在
             os.makedirs(os.path.dirname(temp_audio), exist_ok=True)
             # 复制文件
             shutil.copy(self.audio_path, temp_audio)
-        except PermissionError:
-            temp_audio = temp_audio = temp_dir / audio_path.name + time.strftime("%Y%m%d%H%M%S")
-            shutil.copy(self.audio_path, temp_audio)
         except Exception as e:
             raise Exception(f"无法复制音频文件: {str(e)}")
 
-        output_path = temp_dir / f"{audio_path.stem}.srt"
+        output_path = temp_dir / f"{temp_audio.stem}.srt"
 
         cmd = [
             str(self.whisper_cpp_path),  # whisper.cpp 可执行文件路径
@@ -91,8 +92,6 @@ class WhisperASR(BaseASR):
                 stderr=subprocess.PIPE,
                 text=True,
                 encoding='utf-8',
-                bufsize=1,
-                universal_newlines=True,
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
             )
 
@@ -159,19 +158,19 @@ class WhisperASR(BaseASR):
             logger.exception("获取音频时长时出错: %s", str(e))
             return 600
 
-    # def stop(self):
-    #     """停止 ASR 语音识别处理
-    #     - 终止进程及其子进程
-    #     """
-    #     if self.process:
-    #         logger.info("终止 Whisper ASR 进程")
-    #         if os.name == 'nt':  # Windows系统
-    #             subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
-    #                          capture_output=True)
-    #         else:  # Linux/Mac系统
-    #             import signal
-    #             os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-    #         self.process = None
+    def stop(self):
+        """停止 ASR 语音识别处理
+        - 终止进程及其子进程
+        """
+        if self.process:
+            logger.info("终止 Whisper ASR 进程")
+            if os.name == 'nt':  # Windows系统
+                subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
+                             capture_output=True)
+            else:  # Linux/Mac系统
+                import signal
+                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
+            self.process = None
 
 
 if __name__ == '__main__':
