@@ -13,7 +13,7 @@ from ..utils.logger import setup_logger
 
 logger = setup_logger("split_by_llm")
 
-MAX_WORD_COUNT = 18  # 英文单词或中文字符的最大数量
+MAX_WORD_COUNT = 20  # 英文单词或中文字符的最大数量
 
 
 def count_words(text: str) -> int:

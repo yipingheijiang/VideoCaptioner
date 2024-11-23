@@ -186,7 +186,8 @@ def check_time_gaps(segments: List[ASRDataSeg], max_gap: float = MAX_GAP) -> Lis
 
 def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> List[ASRDataSeg]:
     """
-    基于最大时间间隔拆分长分段，尽可能避免拆分时间连续的英文单词
+    基于最大时间间隔拆分长分段，尽可能避免拆分时间连续的英文单词。
+    如果所有时间间隔相等，则在中间位置断句。
     """
     result_segs = []
     logger.debug(f"正在拆分长分段: {merged_text}")
@@ -201,19 +202,23 @@ def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> Lis
         result_segs.append(merged_seg)
         return result_segs
 
-    # 在分段中间2/3部分寻找最佳拆分点
+    # 检查时间间隔是否都相等
     n = len(segs_to_merge)
-    start_idx = n // 6
-    end_idx = (5 * n) // 6
+    gaps = [segs_to_merge[i+1].start_time - segs_to_merge[i].end_time for i in range(n-1)]
+    all_equal = all(abs(gap - gaps[0]) < 1e-6 for gap in gaps)
 
-    split_index = max(
-        range(start_idx, end_idx),
-        key=lambda i: segs_to_merge[i + 1].start_time - segs_to_merge[i].end_time,
-        default=None
-    )
-
-    if split_index is None:
+    if all_equal:
+        # 如果时间间隔都相等，在中间位置断句
         split_index = n // 2
+    else:
+        # 在分段中间2/3部分寻找最大时间间隔点
+        start_idx = n // 6
+        end_idx = (5 * n) // 6
+        split_index = max(
+            range(start_idx, end_idx),
+            key=lambda i: segs_to_merge[i + 1].start_time - segs_to_merge[i].end_time,
+            default=n // 2
+        )
 
     first_segs = segs_to_merge[:split_index + 1]
     second_segs = segs_to_merge[split_index + 1:]
