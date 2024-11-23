@@ -23,7 +23,7 @@ class SubtitleOptimizationThread(QThread):
     update = pyqtSignal(dict)
     update_all = pyqtSignal(dict)
     error = pyqtSignal(str)
-    MAX_DAILY_LLM_CALLS = 100
+    MAX_DAILY_LLM_CALLS = 50
 
     def __init__(self, task: Task):
         super().__init__()
@@ -95,8 +95,8 @@ class SubtitleOptimizationThread(QThread):
                         llm_model = config["llm_model"]
                         thread_num = config["thread_num"]
                         batch_size = config["batch_size"]
+                        self.set_limit()
                         break
-                    self.set_limit()
 
                 else:
                     logger.error("自带的API配置暂时不可用，请配置自己的API")
@@ -115,7 +115,7 @@ class SubtitleOptimizationThread(QThread):
             asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
-            if not asr_data.is_word_timestamp():
+            if not asr_data.is_word_timestamp() and self.task.status != Task.Status.OPTIMIZING:
                 asr_data.split_to_word_segments()
             if asr_data.is_word_timestamp():
                 self.progress.emit(5, self.tr("字幕断句..."))

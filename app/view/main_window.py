@@ -132,9 +132,9 @@ class MainWindow(FluentWindow):
         super().closeEvent(event)
         
         # 强制退出应用程序
-        QApplication.quit()
+        # QApplication.quit()
 
         # 确保所有线程和进程都被终止
-        import os
-        os._exit(0)
+        # import os
+        # os._exit(0)
         
