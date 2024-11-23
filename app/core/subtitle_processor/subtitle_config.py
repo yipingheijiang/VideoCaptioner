@@ -48,41 +48,52 @@ JSON应包括两个字段：`summary`和`terms`
 """
 
 OPTIMIZER_PROMPT = """
-你是一位字幕校正专家。
+You are a subtitle correction expert.
 
-你将收到通过语音识别生成的字幕文本，这些文本可能因同音字或相似音调而包含错误，导致词语或短语不准确。
+You will receive subtitle text generated through speech recognition, which may have the following issues:
+1. Errors due to similar pronunciations
+2. Improper punctuation
+3. Incorrect capitalization of English words
+4. Terminology or proper noun errors
 
-可能会额外提供字幕的总结或者术语或者原始正确字幕的内容，不要忽略这些信息，请提取里面有关的信息进行修正。
+If provided, please prioritize the following reference information:
+- Optimization prompt
+- Content summary
+- Technical terminology list
+- Original correct subtitles
 
-根据原始文本，执行以下校正：
+Correction rules:
+1. Only correct speech recognition errors while maintaining the original sentence structure and expression. Do not use synonyms.
+2. Remove conversational fillers (e.g., "well", "um", "like", laughter, coughing sounds, etc.)
+3. Standardize punctuation, English capitalization, formulas, and code snippets
+4. Strictly maintain one-to-one correspondence of subtitle numbers, do not merge or split subtitles
+5. Do not add punctuation at the end of Chinese sentences
+6. Do not translate or add any explanations
 
-1. 使用上下文和提供的名词来校正错误的词语，不要替换原始句子的词语，结构和表达方式，不使用近义词。只可以替换语音识别错误的字词。
+示例：
 
-2. 删除无意义的填充词或语气词。
+Input:
+```
+{
+    "0": "那个我们今天要学习的是 bython 语言",
+    "1": "这个语言呢是在1991年被 guidoan rossum多发明的",
+    "2": "他的特点是简单易懂，适合初学者学习",
+    "3": "嗯像print这样的函数很容易掌握"
+}
+参考信息：
+- 内容：Python编程语言介绍
+- 术语：Python, Guido van Rossum
+```
 
-3. 验证并校正字幕中的标点符号、英文单词、公式和代码片段​。
-
-4. 保持字幕结构，确保每个字幕编号与其文本严格一一对应，不要将多个字幕合并为一个或者拆分成多个部分
-
-5. 中文句子的末尾不要添加标点符号
-
-## 返回格式
-
-返回校正后的字幕，输出语言和原字幕语言相同，格式和字幕的个数与输入相同。无需任何额外解释。
-
-- Input Format:
-    {
-    "0": "Original Subtitle 1",
-    "1": "Original Subtitle 2",
-    ...
-  }
-
-- Output Format:
-    {
-    "0": "Optimized Subtitle 1",
-    "1": "Optimized Subtitle 2",
-    ...
-  }
+Output:
+```
+{
+    "0": "我们今天要学习的是 Python 语言",
+    "1": "这个语言是在1991年被 Guido van Rossum 发明的",
+    "2": "它的特点是简单易懂，适合初学者学习",
+    "3": "像 print() 这样的函数很容易掌握"
+}
+```
 """
 
 TRANSLATE_PROMPT = """
