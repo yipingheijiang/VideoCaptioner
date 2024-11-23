@@ -73,7 +73,15 @@ class WhisperASR(BaseASR):
 
         output_path = temp_dir / f"{audio_path.stem}.srt"
 
-        cmd = [str(self.whisper_cpp_path), "-m", str(self.model_path), str(temp_audio), "-l", self.language, "-osrt"]
+        cmd = [
+            str(self.whisper_cpp_path),  # whisper.cpp 可执行文件路径
+            "-m", str(self.model_path),  # 模型文件路径
+            str(temp_audio),             # 临时音频文件路径
+            "-l", self.language,         # 语言设置
+            "-osrt"                      # 输出SRT格式
+        ]
+        if self.language == "zh":
+            cmd.extend(['--prompt', '你好，我们需要使用简体中文，以下是普通话的句子。'])
         try:
             callback(5, "Whisper 识别")
             logger.info("WhisperCPP 执行命令: %s", " ".join(cmd))
