@@ -35,7 +35,7 @@
 
  近后台计算，模型优化和翻译消耗费用不足 ￥0.01（以官方价格为计算）
 
-具体字幕和视频合成的效果的测试结果，请参考 [测试文档](./docs/test.md)
+具体字幕和视频合成的效果的测试结果图片，请参考 [TED视频测试](./docs/test.md)
 
 
 ## 🚀 快速开始
@@ -116,9 +116,10 @@ python main.py
 | 配置项 | 说明 |
 |--------|------|
 | 内置模型 | 软件内置基础大语言模型（`gpt-4o-mini`），无需配置即可使用 |
-| API支持 | 支持标准 OpenAI API 格式。兼容[SiliconCloud](https://cloud.siliconflow.cn/i/HF95kaoz)、[DeepSeek](https://platform.deepseek.com/) 、 [Ollama](https://ollama.com/blog/openai-compatibility) 等。<br>配置方法请参考[配置文档](./docs/llm_config.md) |
+| API支持 | 支持标准 OpenAI API 格式。兼容 [SiliconCloud](https://cloud.siliconflow.cn/i/HF95kaoz)、[DeepSeek](https://platform.deepseek.com/) 、 [Ollama](https://ollama.com/blog/openai-compatibility) 等。<br>配置方法请参考[配置文档](./docs/llm_config.md) |
 
 推荐模型: 追求更高质量可选用 `Claude-3.5-sonnet` 或 `gpt-4o`
+
 
 ### 2. 本地 Whisper 语音识别配置（需软件内下载）
 
@@ -128,9 +129,10 @@ python main.py
 | Small | 466 MiB | ~852 MB | 英文识别效果已经不错 |
 | Medium | 1.5 GiB | ~2.1 GB | 中文识别建议至少使用此版本 |
 | Large-v1/v2 | 2.9 GiB | ~3.9 GB | 效果好 |
-| Large-v3 | 2.9 GiB | ~3.9 GB | 社区反馈可能出现幻觉 |
+| Large-v3 | 2.9 GiB | ~3.9 GB | 社区反馈可能会出现幻觉/字幕重复问题 |
 
-注：以上模型无需代理国内可直接下载，支持GPU也支持核显调用。
+注：以上模型国内网络可直接在软件内下载；支持GPU也支持核显调用。
+
 
 ### 3. 文稿匹配
 
@@ -145,6 +147,7 @@ python main.py
 - 全流程处理时，请先填写文稿信息，再进行开始任务处理
 - 不需要提供文稿信息，也可以正常处理
 - 注意: 使用上下文参数量不高的小型LLM模型时，建议控制文稿内容在1千字以内
+
 
 ### 4. 语音识别接口说明
 
