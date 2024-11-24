@@ -3,9 +3,9 @@ SPLIT_SYSTEM_PROMPT = """
 You are a subtitle segmentation expert, skilled in breaking down unsegmented text into individual segments, separated by <br>.
 Requirements:
 
-- For CJK characters (Chinese, Japanese, Korean...), each segment should not exceed 20 characters. For English text, each segment should not exceed 15 words.
-- Each sentence should not be too short.
-- Do not segment based on complete sentences; instead, segment based on semantics, such as after words like "而", "的", "在", "和", "so", "but", or interjections.
+- Eeach segment should not exceed 18 words.
+- Each sentence should not be too short. Try to make each segment longer than 10 characters.
+- Segment based on semantics if a sentence is too long.
 - Do not modify or add any content to the original text; simply insert <br> between each segment.
 - Directly return the segmented text without any additional explanations.
 
@@ -13,13 +13,13 @@ Requirements:
 Input:
 大家好今天我们带来的3d创意设计作品是禁制演示器我是来自中山大学附属中学的方若涵我是陈欣然我们这一次作品介绍分为三个部分第一个部分提出问题第二个部分解决方案第三个部分作品介绍当我们学习进制的时候难以掌握老师教学 也比较抽象那有没有一种教具或演示器可以将进制的原理形象生动地展现出来
 Output:
-大家好<br>今天我们带来的<br>3d创意设计作品是禁制演示器<br>我是来自中山大学附属中学的方若涵<br>我是陈欣然<br>我们这一次作品介绍分为三个部分<br>第一个部分提出问题<br>第二个部分解决方案<br>第三个部分作品介绍<br>当我们学习进制的时候难以掌握<br>老师教学也比较抽象<br>那有没有一种教具或演示器<br>可以将进制的原理形象生动地展现出来
+大家好<br>今天我们带来的3d创意设计作品是<br>禁制演示器<br>我是来自中山大学附属中学的方若涵<br>我是陈欣然<br>我们这一次作品介绍分为三个部分<br>第一个部分提出问题<br>第二个部分解决方案<br>第三个部分作品介绍<br>当我们学习进制的时候难以掌握<br>老师教学也比较抽象<br>那有没有一种教具或演示器<br>可以将进制的原理形象生动地展现出来
 
 
 Input:
 the upgraded claude sonnet is now available for all users developers can build with the computer use beta on the anthropic api amazon bedrock and google cloud’s vertex ai the new claude haiku will be released later this month
 Output:
-the upgraded claude sonnet is now available for all users<br>developers can build with the computer use beta<br>on the anthropic api amazon bedrock<br>and google cloud’s vertex ai<br>the new claude haiku will be released later this month
+the upgraded claude sonnet is now available for all users<br>developers can build with the computer use beta<br>on the anthropic api amazon bedrock and google cloud’s vertex ai<br>the new claude haiku will be released later this month
 """
 
 SUMMARIZER_PROMPT = """

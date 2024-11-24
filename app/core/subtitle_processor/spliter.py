@@ -346,7 +346,7 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         def process_segment(asr_data_part):
             txt = asr_data_part.to_txt().replace("\n", "")
-            sentences = split_by_llm(txt, model=model, use_cache=True)
+            sentences = split_by_llm(txt, model=model, use_cache=False)
             logger.info(f"分段的句子提取完成，共 {len(sentences)} 句")
 
             return sentences
