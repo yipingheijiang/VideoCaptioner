@@ -8,7 +8,7 @@ from .split_by_llm import split_by_llm, MAX_WORD_COUNT
 from ..bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
 from ..utils.logger import setup_logger
 
-logger = setup_logger("subtitle_spliter", level=logging.DEBUG)
+logger = setup_logger("subtitle_spliter")
 
 SEGMENT_THRESHOLD = 500  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
@@ -145,12 +145,12 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
                     new_segments.extend(split_segs)
                 else:
                     new_segments.append(merged_seg)
-            max_shift = 100
+            max_shift = 30
             asr_index = end_seg_index + 1  # 移动到下一个未处理的分段
         else:
             logger.warning(f"无法匹配句子: {sentence}")
-            max_shift = 30
-            asr_index += 1
+            max_shift = 100
+            asr_index = end_seg_index + 1
 
     return ASRData(new_segments)
 
@@ -243,7 +243,6 @@ def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
     """
     total_segs = len(asr_data.segments)
     total_word_count = count_words(asr_data.to_txt())
-    print(f"总字数: {total_word_count}")
     words_per_segment = total_word_count // num_segments
     split_indices = []
 
@@ -349,7 +348,6 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
             txt = asr_data_part.to_txt().replace("\n", "")
             sentences = split_by_llm(txt, model=model, use_cache=True)
             logger.info(f"分段的句子提取完成，共 {len(sentences)} 句")
-            print(f"sentences: {sentences}")
 
             return sentences
 

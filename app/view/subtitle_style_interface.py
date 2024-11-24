@@ -315,6 +315,11 @@ class SubtitleStyleInterface(QWidget):
 
     def __setValues(self):
         """设置初始值"""
+        # 设置字幕排布
+        self.layoutCard.comboBox.setCurrentText(cfg.get(cfg.subtitle_layout))
+        # 设置字幕样式
+        self.styleNameComboBox.comboBox.setCurrentText(cfg.get(cfg.subtitle_style_name))
+
         # 获取系统字体,设置comboBox的选项
         fontDatabase = QFontDatabase()
         fontFamilies = fontDatabase.families()
@@ -338,9 +343,6 @@ class SubtitleStyleInterface(QWidget):
         else:
             self.loadStyle(style_files[0])
             self.styleNameComboBox.comboBox.setCurrentText(style_files[0])
-
-        # 设置字幕排布
-        self.layoutCard.comboBox.setCurrentText(cfg.get(cfg.subtitle_layout))
 
     def connectSignals(self):
         """连接所有设置变更的信号到预览更新函数"""

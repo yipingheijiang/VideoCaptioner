@@ -256,12 +256,13 @@ class TaskCreationInterface(QWidget):
             self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value or
             self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value
         )
-        InfoBar.warning(
-            self.tr("警告，将使用自带小模型API"),
-            self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
-            duration=8000,
-            parent=self,
-            position=InfoBarPosition.BOTTOM_RIGHT
+        if cfg.api_base == "":
+            InfoBar.warning(
+                self.tr("警告"),
+                self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
+                duration=6000,
+                parent=self,
+                position=InfoBarPosition.BOTTOM_RIGHT
         )
 
     def on_transcription_model_changed(self, value):
