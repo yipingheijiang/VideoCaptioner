@@ -116,7 +116,7 @@ python main.py
 | 配置项 | 说明 |
 |--------|------|
 | 内置模型 | 软件内置基础大语言模型（`gpt-4o-mini`），无需配置即可使用 |
-| API支持 | 支持标准 OpenAI API 格式（兼容[SiliconCloud](https://cloud.siliconflow.cn/i/HF95kaoz)、[DeepSeek](https://platform.deepseek.com/) 、本地模型 [Ollama](https://ollama.com/blog/openai-compatibility) 等<br>配置方法请参考[配置文档](./docs/llm_config.md)） |
+| API支持 | 支持标准 OpenAI API 格式。兼容[SiliconCloud](https://cloud.siliconflow.cn/i/HF95kaoz)、[DeepSeek](https://platform.deepseek.com/) 、 [Ollama](https://ollama.com/blog/openai-compatibility) 等。<br>配置方法请参考[配置文档](./docs/llm_config.md) |
 
 推荐模型: 追求更高质量可选用 `Claude-3.5-sonnet` 或 `gpt-4o`
 
@@ -134,13 +134,13 @@ python main.py
 
 ### 3. 文稿匹配
 
-- 在"字幕优化与翻译"页面，包含"文稿匹配"选项，支持以下一种或者多种内容校正字幕和翻译:
+- 在"字幕优化与翻译"页面，包含"文稿匹配"选项，支持以下**一种或者多种**内容，辅助校正字幕和翻译:
 
-| 类型 | 说明 | 示例 |
+| 类型 | 说明 | 填写示例 |
 |------|------|------|
 | 术语表 | 专业术语、人名、特定词语的修正对照表 | 机器学习->Machine Learning<br>马斯克->Elon Musk<br>打call -> 应援<br>图灵斑图<br>公交车悖论 |
 | 原字幕文稿 | 视频的原有文稿或相关内容 | 完整的演讲稿、课程讲义等 |
-| 修正要求 | 内容相关的具体修正要求 | 统一人称代词、规范专业术语等<br>（格式相关的不用说明，填写内容相关的要求即可） |
+| 修正要求 | 内容相关的具体修正要求 | 统一人称代词、规范专业术语等<br>填写**内容相关**的要求即可 |
 
 - 全流程处理时，请先填写文稿信息，再进行开始任务处理
 - 不需要提供文稿信息，也可以正常处理
@@ -150,9 +150,9 @@ python main.py
 
 | 接口名称 | 支持语言 | 运行方式 | 说明 |
 |---------|---------|---------|------|
-| B站接口 | 中文、英文 | 在线 | 免费、速度较快 |
-| J接口 | 中文、英文 | 在线 | 免费、速度较快 |
-| Whisper | 多语言 | 本地 | 需要下载模型<br>中文建议medium以上模型<br>英文等使用较小模型即可达到不错效果。 |
+| B站接口 | 仅支持中文、英文 | 在线 | 免费、速度较快 |
+| J接口 | 仅支持中文、英文 | 在线 | 免费、速度较快 |
+| Whisper | 中文、日语韩语、英文等 96 种语言 | 本地 | 需要下载转录模型<br>中文建议medium以上模型<br>英文等使用较小模型即可达到不错效果。 |
 
 
 ## 💡 软件流程介绍
