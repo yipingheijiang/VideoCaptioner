@@ -92,7 +92,7 @@ class WhisperASR(BaseASR):
                 stderr=subprocess.PIPE,
                 text=True,
                 encoding='utf-8',
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+                shell=True
             )
 
             total_duration = self.get_audio_duration(str(temp_audio))
