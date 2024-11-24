@@ -97,6 +97,9 @@ def split_by_llm_retry(text: str, model: str = "gpt-4o-mini", use_cache: bool = 
         temperature=0.2
     )
     result = response.choices[0].message.content
+    print("==========")
+    print(prompt)
+    # print(f"断句结果: {result}")
     # 清理结果中的多余换行符
     result = re.sub(r'\n+', '', result)
     split_result = [segment.strip() for segment in result.split("<br>") if segment.strip()]

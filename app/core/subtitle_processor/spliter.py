@@ -8,9 +8,9 @@ from .split_by_llm import split_by_llm, MAX_WORD_COUNT
 from ..bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
 from ..utils.logger import setup_logger
 
-logger = setup_logger("subtitle_spliter")
+logger = setup_logger("subtitle_spliter", level=logging.DEBUG)
 
-SEGMENT_THRESHOLD = 600  # 每个分段的最大字数
+SEGMENT_THRESHOLD = 500  # 每个分段的最大字数
 FIXED_NUM_THREADS = 4  # 固定的线程数量
 SPLIT_RANGE = 30  # 在分割点前后寻找最大时间间隔的范围
 MAX_GAP = 1500.0  # 允许每个词语之间的最大时间间隔 ms
@@ -82,16 +82,16 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
     asr_len = len(asr_texts)
     asr_index = 0  # 当前分段索引位置
     threshold = 0.5  # 相似度阈值
-    max_shift = 50  # 滑动窗口的最大偏移量
+    max_shift = 30  # 滑动窗口的最大偏移量
 
     new_segments = []
 
-    logger.debug(f"ASR分段: {asr_texts}")
+    # logger.debug(f"ASR分段: {asr_texts}")
 
     for sentence in sentences:
         logger.debug(f"==========")
         logger.debug(f"处理句子: {sentence}")
-        logger.debug("后续句子:" + " ".join(asr_texts[asr_index: asr_index+10]))
+        logger.debug("后续句子:" + "".join(asr_texts[asr_index: asr_index+10]))
 
         sentence_proc = preprocess_text(sentence)
         word_count = count_words(sentence_proc)
@@ -145,11 +145,11 @@ def merge_segments_based_on_sentences(asr_data: ASRData, sentences: List[str]) -
                     new_segments.extend(split_segs)
                 else:
                     new_segments.append(merged_seg)
-            max_shift = 50
+            max_shift = 100
             asr_index = end_seg_index + 1  # 移动到下一个未处理的分段
         else:
             logger.warning(f"无法匹配句子: {sentence}")
-            max_shift = 1000
+            max_shift = 30
             asr_index += 1
 
     return ASRData(new_segments)
@@ -232,6 +232,7 @@ def split_long_segment(merged_text: str, segs_to_merge: List[ASRDataSeg]) -> Lis
 
     return result_segs
 
+
 def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
     """
     根据ASR分段中的时间间隔，将ASRData拆分成多个部分。
@@ -242,6 +243,7 @@ def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
     """
     total_segs = len(asr_data.segments)
     total_word_count = count_words(asr_data.to_txt())
+    print(f"总字数: {total_word_count}")
     words_per_segment = total_word_count // num_segments
     split_indices = []
 
@@ -265,7 +267,6 @@ def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
                 max_gap = gap
                 best_index = j
         adjusted_split_indices.append(best_index)
-
     # 移除重复的分割点
     adjusted_split_indices = sorted(list(set(adjusted_split_indices)))
 
@@ -280,8 +281,8 @@ def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
     if prev_index < total_segs:
         part = ASRData(asr_data.segments[prev_index:])
         segments.append(part)
-
     return segments
+
 
 def optimize_subtitles(asr_data):
     """
@@ -307,6 +308,7 @@ def optimize_subtitles(asr_data):
             asr_data.merge_with_next_segment(i - 1)
             logger.debug(f"优化：合并相邻分段: {prev_seg.text} --- {current_seg.text} -> {time_gap}")
 
+
 def determine_num_segments(word_count: int, threshold: int = 1000) -> int:
     """
     根据字数计算分段数，每1000个字为一个分段，至少为1
@@ -323,6 +325,7 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     new_segments = []
     for seg in asr_data.segments:
         if not is_pure_punctuation(seg.text):
+            # 如果文本只包含字母和撇号，则将其转换为小写并添加一个空格
             if re.match(r'^[a-zA-Z\']+$', seg.text.strip()):
                 seg.text = seg.text.lower() + " "
             new_segments.append(seg)
@@ -346,6 +349,8 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
             txt = asr_data_part.to_txt().replace("\n", "")
             sentences = split_by_llm(txt, model=model, use_cache=True)
             logger.info(f"分段的句子提取完成，共 {len(sentences)} 句")
+            print(f"sentences: {sentences}")
+
             return sentences
 
         all_sentences = list(executor.map(process_segment, asr_data_segments))
