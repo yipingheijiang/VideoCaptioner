@@ -2,7 +2,7 @@ import os
 import logging
 from pathlib import Path
 
-VERSION = "v1.1.0"
+VERSION = "v1.1.1"
 YEAR = 2024
 APP_NAME = "VideoCaptioner"
 AUTHOR = "Weifeng"

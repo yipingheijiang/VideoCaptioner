@@ -132,7 +132,7 @@ class LogWindow(QWidget):
                 for line in lines:
                     self.log_text.moveCursor(QTextCursor.End)
                     self.log_text.insertPlainText(line)
-                    time.sleep(0.05)
+                    # time.sleep(0.02)
                     self.log_text.repaint()
                 
                 self.last_position = self.log_file.tell()
