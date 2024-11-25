@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 import shutil
 import hashlib
+import platform
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QProgressBar,
@@ -133,15 +134,23 @@ class DownloadThread(QThread):
                 self.url
             ]
             
+            # 根据操作系统设置不同的 subprocess 参数
+            subprocess_args = {
+                'stdout': subprocess.PIPE,
+                'stderr': subprocess.PIPE,
+                'universal_newlines': True,
+                'encoding': 'utf-8'
+            }
+            
+            # 仅在 Windows 系统上添加 CREATE_NO_WINDOW 标志
+            if platform.system() == 'Windows':
+                subprocess_args['creationflags'] = subprocess.CREATE_NO_WINDOW
+            
             logger.info("运行下载命令: %s", " ".join(cmd))
             
             self.process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-                encoding='utf-8',
-                creationflags=subprocess.CREATE_NO_WINDOW
+                **subprocess_args
             )
             
             while True:
