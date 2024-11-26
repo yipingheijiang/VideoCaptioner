@@ -3,7 +3,7 @@
 ## 问题说明
 在使用软件下载视频时，可能会遇到以下错误提示：
 
-![alt text](images/cookie_error.png)
+![alt text](images/cookies_error.png)
 
 这是因为:
 1. 某些视频平台(如B站)需要用户登录信息才能获取高质量视频

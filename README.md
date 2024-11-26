@@ -61,27 +61,23 @@
 
 Mac 用户请自行使用下载源码和安装 python 依赖运行。（本地 Whisper 功能暂不支持 MacOS）
 
-1. 安装 ffmpeg
+1. 安装 ffmpeg 和 Aria2 下载工具
 ```bash
 brew install ffmpeg
-```
-
-2. 安装 Aria2 下载工具
-```bash
 brew install aria2
 ```
 
-3. 克隆项目
+2. 克隆项目
 ```bash
 git clone https://github.com/WEIFENG2333/VideoCaptioner.git
 ```
 
-4. 安装依赖
+3. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-5. 运行程序
+4. 运行程序
 ```bash
 python main.py
 ```
