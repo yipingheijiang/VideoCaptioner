@@ -366,9 +366,9 @@ class SettingInterface(ScrollArea):
     def __onsavePathCardClicked(self):
         """ 处理保存路径卡片点击事件 """
         folder = QFileDialog.getExistingDirectory(self, self.tr("选择文件夹"), "./")
-        if not folder or cfg.get(cfg.save_path) == folder:
+        if not folder or cfg.get(cfg.work_dir) == folder:
             return
-        cfg.set(cfg.save_path, folder)
+        cfg.set(cfg.work_dir, folder)
         self.savePathCard.setContent(folder)
 
     def checkLLMConnection(self):
