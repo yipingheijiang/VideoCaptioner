@@ -75,14 +75,14 @@ WHISPER_MODELS = [
         "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v2.bin",
         "sha": "0f4c8e34f21cf1a914c59d8b3ce882345ad349d6"
     },
-    {
-        "label": "Large(v3)",
-        "value": "ggml-large-v3.bin",
-        "size": "3.09 GB",
-        "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
-        "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin",
-        "sha": "ad82bf6a9043ceed055076d0fd39f5f186ff8062"
-    },
+    # {
+    #     "label": "Large(v3)",
+    #     "value": "ggml-large-v3.bin",
+    #     "size": "3.09 GB",
+    #     "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
+    #     "mirrorLink": "https://www.modelscope.cn/models/cjc1887415157/whisper.cpp/resolve/master/ggml-large-v3.bin",
+    #     "sha": "ad82bf6a9043ceed055076d0fd39f5f186ff8062"
+    # },
     # {
     #     "label": "Distil Large(v3)",
     #     "value": "ggml-distil-large-v3.bin",
