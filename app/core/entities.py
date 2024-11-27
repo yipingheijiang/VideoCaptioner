@@ -177,7 +177,7 @@ class Task:
     video_info: Optional[VideoInfo] = None
 
     # 音频转换
-    audio_format: Optional[str] = "mp3"
+    audio_format: Optional[str] = "wav"
     audio_save_path: Optional[str] = None
 
     # 转录（转录模型）
@@ -202,8 +202,13 @@ class Task:
     thread_num: int = 10
     batch_size: int = 10
     subtitle_layout: Optional[str] = None
+    max_word_count_cjk: int = 12
+    max_word_count_english: int = 18
+    need_split: bool = True
+
 
     # 视频生成
+    need_video: bool = True
     video_save_path: Optional[str] = None
     soft_subtitle: bool = True
     subtitle_style_srt: Optional[str] = None

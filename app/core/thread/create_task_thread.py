@@ -118,11 +118,15 @@ class CreateTaskThread(QThread):
             llm_model=cfg.model.value,
             need_translate=cfg.need_translate.value,
             need_optimize=cfg.need_optimize.value,
+            max_word_count_cjk=cfg.max_word_count_cjk.value,
+            max_word_count_english=cfg.max_word_count_english.value,
+            need_split=True,
             result_subtitle_save_path=str(result_subtitle_save_path),
             subtitle_layout=cfg.subtitle_layout.value,
             video_save_path=str(video_save_path),
             soft_subtitle=cfg.soft_subtitle.value,
-            subtitle_style_srt=subtitle_style_srt
+            subtitle_style_srt=subtitle_style_srt,
+            need_video=cfg.need_video.value,
         )
         self.finished.emit(task)
         self.progress.emit(100, self.tr("创建任务完成"))
@@ -216,11 +220,15 @@ class CreateTaskThread(QThread):
             llm_model=cfg.model.value,
             need_translate=cfg.need_translate.value,
             need_optimize=cfg.need_optimize.value,
+            max_word_count_cjk=cfg.max_word_count_cjk.value,
+            max_word_count_english=cfg.max_word_count_english.value,
+            need_split=True,
             result_subtitle_save_path=str(result_subtitle_save_path),
             subtitle_layout=cfg.subtitle_layout.value,
             video_save_path=str(video_save_path),
             soft_subtitle=cfg.soft_subtitle.value,
-            subtitle_style_srt=subtitle_style_srt
+            subtitle_style_srt=subtitle_style_srt,
+            need_video=cfg.need_video.value,
         )
         self.finished.emit(task)
         logger.info(f"URL任务创建完成：{task}")
@@ -318,7 +326,11 @@ class CreateTaskThread(QThread):
             thread_num=cfg.thread_num.value,
             batch_size=cfg.batch_size.value,
             subtitle_layout=cfg.subtitle_layout.value,
-            subtitle_style_srt=subtitle_style_srt
+            need_split=cfg.need_split.value,
+            max_word_count_cjk=cfg.max_word_count_cjk.value,
+            max_word_count_english=cfg.max_word_count_english.value,
+            subtitle_style_srt=subtitle_style_srt,
+
         )
         logger.info(f"字幕优化任务创建完成：{task}")
         return task

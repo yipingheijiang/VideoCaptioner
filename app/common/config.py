@@ -37,60 +37,95 @@ class LanguageSerializer(ConfigSerializer):
         return Language(QLocale(value)) if value != "Auto" else Language.AUTO
 
 
-
 class Config(QConfig):
     """ 应用配置 """
-    # LLM CONFIG
+    # ------------------- LLM 配置 -------------------
     api_key = ConfigItem("LLM", "API_Key", "")
     api_base = ConfigItem("LLM", "API_Base", "")
     model = ConfigItem("LLM", "Model", "gpt-4o-mini")
-    batch_size = RangeConfigItem("LLM", "BatchSize", 10, RangeValidator(10, 30))
-    thread_num = RangeConfigItem("LLM", "ThreadNum", 10, RangeValidator(1, 30))
+    batch_size = RangeConfigItem(
+        "LLM", "BatchSize", 10, RangeValidator(10, 30)
+    )
+    thread_num = RangeConfigItem(
+        "LLM", "ThreadNum", 10, RangeValidator(1, 30)
+    )
 
-    # 转录配置
-    transcribe_model = OptionsConfigItem("Transcribe", "TranscribeModel", TranscribeModelEnum.JIANYING.value,
-                                         OptionsValidator(TranscribeModelEnum), EnumSerializer(TranscribeModelEnum))
-    use_asr_cache = ConfigItem("Transcribe", "UseASRCache", True, BoolValidator())
-    transcribe_language = OptionsConfigItem("Transcribe", "TranscribeLanguage", TranscribeLanguageEnum.ENGLISH.value,
-                                            OptionsValidator(TranscribeLanguageEnum),
-                                            EnumSerializer(TranscribeLanguageEnum))
-    # Whisper 配置
-    whisper_model = OptionsConfigItem("Whisper", "WhisperModel", WhisperModelEnum.TINY.value,
-                                      OptionsValidator(WhisperModelEnum), EnumSerializer(WhisperModelEnum))
+    # ------------------- 转录配置 -------------------
+    transcribe_model = OptionsConfigItem(
+        "Transcribe", "TranscribeModel",
+        TranscribeModelEnum.JIANYING.value,
+        OptionsValidator(TranscribeModelEnum),
+        EnumSerializer(TranscribeModelEnum)
+    )
+    use_asr_cache = ConfigItem(
+        "Transcribe", "UseASRCache", True, BoolValidator()
+    )
+    transcribe_language = OptionsConfigItem(
+        "Transcribe", "TranscribeLanguage",
+        TranscribeLanguageEnum.ENGLISH.value,
+        OptionsValidator(TranscribeLanguageEnum),
+        EnumSerializer(TranscribeLanguageEnum)
+    )
 
-    # Whisper API 配置
+    # ------------------- Whisper Cpp 配置 -------------------
+    whisper_model = OptionsConfigItem(
+        "Whisper", "WhisperModel",
+        WhisperModelEnum.TINY.value,
+        OptionsValidator(WhisperModelEnum),
+        EnumSerializer(WhisperModelEnum)
+    )
+
+    # ------------------- Whisper API 配置 -------------------
     whisper_api_base = ConfigItem("WhisperAPI", "WhisperApiBase", "")
     whisper_api_key = ConfigItem("WhisperAPI", "WhisperApiKey", "")
     whisper_api_model = OptionsConfigItem("WhisperAPI", "WhisperApiModel", "")
     whisper_api_prompt = ConfigItem("WhisperAPI", "WhisperApiPrompt", "")
-    
 
-    # 字幕配置
+    # ------------------- 字幕配置 -------------------
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
-    target_language = OptionsConfigItem("Subtitle", "TargetLanguage", TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
-                                        OptionsValidator(TargetLanguageEnum), EnumSerializer(TargetLanguageEnum))
-    soft_subtitle = ConfigItem("Subtitle", "SoftSubtitle", False, BoolValidator())
+    target_language = OptionsConfigItem(
+        "Subtitle", "TargetLanguage",
+        TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
+        OptionsValidator(TargetLanguageEnum),
+        EnumSerializer(TargetLanguageEnum)
+    )
+    need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
+    max_word_count_cjk = ConfigItem("Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 50))
+    max_word_count_english = ConfigItem("Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 50))
 
+    # ------------------- 字幕合成配置 -------------------
+    soft_subtitle = ConfigItem("Video", "SoftSubtitle", False, BoolValidator())
+    need_video = ConfigItem("Video", "NeedVideo", True, BoolValidator())
 
-    # 字幕样式配置
+    # ------------------- 字幕样式配置 -------------------
     subtitle_style_name = ConfigItem("SubtitleStyle", "StyleName", "default")
     subtitle_layout = ConfigItem("SubtitleStyle", "Layout", "译文在上")
     subtitle_preview_image = ConfigItem("SubtitleStyle", "PreviewImage", "")
 
-    # 保存配置
+    # ------------------- 保存配置 -------------------
     work_dir = ConfigItem("Save", "Work_Dir", WORK_PATH, FolderValidator())
 
-    # 软件页面配置
+    # ------------------- 软件页面配置 -------------------
     micaEnabled = ConfigItem("MainWindow", "MicaEnabled", False, BoolValidator())
-    dpiScale = OptionsConfigItem("MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]),
-                                 restart=True)
-    language = OptionsConfigItem("MainWindow", "Language", Language.AUTO, OptionsValidator(Language),
-                                 LanguageSerializer(), restart=True)
+    dpiScale = OptionsConfigItem(
+        "MainWindow", "DpiScale",
+        "Auto",
+        OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]),
+        restart=True
+    )
+    language = OptionsConfigItem(
+        "MainWindow", "Language",
+        Language.AUTO,
+        OptionsValidator(Language),
+        LanguageSerializer(),
+        restart=True
+    )
 
-    # 更新
-    checkUpdateAtStartUp = ConfigItem("Update", "CheckUpdateAtStartUp", True, BoolValidator())
-
+    # ------------------- 更新配置 -------------------
+    checkUpdateAtStartUp = ConfigItem(
+        "Update", "CheckUpdateAtStartUp", True, BoolValidator()
+    )
 
 
 cfg = Config()
