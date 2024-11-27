@@ -9,7 +9,7 @@ from .split_by_llm import split_by_llm, MAX_WORD_COUNT
 from ..bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
 from ..utils.logger import setup_logger
 
-logger = setup_logger("subtitle_spliter", level=logging.DEBUG)
+logger = setup_logger("subtitle_spliter")
 
 SEGMENT_THRESHOLD = 500  # 每个分段的最大字数
 FIXED_NUM_THREADS = 1  # 固定的线程数量
@@ -341,7 +341,7 @@ def merge_short_segment(segments: List[ASRDataSeg]) -> None:
         total_words = current_words + next_words
         max_word_count = MAX_WORD_COUNT_CJK if is_mainly_cjk(current_seg.text) else MAX_WORD_COUNT_ENGLISH
 
-        if time_gap < 300 and (current_words < 5 or next_words < 5) and total_words <= max_word_count:
+        if time_gap < 300 and (current_words < 5 or next_words <= 5) and total_words <= max_word_count:
             # 执行合并操作
             logger.debug(f"优化：合并相邻分段: {current_seg.text} --- {next_seg.text} -> {time_gap}")
             
@@ -563,8 +563,10 @@ def process_by_rules(segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
     return result_segments
 
 
-@retry(exceptions=(SubtitleProcessError, Exception), tries=2, logger=logger)
-def process_by_llm(segments: List[ASRDataSeg], model: str = "gpt-4o-mini") -> List[ASRDataSeg]:
+def process_by_llm(segments: List[ASRDataSeg], 
+                   model: str = "gpt-4o-mini",
+                   max_word_count_cjk: int = MAX_WORD_COUNT_CJK,
+                   max_word_count_english: int = MAX_WORD_COUNT_ENGLISH) -> List[ASRDataSeg]:
 
     """
     使用LLM拆分句子
@@ -575,14 +577,22 @@ def process_by_llm(segments: List[ASRDataSeg], model: str = "gpt-4o-mini") -> Li
     """
     txt = "".join([seg.text for seg in segments])
     # 使用LLM拆分句子
-    sentences = split_by_llm(txt, model=model, use_cache=USE_CACHE)
+    sentences = split_by_llm(txt, 
+                             model=model, 
+                             use_cache=USE_CACHE,
+                             max_word_count_cjk=max_word_count_cjk,
+                             max_word_count_english=max_word_count_english)
     logger.info(f"分段的句子提取完成，共 {len(sentences)} 句")
     # 对当前分段进行合并处理
     merged_segments = merge_segments_based_on_sentences(segments, sentences)
     return merged_segments
 
 
-def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: int = FIXED_NUM_THREADS, max_word_count=MAX_WORD_COUNT) -> ASRData:
+def merge_segments(asr_data: ASRData, 
+                   model: str = "gpt-4o-mini", 
+                   num_threads: int = FIXED_NUM_THREADS, 
+                   max_word_count_cjk: int = MAX_WORD_COUNT_CJK, 
+                   max_word_count_english: int = MAX_WORD_COUNT_ENGLISH) -> ASRData:
     """
     合并ASR数据分段
     
@@ -596,7 +606,8 @@ def merge_segments(asr_data: ASRData, model: str = "gpt-4o-mini", num_threads: i
     """
     # 更新全局的MAX_WORD_COUNT
     global MAX_WORD_COUNT_CJK, MAX_WORD_COUNT_ENGLISH
-    MAX_WORD_COUNT_CJK = MAX_WORD_COUNT_ENGLISH = max_word_count
+    MAX_WORD_COUNT_CJK = max_word_count_cjk
+    MAX_WORD_COUNT_ENGLISH = max_word_count_english
 
     # 预处理ASR数据，移除纯标点符号的分段，并处理仅包含字母和撇号的文本
     asr_data.segments = preprocess_segments(asr_data.segments, need_lower=False)
