@@ -1678,7 +1678,7 @@
     </message>
     <message>
         <location filename="../../app/components/WhisperSettingDialog.py" line="399"/>
-        <source>小心肝兒,注意身體哦~</source>
+        <source>小心肝,注意身體哦~</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
