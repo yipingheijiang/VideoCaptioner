@@ -14,6 +14,7 @@ from ..subtitle_processor.spliter import merge_segments
 from ..utils.test_opanai import test_openai
 from ..utils.logger import setup_logger
 
+
 # 配置日志
 logger = setup_logger("subtitle_optimization_thread")
 
@@ -113,7 +114,7 @@ class SubtitleOptimizationThread(QThread):
             asr_data = from_subtitle_file(str_path)
 
             # 检查是否需要合并重新断句
-            if not asr_data.is_word_timestamp() and need_split:
+            if not asr_data.is_word_timestamp() and need_split and self.task.faster_whisper_one_word:
                 asr_data.split_to_word_segments()
             if asr_data.is_word_timestamp():
                 self.progress.emit(5, self.tr("字幕断句..."))
