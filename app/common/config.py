@@ -8,7 +8,14 @@ from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, Boo
                             Theme, FolderValidator, ConfigSerializer, EnumSerializer)
 
 from app.config import WORK_PATH, SETTINGS_PATH
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, TranscribeLanguageEnum, WhisperModelEnum
+from ..core.entities import (
+    TargetLanguageEnum,
+    TranscribeModelEnum,
+    TranscribeLanguageEnum,
+    WhisperModelEnum,
+    FasterWhisperModelEnum,
+    VadMethodEnum
+)
 
 
 class Language(Enum):
@@ -35,6 +42,7 @@ class LanguageSerializer(ConfigSerializer):
 
     def deserialize(self, value: str):
         return Language(QLocale(value)) if value != "Auto" else Language.AUTO
+
 
 
 class Config(QConfig):
@@ -74,6 +82,47 @@ class Config(QConfig):
         OptionsValidator(WhisperModelEnum),
         EnumSerializer(WhisperModelEnum)
     )
+
+    # ------------------- Faster Whisper 配置 -------------------
+    faster_whisper_program = ConfigItem(
+        "FasterWhisper", "Program",
+        "faster-whisper-xxl.exe",
+    )
+    faster_whisper_model = OptionsConfigItem(
+        "FasterWhisper", "Model",
+        FasterWhisperModelEnum.TINY.value,
+        OptionsValidator(FasterWhisperModelEnum),
+        EnumSerializer(FasterWhisperModelEnum)
+    )
+    faster_whisper_model_dir = ConfigItem("FasterWhisper", "ModelDir", "")
+    faster_whisper_device = OptionsConfigItem(
+        "FasterWhisper", "Device",
+        "cuda",
+        OptionsValidator(["cuda", "cpu"])
+    )
+    # VAD 参数
+    faster_whisper_vad_filter = ConfigItem(
+        "FasterWhisper", "VadFilter", True, BoolValidator()
+    )
+    faster_whisper_vad_threshold = RangeConfigItem(
+        "FasterWhisper", "VadThreshold", 0.4, RangeValidator(0, 1)
+    )
+    faster_whisper_vad_method = OptionsConfigItem(
+        "FasterWhisper", "VadMethod",
+        VadMethodEnum.SILERO_V3.value,
+        OptionsValidator(VadMethodEnum),
+        EnumSerializer(VadMethodEnum)
+    )
+    # 人声提取
+    faster_whisper_ff_mdx_kim2 = ConfigItem(
+        "FasterWhisper", "FfMdxKim2", False, BoolValidator()
+    )
+    # 文本处理参数
+    faster_whisper_one_word = ConfigItem(
+        "FasterWhisper", "OneWord", True, BoolValidator()
+    )
+    # 提示词
+    faster_whisper_prompt = ConfigItem("FasterWhisper", "Prompt", "")
 
     # ------------------- Whisper API 配置 -------------------
     whisper_api_base = ConfigItem("WhisperAPI", "WhisperApiBase", "")

@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     ProgressRing, InfoBarPosition
 
+from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
+
 from ..components.WhisperSettingDialog import WhisperSettingDialog
 from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from ..config import RESOURCE_PATH
@@ -138,13 +140,17 @@ class VideoInfoCard(CardWidget):
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
 
     def show_whisper_settings(self):
+        """显示Whisper设置对话框"""
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             dialog = WhisperSettingDialog(self.window())
             if dialog.exec_():
-                if dialog.check_whisper_model():
-                    return True
-        else:  # WHISPER_API
+                return True
+        elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
             dialog = WhisperAPISettingDialog(self.window())
+            if dialog.exec_():
+                return True
+        elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
+            dialog = FasterWhisperSettingDialog(self.window())
             if dialog.exec_():
                 return True
         return False
@@ -152,7 +158,7 @@ class VideoInfoCard(CardWidget):
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         if self.task.status == Task.Status.TRANSCRIBING:
-            need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER, TranscribeModelEnum.WHISPER_API]
+            need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER, TranscribeModelEnum.WHISPER_API, TranscribeModelEnum.FASTER_WHISPER]
             if need_whisper_settings and not self.show_whisper_settings():
                 return
         self.progress_ring.show()
@@ -185,8 +191,25 @@ class VideoInfoCard(CardWidget):
         self.transcript_thread.start()
 
     def _update_task_config(self):
+        self.task.target_language = cfg.target_language.value.value
         self.task.transcribe_language = LANGUAGES[cfg.transcribe_language.value.value]
         self.task.transcribe_model = cfg.transcribe_model.value
+        self.task.whisper_model = cfg.whisper_model.value.value
+        self.task.whisper_api_key = cfg.whisper_api_key.value
+        self.task.whisper_api_base = cfg.whisper_api_base.value
+        self.task.whisper_api_model = cfg.whisper_api_model.value
+        self.task.whisper_api_prompt = cfg.whisper_api_prompt.value
+        self.task.faster_whisper_model = cfg.faster_whisper_model.value
+        self.task.faster_whisper_model_dir = cfg.faster_whisper_model_dir.value
+        self.task.faster_whisper_device = cfg.faster_whisper_device.value
+        self.task.faster_whisper_vad_filter = cfg.faster_whisper_vad_filter.value
+        self.task.faster_whisper_vad_threshold = cfg.faster_whisper_vad_threshold.value
+        self.task.faster_whisper_vad_method = cfg.faster_whisper_vad_method.value
+        self.task.faster_whisper_ff_mdx_kim2 = cfg.faster_whisper_ff_mdx_kim2.value
+        self.task.faster_whisper_one_word = cfg.faster_whisper_one_word.value
+        self.task.faster_whisper_prompt = cfg.faster_whisper_prompt.value
+        self.task.max_word_count_cjk = cfg.max_word_count_cjk.value
+        self.task.max_word_count_english = cfg.max_word_count_english.value
 
     def on_transcript_progress(self, value, message):
         """更新转录进度"""
@@ -203,7 +226,7 @@ class VideoInfoCard(CardWidget):
             self.tr("转录失败"),
             self.tr(error),
             duration=3000,
-            parent=self
+            parent=self.parent().parent()
         )
 
     def on_transcript_finished(self, task):

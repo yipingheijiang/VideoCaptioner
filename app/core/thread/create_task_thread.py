@@ -62,9 +62,11 @@ class CreateTaskThread(QThread):
             result_subtitle_type = "【字幕】"
 
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
-            whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"-{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"-{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+        elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
+            whisper_type = f"-{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
@@ -106,6 +108,15 @@ class CreateTaskThread(QThread):
             whisper_api_base=cfg.whisper_api_base.value,
             whisper_api_model=cfg.whisper_api_model.value,
             whisper_api_prompt=cfg.whisper_api_prompt.value,
+            faster_whisper_model=cfg.faster_whisper_model.value,
+            faster_whisper_model_dir=cfg.faster_whisper_model_dir.value,
+            faster_whisper_device=cfg.faster_whisper_device.value,
+            faster_whisper_vad_filter=cfg.faster_whisper_vad_filter.value,
+            faster_whisper_vad_threshold=cfg.faster_whisper_vad_threshold.value,
+            faster_whisper_vad_method=cfg.faster_whisper_vad_method.value,
+            faster_whisper_ff_mdx_kim2=cfg.faster_whisper_ff_mdx_kim2.value,
+            faster_whisper_one_word=cfg.faster_whisper_one_word.value,
+            faster_whisper_prompt=cfg.faster_whisper_prompt.value,
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
@@ -120,7 +131,7 @@ class CreateTaskThread(QThread):
             need_optimize=cfg.need_optimize.value,
             max_word_count_cjk=cfg.max_word_count_cjk.value,
             max_word_count_english=cfg.max_word_count_english.value,
-            need_split=True,
+            need_split=cfg.need_split.value,
             result_subtitle_save_path=str(result_subtitle_save_path),
             subtitle_layout=cfg.subtitle_layout.value,
             video_save_path=str(video_save_path),
@@ -166,7 +177,9 @@ class CreateTaskThread(QThread):
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+        elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
+            whisper_type = f"{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
@@ -212,6 +225,15 @@ class CreateTaskThread(QThread):
             whisper_api_base=cfg.whisper_api_base.value,
             whisper_api_model=cfg.whisper_api_model.value,
             whisper_api_prompt=cfg.whisper_api_prompt.value,
+            faster_whisper_model=cfg.faster_whisper_model.value,
+            faster_whisper_model_dir=cfg.faster_whisper_model_dir.value,
+            faster_whisper_device=cfg.faster_whisper_device.value,
+            faster_whisper_vad_filter=cfg.faster_whisper_vad_filter.value,
+            faster_whisper_vad_threshold=cfg.faster_whisper_vad_threshold.value,
+            faster_whisper_vad_method=cfg.faster_whisper_vad_method.value,
+            faster_whisper_ff_mdx_kim2=cfg.faster_whisper_ff_mdx_kim2.value,
+            faster_whisper_one_word=cfg.faster_whisper_one_word.value,
+            faster_whisper_prompt=cfg.faster_whisper_prompt.value,
             use_asr_cache=cfg.use_asr_cache.value,
             need_word_time_stamp=need_word_time_stamp,
             original_subtitle_save_path=str(original_subtitle_save_path),
@@ -222,7 +244,7 @@ class CreateTaskThread(QThread):
             need_optimize=cfg.need_optimize.value,
             max_word_count_cjk=cfg.max_word_count_cjk.value,
             max_word_count_english=cfg.max_word_count_english.value,
-            need_split=True,
+            need_split=cfg.need_split.value,
             result_subtitle_save_path=str(result_subtitle_save_path),
             subtitle_layout=cfg.subtitle_layout.value,
             video_save_path=str(video_save_path),
@@ -247,7 +269,9 @@ class CreateTaskThread(QThread):
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+        elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
+            whisper_type = f"{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
@@ -274,12 +298,23 @@ class CreateTaskThread(QThread):
             whisper_api_base=cfg.whisper_api_base.value,
             whisper_api_model=cfg.whisper_api_model.value,
             whisper_api_prompt=cfg.whisper_api_prompt.value,
+            faster_whisper_model=cfg.faster_whisper_model.value,
+            faster_whisper_model_dir=cfg.faster_whisper_model_dir.value,
+            faster_whisper_device=cfg.faster_whisper_device.value,
+            faster_whisper_vad_filter=cfg.faster_whisper_vad_filter.value,
+            faster_whisper_vad_threshold=cfg.faster_whisper_vad_threshold.value,
+            faster_whisper_vad_method=cfg.faster_whisper_vad_method.value,
+            faster_whisper_ff_mdx_kim2=cfg.faster_whisper_ff_mdx_kim2.value,
+            faster_whisper_one_word=cfg.faster_whisper_one_word.value,
+            faster_whisper_prompt=cfg.faster_whisper_prompt.value,
             video_info=video_info,
             audio_format="mp3",
             audio_save_path=str(audio_save_path),
             transcribe_model=cfg.transcribe_model.value,
             use_asr_cache=cfg.use_asr_cache.value,
             original_subtitle_save_path=str(original_subtitle_save_path),
+            max_word_count_cjk=cfg.max_word_count_cjk.value,
+            max_word_count_english=cfg.max_word_count_english.value,
         )
         self.finished.emit(task)
         logger.info(f"转录任务创建完成：{task}")

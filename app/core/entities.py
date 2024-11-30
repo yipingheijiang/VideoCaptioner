@@ -74,11 +74,18 @@ class TranscribeModelEnum(Enum):
     """ 转录模型 """
     BIJIAN = "B 接口"
     JIANYING = "J 接口"
-    # KUAISHOU = "K j接口"
-    WHISPER = "Whisper [本地]"
+    FASTER_WHISPER = "FasterWhisper"
+    WHISPER = "WhisperCpp"
     WHISPER_API = "Whisper [API]"
 
-
+class VadMethodEnum(Enum):
+    """ VAD方法 """
+    SILERO_V3 = "silero_v3"
+    SILERO_V4 = "silero_v4"
+    PYANNOTE_V3 = "pyannote_v3"
+    PYANNOTE_ONNX_V3 = "pyannote_onnx_v3"
+    AUDITOK = "auditok"
+    WEBRTC = "webrtc"
 
 class TargetLanguageEnum(Enum):
     """ 目标语言 """
@@ -109,6 +116,7 @@ class TranscribeLanguageEnum(Enum):
 
 
 LANGUAGES = {
+    "auto": "auto",
     "English": "en",
     "Chinese": "zh",
     "Japanese": "ja", 
@@ -140,6 +148,16 @@ class WhisperModelEnum(Enum):
     MEDIUM = "medium"
     LARGE_V1 = "large-v1"
     LARGE_V2 = "large-v2"
+
+
+class FasterWhisperModelEnum(Enum):
+    TINY = "tiny"
+    BASE = "base"
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE_V1 = "large-v1"
+    LARGE_V2 = "large-v2"
+    LARGE_V3 = "large-v3"
 
 @dataclass
 class Task:
@@ -186,11 +204,23 @@ class Task:
     use_asr_cache: bool = True
     need_word_time_stamp: bool = False
     original_subtitle_save_path: Optional[str] = None
+    # Whisper Cpp 配置
     whisper_model: Optional[WhisperModelEnum] = None
+    # Whisper API 配置
     whisper_api_key: Optional[str] = None
     whisper_api_base: Optional[str] = None
     whisper_api_model: Optional[str] = None
     whisper_api_prompt: Optional[str] = None
+    # Faster Whisper 配置
+    faster_whisper_model: Optional[FasterWhisperModelEnum] = None
+    faster_whisper_model_dir: Optional[str] = None
+    faster_whisper_device: str = "cuda"
+    faster_whisper_vad_filter: bool = True
+    faster_whisper_vad_threshold: float = 0.5
+    faster_whisper_vad_method: Optional[VadMethodEnum] = VadMethodEnum.SILERO_V3
+    faster_whisper_ff_mdx_kim2: bool = False
+    faster_whisper_one_word: bool = True
+    faster_whisper_prompt: Optional[str] = None
 
     # LLM（优化翻译模型）
     base_url: Optional[str] = None
