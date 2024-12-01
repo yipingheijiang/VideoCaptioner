@@ -3,6 +3,7 @@
 import datetime
 import os
 import sys
+import subprocess
 from pathlib import Path
 
 from PyQt5.QtCore import *
@@ -171,7 +172,12 @@ class VideoInfoCard(CardWidget):
         if self.task and self.task.work_dir:
             original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
             target_path = str(original_subtitle_save_path.parent if original_subtitle_save_path.exists() else Path(self.task.work_dir))
-            os.startfile(target_path)
+            if sys.platform == "win32":
+                os.startfile(target_path)
+            elif sys.platform == "darwin":  # macOS
+                subprocess.run(["open", target_path])
+            else:  # Linux
+                subprocess.run(["xdg-open", target_path])
         else:
             InfoBar.warning(
                 self.tr("警告"),

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import subprocess
 from pathlib import Path
 
 from PyQt5.QtCore import *
@@ -373,7 +374,12 @@ class SubtitleOptimizationInterface(QWidget):
         if not self.task:
             InfoBar.warning(self.tr("警告"), self.tr("请先加载字幕文件"), duration=3000, parent=self)
             return
-        os.startfile(os.path.dirname(self.task.original_subtitle_save_path))
+        if sys.platform == "win32":
+            os.startfile(os.path.dirname(self.task.original_subtitle_save_path))
+        elif sys.platform == "darwin":  # macOS
+            subprocess.run(["open", os.path.dirname(self.task.original_subtitle_save_path)])
+        else:  # Linux
+            subprocess.run(["xdg-open", os.path.dirname(self.task.original_subtitle_save_path)])
 
     def load_subtitle_file(self, file_path):
         self.create_task(file_path)

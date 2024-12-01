@@ -1,3 +1,5 @@
+import sys
+import subprocess
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidgetItem, QHeaderView, QHBoxLayout
 from qfluentwidgets import (MessageBoxBase, BodyLabel, SubtitleLabel,
@@ -193,9 +195,25 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
 
     def _setup_model_section(self, layout):
         """设置模型下载部分UI"""
+        # 标题和按钮的水平布局
+        title_layout = QHBoxLayout()
+        
         # 标题
         model_title = SubtitleLabel(self.tr("模型下载"), self)
-        layout.addWidget(model_title)
+        title_layout.addWidget(model_title)
+        
+        # 添加打开文件夹按钮
+        open_folder_btn = HyperlinkButton(
+            "",
+            self.tr("打开模型文件夹"),
+            parent=self
+        )
+        open_folder_btn.setIcon(FIF.FOLDER)
+        open_folder_btn.clicked.connect(self._open_model_folder)
+        title_layout.addStretch()
+        title_layout.addWidget(open_folder_btn)
+        
+        layout.addLayout(title_layout)
         layout.addSpacing(10)
 
         # 模型表格
@@ -522,6 +540,17 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
                 if download_btn:
                     download_btn.setEnabled(enabled)
 
+    def _open_model_folder(self):
+        """打开模型文件夹"""
+        if os.path.exists(MODEL_PATH):
+            # 根据操作系统打开文件夹
+            if sys.platform == "win32":
+                os.startfile(MODEL_PATH)
+            elif sys.platform == "darwin":  # macOS
+                subprocess.run(["open", MODEL_PATH])
+            else:  # Linux
+                subprocess.run(["xdg-open", MODEL_PATH])
+
 class FasterWhisperSettingDialog(MessageBoxBase):
     """Faster Whisper设置对话框"""
     
@@ -646,7 +675,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
         self.one_word_card = SwitchSettingCard(
             FIF.UNIT,
             self.tr("单字时间戳"),
-            self.tr("开启生成单字级时间戳；关闭后使用原始分段，不进行智能断句"),
+            self.tr("开启生成单字级时间戳；关闭后使用原始分段断句"),
             cfg.faster_whisper_one_word,
             self.other_group
         )
@@ -680,7 +709,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
         self.vad_group.addSettingCard(self.vad_threshold_card)
         self.vad_group.addSettingCard(self.vad_method_card)
         
-        # 添加其他设置��的卡片
+        # 添加其他设置的卡片
         self.other_group.addSettingCard(self.ff_mdx_kim2_card)
         self.other_group.addSettingCard(self.one_word_card)
         self.other_group.addSettingCard(self.prompt_card)

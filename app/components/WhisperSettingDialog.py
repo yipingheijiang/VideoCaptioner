@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
 import subprocess
-import shutil
 import hashlib
-import platform
+import sys
 
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QProgressBar,
                            QMessageBox, QLabel)
@@ -229,7 +228,7 @@ class WhisperSettingDialog(MessageBoxBase):
             self.tr('打开模型文件夹'), 
             self
         )
-        self.openFolderButton.clicked.connect(lambda: os.startfile(MODEL_PATH))
+        self.openFolderButton.clicked.connect(self.on_open_model_folder_clicked)
         self.buttonLayout.addWidget(self.downloadButton)
         self.buttonLayout.addStretch()
         self.buttonLayout.addWidget(self.openFolderButton)
@@ -244,7 +243,16 @@ class WhisperSettingDialog(MessageBoxBase):
         self.yesButton.setText(self.tr('确定'))
         self.yesButton.clicked.connect(self.__onYesButtonClicked)
         self.widget.setMinimumWidth(400)
-    
+
+
+    def on_open_model_folder_clicked(self):
+        if sys.platform == "win32":
+            os.startfile(MODEL_PATH)
+        elif sys.platform == "darwin":  # macOS
+            subprocess.run(["open", MODEL_PATH])
+        else:  # Linux
+            subprocess.run(["xdg-open", MODEL_PATH])
+
     def show_download_dialog(self):
         download_dialog = DownloadDialog(self)
         download_dialog.show()
