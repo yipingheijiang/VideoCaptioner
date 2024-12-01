@@ -244,9 +244,9 @@ You may be provided reference content for the subtitles (such as context or summ
 
 1. Original Subtitle correction:
     - Contextual Correction: Use the context and the provided prompts to correct erroneous words without replacing the original words, structure, and expressions of the sentence, and do not use synonyms. Only replace words that are errors from speech recognition.
-    - Remove Unnecessary Filler Words: Delete filler or interjection words that have no actual meaning, such as laughter, coughing sounds, etc.
-    - Punctuation and Formatting: Proofread and correct punctuation, English words, capitalization, formulas, and code snippets. Certain words or names may require formatting corrections due to specific expressions.
-    - Maintain Subtitle Structure: Each subtitle corresponds one-to-one with its number; do not merge or split subtitles.
+    - Remove meaningless interjections (e.g., "um," "uh," "like," laughter, coughing, etc.)
+    - Standardize punctuation, English capitalization, mathematical formulas, and code variable names. Use plain text to represent mathematical formulas.
+    - Strictly maintain one-to-one correspondence of subtitle numbers, do not merge or split subtitles.
 
 2. Translation process:
    a) Translation into [TargetLanguage]:
@@ -257,13 +257,12 @@ You may be provided reference content for the subtitles (such as context or summ
       - Do not isolate a sentence; ensure coherence with the previous sentence's context, and do not add or omit content for a single sentence.
 
    b) Translation revision suggestions:
-      - Check accuracy: Pointing out any semantic errors or misunderstandings.
       - Evaluate fluency and naturalness. Pointing out any awkwardness or deviations from language norms.
-      - Whether the translation considers the cultural context of the corresponding language or uses appropriate idioms and proverbs to express.
+      - Whether the translation considers the cultural context of the corresponding language.For Chinese, uses appropriate idioms and proverbs to express.
       - Whether the translation can be simplified and more concise, while still conforming to the cultural context of the target language.
 
    c) Revised translation:
-      Provide an improved version of the translation based on the suggestions. No additional explanation needed.
+      Based on revision suggestions, provide an improved version of the translation. No additional explanation needed.
 
 Input format:
 A JSON structure where each subtitle is identified by a unique numeric key:
