@@ -25,7 +25,7 @@ class SubtitleSettingDialog(MessageBoxBase):
             cfg.max_word_count_cjk,
             FIF.TILES,
             self.tr('中文最大字数'),
-            self.tr('单条字幕的最大字数 (对于中日韩等CJK字符)'),
+            self.tr('单条字幕的最大字数 (对于中日韩等字符)'),
             minimum=8,
             maximum=30,
             parent=self
@@ -40,14 +40,23 @@ class SubtitleSettingDialog(MessageBoxBase):
             maximum=30,
             parent=self
         )
+
+        self.remove_punctuation_card = SwitchSettingCard(
+            FIF.ALIGNMENT,
+            self.tr('去除末尾标点符号'),
+            self.tr('是否去除中文字幕中的末尾标点符号'),
+            cfg.needs_remove_punctuation,
+            self
+        )
         
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addWidget(self.split_card)
         self.viewLayout.addWidget(self.word_count_cjk_card)
         self.viewLayout.addWidget(self.word_count_english_card)
-        
+        self.viewLayout.addWidget(self.remove_punctuation_card)
         # 设置间距
+
         self.viewLayout.setSpacing(10)
         
         # 设置窗口标题

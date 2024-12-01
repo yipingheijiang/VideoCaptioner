@@ -13,7 +13,7 @@ from ..entities import Task
 from ..subtitle_processor.spliter import merge_segments
 from ..utils.test_opanai import test_openai
 from ..utils.logger import setup_logger
-
+from ...common.config import cfg
 
 # 配置日志
 logger = setup_logger("subtitle_optimization_thread")
@@ -98,6 +98,7 @@ class SubtitleOptimizationThread(QThread):
             max_word_count_english = self.task.max_word_count_english
             need_split=self.task.need_split
             split_path = str(Path(result_subtitle_save_path).parent / f"【智能断句】{Path(str_path).stem}.srt")
+            need_remove_punctuation = cfg.needs_remove_punctuation
 
             # 检查
             assert str_path is not None, self.tr("字幕文件路径为空")
@@ -141,9 +142,16 @@ class SubtitleOptimizationThread(QThread):
                     self.progress.emit(30, self.tr("优化+翻译..."))
                     logger.info("正在优化+翻译...")
                     need_reflect = False if "glm-4-flash" in llm_model.lower() else True
-                    self.optimizer = SubtitleOptimizer(summary_content=summarize_result, model=llm_model,
-                                                       target_language=target_language, batch_num=batch_size,
-                                                       thread_num=thread_num, llm_result_logger=self.llm_result_logger)
+                    self.optimizer = SubtitleOptimizer(
+                        summary_content=summarize_result,
+                        model=llm_model,
+                        target_language=target_language,
+                        batch_num=batch_size,
+                        thread_num=thread_num,
+                        llm_result_logger=self.llm_result_logger,
+                        need_remove_punctuation=need_remove_punctuation,
+                        cjk_only=True
+                    )
                     optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, translate=True,
                                                                              reflect=need_reflect,
                                                                              callback=self.callback)
@@ -154,11 +162,12 @@ class SubtitleOptimizationThread(QThread):
                                                        batch_num=batch_size, thread_num=thread_num, llm_result_logger=self.llm_result_logger)
                     optimizer_result = self.optimizer.optimizer_multi_thread(subtitle_json, callback=self.callback)
 
-                # 保存字幕
+                # 替换优化或者翻译后的字幕
                 for i, subtitle_text in optimizer_result.items():
                     seg = asr_data.segments[int(i) - 1]
                     seg.text = subtitle_text
 
+                # 保存字幕
                 if result_subtitle_save_path.endswith(".ass"):
                     asr_data.to_ass(style_str=subtitle_style_srt, layout=subtitle_layout, save_path=result_subtitle_save_path)
                 else:

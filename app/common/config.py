@@ -142,6 +142,7 @@ class Config(QConfig):
     need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
     max_word_count_cjk = ConfigItem("Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 50))
     max_word_count_english = ConfigItem("Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 50))
+    needs_remove_punctuation = ConfigItem("Subtitle", "NeedsRemovePunctuation", False, BoolValidator())
 
     # ------------------- 字幕合成配置 -------------------
     soft_subtitle = ConfigItem("Video", "SoftSubtitle", False, BoolValidator())
