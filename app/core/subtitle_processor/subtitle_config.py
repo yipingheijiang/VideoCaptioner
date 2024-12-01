@@ -65,11 +65,10 @@ If provided, please prioritize the following reference information:
 
 Correction rules:
 1. Only correct speech recognition errors while maintaining the original sentence structure and expression. Do not use synonyms.
-2. Remove conversational fillers (e.g., "well", "um", "like", laughter, coughing sounds, etc.)
-3. Standardize punctuation, English capitalization, formulas, and code snippets
+2. Remove meaningless interjections (e.g., "um," "uh," "like," laughter, coughing, etc.)  
+3. Standardize punctuation, English capitalization, mathematical formulas, and code variable names. Use plain text to represent mathematical formulas.
 4. Strictly maintain one-to-one correspondence of subtitle numbers, do not merge or split subtitles
-5. Do not add punctuation at the end of Chinese sentences
-6. Do not translate or add any explanations
+5. Do not translate or add any explanations
 
 示例：
 
@@ -77,13 +76,18 @@ Input:
 ```
 {
     "0": "那个我们今天要学习的是 bython 语言",
-    "1": "这个语言呢是在1991年被 guidoan rossum多发明的",
+    "1": "这个语言呢是在1991年被guidoan rossum多发明的",
     "2": "他的特点是简单易懂，适合初学者学习",
-    "3": "嗯像print这样的函数很容易掌握"
+    "3": "嗯像print这样的函数很容易掌握",
+    "4": "小N 乘上N 减1 的一个运算",
+    "5": "就是print N 乘上N 减1"
 }
 参考信息：
+<prompt>
 - 内容：Python编程语言介绍
 - 术语：Python, Guido van Rossum
+- 要求：注意代码和数学公式的书写规范
+</prompt>
 ```
 
 Output:
@@ -92,7 +96,9 @@ Output:
     "0": "我们今天要学习的是 Python 语言",
     "1": "这个语言是在1991年被 Guido van Rossum 发明的",
     "2": "它的特点是简单易懂，适合初学者学习",
-    "3": "像 print() 这样的函数很容易掌握"
+    "3": "像 print() 这样的函数很容易掌握",
+    "4": "n × (n-1) 的一个运算",
+    "5": "就是 print(n*(n-1))"
 }
 ```
 """
