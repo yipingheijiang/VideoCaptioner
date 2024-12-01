@@ -98,7 +98,7 @@ class SubtitleOptimizationThread(QThread):
             max_word_count_english = self.task.max_word_count_english
             need_split=self.task.need_split
             split_path = str(Path(result_subtitle_save_path).parent / f"【智能断句】{Path(str_path).stem}.srt")
-            need_remove_punctuation = cfg.needs_remove_punctuation
+            need_remove_punctuation = cfg.needs_remove_punctuation.value
 
             # 检查
             assert str_path is not None, self.tr("字幕文件路径为空")
