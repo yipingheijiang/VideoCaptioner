@@ -84,7 +84,7 @@ class TaskCreationInterface(QWidget):
         # 创建字幕修正卡片
         self.subtitle_optimization_card = SwitchButtonSimpleSettingCard(
             self.tr("字幕修正"),
-            self.tr("使用AI大模型进行字幕修正"),
+            self.tr("使用AI大模型进行字幕修正（格式、错字、标点等）"),
             self
         )
 
@@ -97,7 +97,7 @@ class TaskCreationInterface(QWidget):
 
         # 创建目标语言卡片
         self.target_language_card = ComboBoxSimpleSettingCard(
-            self.tr("目标语言"),
+            self.tr("翻译目标语言"),
             self.tr("翻译的目标语言"),
             [model.value for model in TargetLanguageEnum],
             self
