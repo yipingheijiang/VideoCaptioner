@@ -56,13 +56,12 @@ class TranscriptThread(QThread):
             self.progress.emit(5, self.tr("转换音频中"))
             logger.info("开始转换音频")
 
-            # 转换为音频(如果音频不存在则转换)
+            # 转换为音频
             audio_save_path = Path(self.task.audio_save_path)
-            if not audio_save_path.exists():
-                is_success = video2audio(str(video_path), output=str(audio_save_path))
-                if not is_success:
-                    logger.error("音频转换失败")
-                    raise ValueError(self.tr("音频转换失败"))
+            is_success = video2audio(str(video_path), output=str(audio_save_path))
+            if not is_success:
+                logger.error("音频转换失败")
+                raise RuntimeError(self.tr("音频转换失败"))
 
             self.progress.emit(20, self.tr("语音转录中"))
             logger.info("开始语音转录")
@@ -156,5 +155,6 @@ class TranscriptThread(QThread):
             self.progress.emit(100, self.tr("转录失败"))
 
     def progress_callback(self, value, message):
-        progress = min(20 + (value // 100) * 80, 100)
+        progress = min(20 + (value * 0.8), 100)
+        print(int(progress), message)
         self.progress.emit(int(progress), message)
