@@ -1,7 +1,9 @@
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
+import tempfile
 from typing import Optional, List, Union
 
 from .ASRData import ASRDataSeg, from_srt
@@ -155,64 +157,69 @@ class FasterWhisperASR(BaseASR):
         if callback is None:
             callback = lambda x, y: None
 
-        cmd = self._build_command(self.audio_path)
+        temp_dir = Path(tempfile.gettempdir()) / "bk_asr"
+        temp_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info("Faster Whisper 执行命令: %s", " ".join(cmd))
-        callback(5, "Whisper识别")
-        
-        self.process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding='utf-8',
-            errors='ignore',
-            shell=True,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
-        )
-        
-        error_output = []  # 收集错误输出
-        is_finish = False
+        with tempfile.TemporaryDirectory(dir=temp_dir) as temp_path:
+            temp_dir = Path(temp_path)
+            wav_path = temp_dir / "audio.wav"
+            output_path = wav_path.with_suffix(".srt")
 
-        # 实时打印日志和错误输出
-        while self.process.poll() is None:
-            # error = self.process.stderr.readline()
-            output = self.process.stdout.readline()
+            shutil.copy2(self.audio_path, wav_path)
 
+            cmd = self._build_command(wav_path)
 
-            output = output.strip()
-            if output:
-                # 解析进度百分比
-                if match := re.search(r'(\d+)%', output):
-                    progress = int(match.group(1))
-                    if progress == 100:
-                        is_finish = True
-                    mapped_progress = int(5 + (progress * 0.9))
-                    callback(mapped_progress, f"{mapped_progress} %")
-                else:
-                    logger.info(output)
+            logger.info("Faster Whisper 执行命令: %s", " ".join(cmd))
+            callback(5, "Whisper识别")
+            
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding='utf-8',
+                errors='ignore',
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
 
-            # if error:
-            #     error = error.strip()
-            #     error_output.append(error)  # 保存错误信息
+            is_finish = False
+            error_msg = ""
 
-        # 判断是否识别成功
-        output_dir = Path(self.audio_path).with_suffix('.srt')
-        if not output_dir.exists():
-            raise RuntimeError(f"Faster Whisper 输出文件不存在: {output_dir}")
-        
-        logger.info("Faster Whisper 返回值: %s", self.process.returncode)
-        if not is_finish :
-            error = self.process.stderr.read()
-            error_output.append(error)
-            error_msg = '\n'.join(error_output).split('\n')[-12:]
-            logger.error("Faster Whisper 返回值错误: %s", ''.join('\n'.join(error_output)))
-            raise RuntimeError(error_msg)
-        logger.info("Faster Whisper 识别完成")
-  
-        callback(100, "识别完成")
+            # 实时打印日志和错误输出
+            while self.process.poll() is None:
+                output = self.process.stdout.readline()
+                output = output.strip()
+                if output:
+                    # 解析进度百分比
+                    if match := re.search(r'(\d+)%', output):
+                        progress = int(match.group(1))
+                        if progress == 100:
+                            is_finish = True
+                        mapped_progress = int(5 + (progress * 0.9))
+                        callback(mapped_progress, f"{mapped_progress} %")
+                    if "error" in output:
+                        error_msg += output
+                        logger.error(output)
+                    else:
+                        logger.info(output)
 
-        return output_dir.read_text(encoding='utf-8')
+            # 获取所有输出和错误信息
+            self.process.communicate()
+
+            logger.info("Faster Whisper 返回值: %s", self.process.returncode)
+            if not is_finish:
+                logger.error("Faster Whisper 错误: %s", error_msg)
+                raise RuntimeError(error_msg)
+            
+            # 判断是否识别成功
+            if not output_path.exists():
+                raise RuntimeError(f"Faster Whisper 输出文件不存在: {output_path}")
+
+            logger.info("Faster Whisper 识别完成")
+    
+            callback(100, "识别完成")
+
+            return output_path.read_text(encoding='utf-8')
 
     def _get_key(self):
         return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}-{self.language}"
