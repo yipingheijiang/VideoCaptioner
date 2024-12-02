@@ -77,28 +77,23 @@ class ModelscopeDownloadThread(QThread):
             self.process.terminate()
             self.process.wait()
 
+
 if __name__ == "__main__":
     from PyQt5.QtCore import QCoreApplication
     import sys
-    
     app = QCoreApplication(sys.argv)
-    
     model_id = "pengzhendong/faster-whisper-tiny"
-    save_path = r"E:\GithubProject\VideoCaptioner\AppData\models\faster-whisper-tiny"  # 保存到当前目录下的models文件夹
-    
+    save_path = r"models\faster-whisper-tiny"  # 保存到当前目录下的models文件夹
     downloader = ModelscopeDownloadThread(model_id, save_path)
-    
     def on_progress(percentage, message):
         print(f"进度: {message}")
-    
     def on_error(error_msg):
         print(f"错误: {error_msg}")
         app.quit()
-    
     def on_finished():
         print("下载完成！")
         app.quit()
-    
+
     downloader.progress.connect(on_progress)
     downloader.error.connect(on_error)
     downloader.finished.connect(on_finished)
