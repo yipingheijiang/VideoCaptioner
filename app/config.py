@@ -35,10 +35,10 @@ FASER_WHISPER_PATH = BIN_PATH / "Faster-Whisper-XXL"
 LOG_LEVEL = logging.INFO
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-# 环境变量添加 bin 路径
-os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(BIN_PATH)
+# 环境变量添加 bin 路径，添加到PATH开头以优先使用
+os.environ["PATH"] = str(BIN_PATH) + os.pathsep + os.environ["PATH"]
 if FASER_WHISPER_PATH.exists():
-    os.environ["PATH"] = os.environ["PATH"] + os.pathsep + str(FASER_WHISPER_PATH)
+    os.environ["PATH"] = str(FASER_WHISPER_PATH) + os.pathsep + os.environ["PATH"]
 
 # 创建路径
 for p in [CACHE_PATH, LOG_PATH, WORK_PATH, MODEL_PATH]:
