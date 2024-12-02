@@ -183,7 +183,7 @@ class BatchProcessInterface(QWidget):
         # 显示取消处理的通知
         InfoBar.warning(
             self.tr("已取消"),
-            self.tr("已取消批量处理任���"),
+            self.tr("已取消批量处理"),
             duration=2000,
             position=InfoBarPosition.BOTTOM,
             parent=self

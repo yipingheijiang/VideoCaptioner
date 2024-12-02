@@ -12,8 +12,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     ProgressRing, InfoBarPosition
 
-from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
-
+from ..components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
 from ..components.WhisperSettingDialog import WhisperSettingDialog
 from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from ..config import RESOURCE_PATH

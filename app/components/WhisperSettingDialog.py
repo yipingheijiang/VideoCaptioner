@@ -228,7 +228,7 @@ class WhisperSettingDialog(MessageBoxBase):
             self.tr('打开模型文件夹'), 
             self
         )
-        self.openFolderButton.clicked.connect(self.on_open_model_folder_clicked)
+        self.openFolderButton.clicked.connect(self.open_folder)
         self.buttonLayout.addWidget(self.downloadButton)
         self.buttonLayout.addStretch()
         self.buttonLayout.addWidget(self.openFolderButton)
@@ -245,7 +245,7 @@ class WhisperSettingDialog(MessageBoxBase):
         self.widget.setMinimumWidth(400)
 
 
-    def on_open_model_folder_clicked(self):
+    def open_folder(self):
         if sys.platform == "win32":
             os.startfile(MODEL_PATH)
         elif sys.platform == "darwin":  # macOS
