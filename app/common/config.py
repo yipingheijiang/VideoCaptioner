@@ -145,7 +145,7 @@ class Config(QConfig):
     needs_remove_punctuation = ConfigItem("Subtitle", "NeedsRemovePunctuation", False, BoolValidator())
 
     # ------------------- 字幕合成配置 -------------------
-    soft_subtitle = ConfigItem("Video", "SoftSubtitle", False, BoolValidator())
+    soft_subtitle = ConfigItem("Video", "SoftSubtitle", True, BoolValidator())
     need_video = ConfigItem("Video", "NeedVideo", True, BoolValidator())
 
     # ------------------- 字幕样式配置 -------------------
