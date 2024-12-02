@@ -155,7 +155,7 @@ class WhisperASR(BaseASR):
     def get_audio_duration(self, filepath: str) -> int:
         try:
             cmd = ["ffmpeg", "-i", filepath]
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
             info = result.stderr
             # 提取时长
             if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):
@@ -175,7 +175,7 @@ class WhisperASR(BaseASR):
             logger.info("终止 Whisper ASR 进程")
             if os.name == 'nt':  # Windows系统
                 subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
-                             capture_output=True)
+                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
             else:  # Linux/Mac系统
                 import signal
                 os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)

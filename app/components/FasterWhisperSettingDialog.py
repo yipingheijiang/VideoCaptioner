@@ -389,7 +389,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
                 os.rename(save_path, os.path.join(BIN_PATH, "faster-whisper.exe"))
             else:
                 # GPU 版本需要解压
-                subprocess.run(["7z", "x", save_path, f"-o{BIN_PATH}", "-y"], check=True)
+                subprocess.run(["7z", "x", save_path, f"-o{BIN_PATH}", "-y"], check=True, creationflags=subprocess.CREATE_NO_WINDOW)
                 # 删除下载的压缩包
                 os.remove(save_path)
 

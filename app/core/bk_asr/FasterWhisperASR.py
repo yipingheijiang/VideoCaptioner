@@ -230,7 +230,7 @@ class FasterWhisperASR(BaseASR):
             logger.info("终止 Faster Whisper ASR 进程")
             if os.name == 'nt':  # Windows系统
                 subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
-                             capture_output=True)
+                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
             else:  # Linux/Mac系统
                 import signal
                 os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)

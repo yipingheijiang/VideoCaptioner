@@ -68,6 +68,7 @@ def check_cuda_available() -> bool:
             ['ffmpeg', '-hide_banner', '-init_hw_device', 'cuda'], 
             capture_output=True, 
             text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
         )
         
         # 如果stderr中包含"Cannot load cuda" 或 "Failed to load"等错误信息，说明CUDA不可用
@@ -212,11 +213,12 @@ def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
         cmd = ["ffmpeg", "-i", filepath]
         logger.info(f"获取视频信息执行命令: {' '.join(cmd)}")
         result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
-            encoding='utf-8', 
-            errors='replace'
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
             )
         info = result.stderr
 
@@ -311,7 +313,8 @@ def extract_thumbnail(video_path: str, seek_time: float, thumbnail_path: str) ->
             capture_output=True, 
             text=True, 
             encoding='utf-8', 
-            errors='replace'
+            errors='replace',
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
         )
         success = result.returncode == 0
         return success
