@@ -29,7 +29,7 @@ DEFAULT_BG_PATH = RESOURCE_PATH / "assets" / "default_bg.png"
 def run_subprocess(command: list):
     """运行子进程命令，并处理异常"""
     try:
-        subprocess.run(command, check=True, capture_output=True, shell=True)
+        subprocess.run(command, check=True, capture_output=True)
     except subprocess.CalledProcessError as e:
         logger.error(f"Subprocess error: {e.stderr}")
 
