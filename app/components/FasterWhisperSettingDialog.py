@@ -33,7 +33,7 @@ FASTER_WHISPER_PROGRAMS = [
         "value": "faster-whisper-gpu.7z",
         "type": "GPU",
         "size": "1.35 GB",
-        "downloadLink": "https://modelscope.cn/models/bkfengg/whisper-cpp/resolve/master/cpu.7z",
+        "downloadLink": "https://modelscope.cn/models/bkfengg/whisper-cpp/resolve/master/Faster-Whisper-XXL_r194.5_windows.7z",
     },
     {
         "label": "CPU版本",
@@ -759,6 +759,18 @@ class FasterWhisperSettingDialog(MessageBoxBase):
 
     def _on_yes_button_clicked(self):
         """确定按钮点击处理"""
+        has_program, installed_versions  = check_faster_whisper_exists()
+        if not has_program:
+            self.show_error_info(self.tr('Faster Whisper程序不存在，请先下载程序'))
+            return
+
+        # 根据安装的版本设置程序路径 
+        if "GPU" in installed_versions:
+            cfg.faster_whisper_program.value = "faster-whisper-xxl.exe"
+        else:
+            cfg.faster_whisper_program.value = "faster-whisper.exe"
+            cfg.faster_whisper_vad_method.value = VadMethodEnum.NONE
+
         if self.check_faster_whisper_model():
             self.accept()
             InfoBar.success(
