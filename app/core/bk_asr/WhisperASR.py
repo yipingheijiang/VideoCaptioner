@@ -18,6 +18,9 @@ class WhisperASR(BaseASR):
     def __init__(self, audio_path, language="en", whisper_cpp_path="whisper-cpp", whisper_model=None,
                  use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, False)
+        assert os.path.exists(audio_path), f"音频文件 {audio_path} 不存在"
+        assert audio_path.endswith('.wav'), f"音频文件 {audio_path} 必须是WAV格式"
+
         # 如果指定了 whisper_model，则在 models 目录下查找对应模型
         if whisper_model:
             models_dir = Path(MODEL_PATH)
@@ -152,7 +155,7 @@ class WhisperASR(BaseASR):
     def get_audio_duration(self, filepath: str) -> int:
         try:
             cmd = ["ffmpeg", "-i", filepath]
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', shell=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
             info = result.stderr
             # 提取时长
             if duration_match := re.search(r'Duration: (\d+):(\d+):(\d+\.\d+)', info):
