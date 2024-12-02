@@ -30,7 +30,7 @@ class FasterWhisperASR(BaseASR):
                  # VAD 相关参数
                  vad_filter: bool = True,
                  vad_threshold: float = 0.4,
-                 vad_method: str = "silero_v4",  # https://github.com/Purfview/whisper-standalone-win/discussions/231
+                 vad_method: str = "",  # https://github.com/Purfview/whisper-standalone-win/discussions/231
                  # 音频处理
                  ff_mdx_kim2: bool = False,
                  # 文本处理参数
