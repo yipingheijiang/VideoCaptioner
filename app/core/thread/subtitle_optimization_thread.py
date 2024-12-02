@@ -183,8 +183,8 @@ class SubtitleOptimizationThread(QThread):
                 logger.info(f"无需优化翻译，直接保存 {result_subtitle_save_path}")
 
             # 删除断句文件
-            # if os.path.exists(split_path):
-            #     os.remove(split_path)
+            if os.path.exists(split_path):
+                os.remove(split_path)
             # 保存srt文件
             if self.task.video_info:
                 save_srt_path = Path(self.task.work_dir) / f"【卡卡】{Path(self.task.video_info.file_name).stem}.srt"
