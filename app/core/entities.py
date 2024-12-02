@@ -86,6 +86,7 @@ class VadMethodEnum(Enum):
     PYANNOTE_ONNX_V3 = "pyannote_onnx_v3"
     AUDITOK = "auditok"
     WEBRTC = "webrtc"
+    NONE = ""
 
 class TargetLanguageEnum(Enum):
     """ 目标语言 """
