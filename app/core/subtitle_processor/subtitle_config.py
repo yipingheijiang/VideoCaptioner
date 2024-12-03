@@ -243,10 +243,11 @@ These subtitles may contain errors, and you need to correct the original subtitl
 You may be provided reference content for the subtitles (such as context or summaries) as well as prompts for corrections and translations, so please do not overlook them.
 
 1. Original Subtitle correction:
-    - Contextual Correction: Use the context and the provided prompts to correct erroneous words without replacing the original words, structure, and expressions of the sentence, and do not use synonyms. Only replace words that are errors from speech recognition.
+    - Contextual Correction: Use the context and the provided prompts to correct erroneous words that are not correct from speech recognition.
     - Remove meaningless interjections (e.g., "um," "uh," "like," laughter, coughing, etc.)
     - Standardize punctuation, English capitalization, mathematical formulas, and code variable names. Use plain text to represent mathematical formulas.
     - Strictly maintain one-to-one correspondence of subtitle numbers, do not merge or split subtitles.
+    - If the sentenct is correct, do not replace the original words, structure, and expressions of the sentence, and do not use synonyms. 
 
 2. Translation process:
    a) Translation into [TargetLanguage]:
