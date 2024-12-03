@@ -56,8 +56,15 @@ class SubtitleOptimizer:
         self.need_remove_punctuation = need_remove_punctuation
         self.cjk_only = cjk_only
 
+        # 注册退出处理
+        import atexit
+        atexit.register(self.stop)
+
     def stop(self):
-        self.executor.shutdown(wait=False)
+        """关闭线程池"""
+        if hasattr(self, 'executor'):
+            self.executor.shutdown(wait=False)  # 直接关闭,不等待任务完成
+            logger.info("字幕优化器线程池已关闭")
 
 
     def optimizer_multi_thread(self, subtitle_json: Dict[int, str],
