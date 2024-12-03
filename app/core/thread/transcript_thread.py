@@ -110,9 +110,6 @@ class TranscriptThread(QThread):
                     args["one_word"] = True
                 else:
                     args["sentence"] = True
-                    print(self.task.transcribe_language)
-                    print(self.task.max_word_count_cjk)
-                    print(self.task.max_word_count_english)
                     if self.task.transcribe_language in ["zh", "ja", "ko"]:
                         args["max_line_width"] = int(self.task.max_word_count_cjk)
                         args["max_comma_cent"] = 50
@@ -156,5 +153,4 @@ class TranscriptThread(QThread):
 
     def progress_callback(self, value, message):
         progress = min(20 + (value * 0.8), 100)
-        print(int(progress), message)
         self.progress.emit(int(progress), message)

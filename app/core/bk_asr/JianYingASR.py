@@ -276,12 +276,3 @@ def aws_signature(secret_key: str, request_parameters: str, headers: Dict[str, s
     signing_key = get_signature_key(secret_key, datestamp, region, service)
     signature = hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
     return signature
-
-
-if __name__ == '__main__':
-    # Example usage
-    audio_file = r"C:\Users\weifeng\Music\output_001.mp3"
-    asr = JianYingASR(audio_file, use_cache=True, need_word_time_stamp=True)
-    print(asr._get_tid())
-    # asr_data = asr.run()
-    # print(asr_data)
