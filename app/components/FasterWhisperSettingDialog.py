@@ -1,6 +1,6 @@
 import sys
 import subprocess
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidgetItem, QHeaderView, QHBoxLayout
 from qfluentwidgets import (MessageBoxBase, BodyLabel, SubtitleLabel,
                           SettingCardGroup, InfoBar, InfoBarPosition, 
@@ -29,7 +29,7 @@ from ..core.thread.modelscope_download_thread import ModelscopeDownloadThread
 # 在文件开头添加常量定义
 FASTER_WHISPER_PROGRAMS = [
     {
-        "label": "GPU版本",
+        "label": "GPU + CPU 版本",
         "value": "faster-whisper-gpu.7z",
         "type": "GPU",
         "size": "1.35 GB",
@@ -121,6 +121,32 @@ def check_faster_whisper_exists() -> tuple[bool, list[str]]:
     installed_versions = list(set(installed_versions))
         
     return bool(installed_versions), installed_versions
+
+# 添加新的解压线程类
+class UnzipThread(QThread):
+    """7z解压线程"""
+    finished = pyqtSignal()  # 解压完成信号
+    error = pyqtSignal(str)  # 解压错误信号
+    
+    def __init__(self, zip_file, extract_path):
+        super().__init__()
+        self.zip_file = zip_file
+        self.extract_path = extract_path
+        
+    def run(self):
+        try:
+            subprocess.run(
+                ["7z", "x", self.zip_file, f"-o{self.extract_path}", "-y"],
+                check=True,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+            )
+            # 删除压缩包
+            os.remove(self.zip_file)
+            self.finished.emit()
+        except subprocess.CalledProcessError as e:
+            self.error.emit(f"解压失败: {str(e)}")
+        except Exception as e:
+            self.error.emit(str(e))
 
 class FasterWhisperDownloadDialog(MessageBoxBase):
     """Faster Whisper 下载对话框"""
@@ -387,26 +413,18 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
             if save_path.endswith('.exe'):
                 # 如果是exe文件,重命名为faster-whisper.exe
                 os.rename(save_path, os.path.join(BIN_PATH, "faster-whisper.exe"))
+                self._finish_program_installation()
             else:
                 # GPU 版本需要解压
-                subprocess.run(["7z", "x", save_path, f"-o{BIN_PATH}", "-y"], check=True, creationflags=subprocess.CREATE_NO_WINDOW)
-                # 删除下载的压缩包
-                os.remove(save_path)
+                self.progress_label.setText(self.tr("正在解压文件..."))
+                
+                # 创建并启动解压线程
+                self.unzip_thread = UnzipThread(save_path, BIN_PATH)
+                self.unzip_thread.finished.connect(self._finish_program_installation)
+                self.unzip_thread.error.connect(self._on_unzip_error)
+                self.unzip_thread.start()
+                return  # 提前返回,等待解压完成
 
-            InfoBar.success(
-                self.tr("安装完成"),
-                self.tr("Faster Whisper 程序已安装成功"),
-                duration=3000,
-                parent=self
-            )
-            self.accept()
-        except subprocess.CalledProcessError as e:
-            InfoBar.error(
-                self.tr("安装失败"), 
-                self.tr("解压失败: ") + str(e),
-                duration=3000,
-                parent=self
-            )
         except Exception as e:
             InfoBar.error(
                 self.tr("安装失败"),
@@ -414,9 +432,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
                 duration=3000,
                 parent=self
             )
-        finally:
-            FasterWhisperDownloadDialog.is_downloading = False
-            self._set_all_download_buttons_enabled(True)
+            self._cleanup_installation()
 
     def _on_program_download_error(self, error):
         """程序下载错误处理"""
@@ -496,6 +512,14 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
                 download_btn.setText(self.tr("重新下载"))
                 download_btn.setEnabled(True)
             
+            # 更新主设置对话框的模型选择
+            parent = self.parent()
+            if isinstance(parent, FasterWhisperSettingDialog):
+                model = FASTER_WHISPER_MODELS[row]
+                model_text = model['label']
+                if parent.model_card.comboBox.findText(model_text) == -1:
+                    parent.model_card.comboBox.addItem(model_text)
+            
             InfoBar.success(
                 self.tr("下载成功"),
                 self.tr(f"{model['label']} 模型已下载完成"),
@@ -550,6 +574,34 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
                 subprocess.run(["open", MODEL_PATH])
             else:  # Linux
                 subprocess.run(["xdg-open", MODEL_PATH])
+
+    def _finish_program_installation(self):
+        """完成程序安装"""
+        InfoBar.success(
+            self.tr("安装完成"),
+            self.tr("Faster Whisper 程序已安装成功"),
+            duration=3000,
+            parent=self
+        )
+        self.accept()
+        self._cleanup_installation()
+
+    def _on_unzip_error(self, error_msg):
+        """处理解压错误"""
+        InfoBar.error(
+            self.tr("安装失败"), 
+            error_msg,
+            duration=3000,
+            parent=self
+        )
+        self._cleanup_installation()
+
+    def _cleanup_installation(self):
+        """清理安装状态"""
+        FasterWhisperDownloadDialog.is_downloading = False
+        self._set_all_download_buttons_enabled(True)
+        self.progress_bar.hide()
+        self.progress_label.hide()
 
 class FasterWhisperSettingDialog(MessageBoxBase):
     """Faster Whisper设置对话框"""
@@ -764,7 +816,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             self.show_error_info(self.tr('Faster Whisper程序不存在，请先下载程序'))
             return
 
-        # 根据安装的版本设置程序路径 
+        # 根据安装的版本设置程路径 
         if "GPU" in installed_versions:
             cfg.faster_whisper_program.value = "faster-whisper-xxl.exe"
         else:
