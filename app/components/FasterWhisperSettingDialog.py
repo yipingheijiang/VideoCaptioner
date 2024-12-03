@@ -408,7 +408,6 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
     def _on_program_download_finished(self, save_path):
         """程序下载完成处理"""
         try:
-            print(f"程序下载完成处理: {save_path}")
             # 检查是否是 CPU 版本的直接下载
             if save_path.endswith('.exe'):
                 # 如果是exe文件,重命名为faster-whisper.exe
@@ -639,9 +638,10 @@ class FasterWhisperSettingDialog(MessageBoxBase):
                 (model for model in FASTER_WHISPER_MODELS if model['label'].lower() == model_text),
                 None
             )
-            model_path = os.path.join(MODEL_PATH, model_config['value']) if model_config else None
-            if model_config and not os.path.exists(model_path):
-                self.model_card.comboBox.removeItem(i)
+            model_path = MODEL_PATH / model_config['value'] if model_config else None
+            if model_config and model_path.exists():
+                continue
+            self.model_card.comboBox.removeItem(i)
 
         # 创建管理模型卡片
         self.manage_model_card = HyperlinkCard(

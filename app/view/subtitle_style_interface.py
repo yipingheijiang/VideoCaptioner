@@ -531,7 +531,6 @@ class SubtitleStyleInterface(QWidget):
                 self.mainSizeCard.spinBox.setValue(int(parts[2]))
                 
                 vertical_spacing = int(parts[21])
-                print(vertical_spacing)
                 self.verticalSpacingCard.spinBox.setValue(vertical_spacing)
 
                 # 将 &HAARRGGBB 格式转换为 QColor

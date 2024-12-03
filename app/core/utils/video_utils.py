@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import re
 import shutil
@@ -157,56 +158,65 @@ def add_subtitles(
         cmd_str = subprocess.list2cmdline(cmd)
         logger.info(f"添加硬字幕执行命令: {cmd_str}")
 
-        process = subprocess.Popen(
-            cmd, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            text=True, 
-            encoding='utf-8',
-            errors='replace',
-            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
-        )
-        # 实时读取输出并调用回调函数
-        total_duration = None
-        current_time = 0
+        try:
+            process = subprocess.Popen(
+                cmd, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True, 
+                encoding='utf-8',
+                errors='replace',
+                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
+            )
 
-        while True:
-            output_line = process.stderr.readline()
-            if not output_line or (process.poll() is not None):
-                break
-            if not progress_callback:
-                continue
+            # 实时读取输出并调用回调函数
+            total_duration = None
+            current_time = 0
 
-            if total_duration is None:
-                duration_match = re.search(r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
-                if duration_match:
-                    h, m, s = map(float, duration_match.groups())
-                    total_duration = h * 3600 + m * 60 + s
-                    logger.info(f"视频总时长: {total_duration}秒")
+            while True:
+                output_line = process.stderr.readline()
+                if not output_line or (process.poll() is not None):
+                    break
+                if not progress_callback:
+                    continue
 
-            # 解析当前处理时间
-            time_match = re.search(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
-            if time_match:
-                h, m, s = map(float, time_match.groups())
-                current_time = h * 3600 + m * 60 + s
+                if total_duration is None:
+                    duration_match = re.search(r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
+                    if duration_match:
+                        h, m, s = map(float, duration_match.groups())
+                        total_duration = h * 3600 + m * 60 + s
+                        logger.info(f"视频总时长: {total_duration}秒")
 
-            # 计算进度百分比
-            if total_duration:
-                progress = (current_time / total_duration) * 100
-                progress_callback(f"{round(progress)}", "正在合成")
+                # 解析当前处理时间
+                time_match = re.search(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
+                if time_match:
+                    h, m, s = map(float, time_match.groups())
+                    current_time = h * 3600 + m * 60 + s
 
-        if progress_callback:
-            progress_callback("100", "合成完成")
-        # 检查进程的返回码
-        return_code = process.wait()
-        if return_code != 0:
-            error_info = process.stderr.read()
-            logger.error(f"视频合成失败， {error_info}")
-            raise Exception(return_code)
-        logger.info("视频合成完成")
+                # 计算进度百分比
+                if total_duration:
+                    progress = (current_time / total_duration) * 100
+                    progress_callback(f"{round(progress)}", "正在合成")
 
-    # 删除临时文件
-    temp_subtitle.unlink()
+            if progress_callback:
+                progress_callback("100", "合成完成")
+            # 检查进程的返回码
+            return_code = process.wait()
+            if return_code != 0:
+                error_info = process.stderr.read()
+                logger.error(f"视频合成失败， {error_info}")
+                raise Exception(return_code)
+            logger.info("视频合成完成")
+
+        except Exception as e:
+            logger.exception(f"关闭 FFmpeg: {str(e)}")
+            if process and process.poll() is None:  # 如果进程还在运行
+                process.kill()  # 如果进程没有及时终止，强制结束它
+            raise
+        finally:
+            # 删除临时文件
+            if temp_subtitle.exists():
+                temp_subtitle.unlink()
 
 def get_video_info(filepath: str, thumbnail_path: str = "") -> dict:
     try:
