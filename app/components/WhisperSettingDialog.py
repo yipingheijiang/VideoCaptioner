@@ -229,6 +229,7 @@ class WhisperSettingDialog(MessageBoxBase):
             [language.value for language in TranscribeLanguageEnum],
             self
         )
+        self.language_card.comboBox.setMaxVisibleItems(6)
 
         self.buttonLayout = QHBoxLayout()
         # 创建下载模型按钮

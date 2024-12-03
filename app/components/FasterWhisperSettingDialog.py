@@ -662,7 +662,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             [lang.value for lang in TranscribeLanguageEnum],
             self.settingGroup
         )
-
+        self.language_card.comboBox.setMaxVisibleItems(6)
 
         # 设备选择
         self.device_card = ComboBoxSettingCard(

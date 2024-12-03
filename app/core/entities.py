@@ -106,27 +106,222 @@ class TargetLanguageEnum(Enum):
 
 class TranscribeLanguageEnum(Enum):
     """ 转录语言 """
-    ENGLISH = "English"
-    CHINESE = "Chinese" 
-    JAPANESE = "Japanese"
-    KOREAN = "Korean"
-    SPANISH = "Spanish"
-    FRENCH = "French"
-    GERMAN = "German"
-    RUSSIAN = "Russian"
-
+    ENGLISH = "英语"
+    CHINESE = "中文"
+    JAPANESE = "日本語"
+    KOREAN = "韩语"
+    YUE = "粤语"
+    FRENCH = "法语"
+    GERMAN = "德语"
+    SPANISH = "西班牙语"
+    RUSSIAN = "俄语" 
+    PORTUGUESE = "葡萄牙语"
+    TURKISH = "土耳其语"
+    POLISH = "Polish"
+    CATALAN = "Catalan"
+    DUTCH = "Dutch"
+    ARABIC = "Arabic"
+    SWEDISH = "Swedish"
+    ITALIAN = "Italian"
+    INDONESIAN = "Indonesian"
+    HINDI = "Hindi"
+    FINNISH = "Finnish"
+    VIETNAMESE = "Vietnamese"
+    HEBREW = "Hebrew"
+    UKRAINIAN = "Ukrainian"
+    GREEK = "Greek"
+    MALAY = "Malay"
+    CZECH = "Czech"
+    ROMANIAN = "Romanian"
+    DANISH = "Danish"
+    HUNGARIAN = "Hungarian"
+    TAMIL = "Tamil"
+    NORWEGIAN = "Norwegian"
+    THAI = "Thai"
+    URDU = "Urdu"
+    CROATIAN = "Croatian"
+    BULGARIAN = "Bulgarian"
+    LITHUANIAN = "Lithuanian"
+    LATIN = "Latin"
+    MAORI = "Maori"
+    MALAYALAM = "Malayalam"
+    WELSH = "Welsh"
+    SLOVAK = "Slovak"
+    TELUGU = "Telugu"
+    PERSIAN = "Persian"
+    LATVIAN = "Latvian"
+    BENGALI = "Bengali"
+    SERBIAN = "Serbian"
+    AZERBAIJANI = "Azerbaijani"
+    SLOVENIAN = "Slovenian"
+    KANNADA = "Kannada"
+    ESTONIAN = "Estonian"
+    MACEDONIAN = "Macedonian"
+    BRETON = "Breton"
+    BASQUE = "Basque"
+    ICELANDIC = "Icelandic"
+    ARMENIAN = "Armenian"
+    NEPALI = "Nepali"
+    MONGOLIAN = "Mongolian"
+    BOSNIAN = "Bosnian"
+    KAZAKH = "Kazakh"
+    ALBANIAN = "Albanian"
+    SWAHILI = "Swahili"
+    GALICIAN = "Galician"
+    MARATHI = "Marathi"
+    PUNJABI = "Punjabi"
+    SINHALA = "Sinhala"
+    KHMER = "Khmer"
+    SHONA = "Shona"
+    YORUBA = "Yoruba"
+    SOMALI = "Somali"
+    AFRIKAANS = "Afrikaans"
+    OCCITAN = "Occitan"
+    GEORGIAN = "Georgian"
+    BELARUSIAN = "Belarusian"
+    TAJIK = "Tajik"
+    SINDHI = "Sindhi"
+    GUJARATI = "Gujarati"
+    AMHARIC = "Amharic"
+    YIDDISH = "Yiddish"
+    LAO = "Lao"
+    UZBEK = "Uzbek"
+    FAROESE = "Faroese"
+    HAITIAN_CREOLE = "Haitian Creole"
+    PASHTO = "Pashto"
+    TURKMEN = "Turkmen"
+    NYNORSK = "Nynorsk"
+    MALTESE = "Maltese"
+    SANSKRIT = "Sanskrit"
+    LUXEMBOURGISH = "Luxembourgish"
+    MYANMAR = "Myanmar"
+    TIBETAN = "Tibetan"
+    TAGALOG = "Tagalog"
+    MALAGASY = "Malagasy"
+    ASSAMESE = "Assamese"
+    TATAR = "Tatar"
+    HAWAIIAN = "Hawaiian"
+    LINGALA = "Lingala"
+    HAUSA = "Hausa"
+    BASHKIR = "Bashkir"
+    JAVANESE = "Javanese"
+    SUNDANESE = "Sundanese"
+    CANTONESE = "Cantonese"
 
 LANGUAGES = {
-    "auto": "auto",
+    "英语": "en",
+    "中文": "zh",
+    "日本語": "ja",
+    "德语": "de",
+    "粤语": "yue",
+    "西班牙语": "es", 
+    "俄语": "ru",
+    "韩语": "ko",
+    "法语": "fr",
+    "葡萄牙语": "pt",
+    "土耳其语": "tr",
     "English": "en",
     "Chinese": "zh",
-    "Japanese": "ja", 
-    "Korean": "ko",
+    "German": "de", 
     "Spanish": "es",
-    "French": "fr",
-    "German": "de",
     "Russian": "ru",
+    "Korean": "ko",
+    "French": "fr",
+    "Japanese": "ja",
+    "Portuguese": "pt",
+    "Turkish": "tr",
+    "Polish": "pl",
+    "Catalan": "ca", 
+    "Dutch": "nl",
+    "Arabic": "ar",
+    "Swedish": "sv",
+    "Italian": "it",
+    "Indonesian": "id",
+    "Hindi": "hi",
+    "Finnish": "fi",
+    "Vietnamese": "vi",
+    "Hebrew": "he",
+    "Ukrainian": "uk",
+    "Greek": "el",
+    "Malay": "ms",
+    "Czech": "cs",
+    "Romanian": "ro",
+    "Danish": "da",
+    "Hungarian": "hu",
+    "Tamil": "ta",
+    "Norwegian": "no",
+    "Thai": "th",
+    "Urdu": "ur",
+    "Croatian": "hr",
+    "Bulgarian": "bg",
+    "Lithuanian": "lt",
+    "Latin": "la",
+    "Maori": "mi",
+    "Malayalam": "ml",
+    "Welsh": "cy",
+    "Slovak": "sk",
+    "Telugu": "te",
+    "Persian": "fa",
+    "Latvian": "lv",
+    "Bengali": "bn",
+    "Serbian": "sr",
+    "Azerbaijani": "az",
+    "Slovenian": "sl",
+    "Kannada": "kn",
+    "Estonian": "et",
+    "Macedonian": "mk",
+    "Breton": "br",
+    "Basque": "eu",
+    "Icelandic": "is",
+    "Armenian": "hy",
+    "Nepali": "ne",
+    "Mongolian": "mn",
+    "Bosnian": "bs",
+    "Kazakh": "kk",
+    "Albanian": "sq",
+    "Swahili": "sw",
+    "Galician": "gl",
+    "Marathi": "mr",
+    "Punjabi": "pa",
+    "Sinhala": "si",
+    "Khmer": "km",
+    "Shona": "sn",
+    "Yoruba": "yo",
+    "Somali": "so",
+    "Afrikaans": "af",
+    "Occitan": "oc",
+    "Georgian": "ka",
+    "Belarusian": "be",
+    "Tajik": "tg",
+    "Sindhi": "sd",
+    "Gujarati": "gu",
+    "Amharic": "am",
+    "Yiddish": "yi",
+    "Lao": "lo",
+    "Uzbek": "uz",
+    "Faroese": "fo",
+    "Haitian Creole": "ht",
+    "Pashto": "ps",
+    "Turkmen": "tk",
+    "Nynorsk": "nn",
+    "Maltese": "mt",
+    "Sanskrit": "sa",
+    "Luxembourgish": "lb",
+    "Myanmar": "my",
+    "Tibetan": "bo",
+    "Tagalog": "tl",
+    "Malagasy": "mg",
+    "Assamese": "as",
+    "Tatar": "tt",
+    "Hawaiian": "haw",
+    "Lingala": "ln",
+    "Hausa": "ha",
+    "Bashkir": "ba",
+    "Javanese": "jw",
+    "Sundanese": "su",
+    "Cantonese": "yue"
 }
+
 
 @dataclass
 class VideoInfo:

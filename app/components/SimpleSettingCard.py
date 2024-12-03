@@ -41,6 +41,7 @@ class ComboBoxSimpleSettingCard(SimpleSettingCard):
     def setup_combobox(self):
         self.comboBox = ComboBox(self)
         self.comboBox.addItems(self.items)
+        self.comboBox.setMaxVisibleItems(6)
         self.comboBox.currentTextChanged.connect(self.valueChanged)
         self.layout.addWidget(self.comboBox)
 
