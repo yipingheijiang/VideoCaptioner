@@ -21,7 +21,8 @@ def test_openai(base_url, api_key, model):
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": "Hello!"}
             ],
-            max_tokens=100
+            max_tokens=100,
+            timeout=15
         )
         # 返回AI的回复
         return True, str(response.choices[0].message.content)
