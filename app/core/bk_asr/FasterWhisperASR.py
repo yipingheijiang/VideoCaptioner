@@ -73,10 +73,6 @@ class FasterWhisperASR(BaseASR):
 
         self.process = None
 
-        # 注册退出处理
-        import atexit
-        atexit.register(self.stop)
-
     def _build_command(self, audio_path: Path) -> List[str]:
         """构建命令行参数"""
         cmd = [
@@ -223,15 +219,3 @@ class FasterWhisperASR(BaseASR):
 
     def _get_key(self):
         return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}-{self.language}"
-
-    def stop(self):
-        """停止 ASR 语音识别处理"""
-        if self.process:
-            logger.info("终止 Faster Whisper ASR 进程")
-            if os.name == 'nt':  # Windows系统
-                subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
-                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
-            else:  # Linux/Mac系统
-                import signal
-                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-            self.process = None
