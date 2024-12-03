@@ -513,11 +513,7 @@ def download(url, work_dir, progress_hook):
         }
         # 更新 yt-dlp 的配置
         ydl.params.update(ydl_opts)
-        import json
-        # 保存视频信息
-        with open(video_work_dir / "video_info.json", "w", encoding="utf-8") as f:
-            json.dump(info_dict, f, indent=4)
-
+        
         # 使用 process_info 进行下载，避免重复解析
         ydl.process_info(info_dict)
 
