@@ -58,7 +58,7 @@ WHISPER_MODELS = [
         "sha": "fd9727b6e1217c2f614f9b698455c4ffd82463b4"
     },
     {
-        "label": "Large(v1)",
+        "label": "large-v1",
         "value": "ggml-large-v1.bin",
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v1.bin",
@@ -66,7 +66,7 @@ WHISPER_MODELS = [
         "sha": "b1caaf735c4cc1429223d5a74f0f4d0b9b59a299"
     },
     {
-        "label": "Large(v2)",
+        "label": "large-v2",
         "value": "ggml-large-v2.bin", 
         "size": "3.09 GB",
         "downloadLink": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v2.bin",
@@ -208,7 +208,19 @@ class WhisperSettingDialog(MessageBoxBase):
             [model.value for model in WhisperModelEnum],
             self
         )
-        
+
+        # 检查未下载的模型并从下拉框中移除
+        for i in range(self.model_card.comboBox.count() - 1, -1, -1):
+            model_text = self.model_card.comboBox.itemText(i).lower()
+            model_config = next(
+                (model for model in WHISPER_MODELS if model['label'].lower() == model_text),
+                None
+            )
+            model_path = MODEL_PATH / model_config['value'] if model_config else None
+            if model_config and model_path.exists():
+                continue
+            self.model_card.comboBox.removeItem(i)
+
         self.language_card = ComboBoxSettingCard(
             cfg.transcribe_language,
             FIF.LANGUAGE,
