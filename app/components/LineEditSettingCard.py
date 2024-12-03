@@ -16,7 +16,6 @@ class LineEditSettingCard(SettingCard):
 
         self.lineEdit = LineEdit(self)
         self.lineEdit.setPlaceholderText(placeholder)
-
         self.hBoxLayout.addWidget(self.lineEdit, 1, Qt.AlignRight)
         self.hBoxLayout.addSpacing(16)
 

@@ -64,7 +64,6 @@ class SubtitleOptimizer:
         """关闭线程池"""
         if hasattr(self, 'executor'):
             self.executor.shutdown(wait=False)  # 直接关闭,不等待任务完成
-            logger.info("字幕优化器线程池已关闭")
 
 
     def optimizer_multi_thread(self, subtitle_json: Dict[int, str],
