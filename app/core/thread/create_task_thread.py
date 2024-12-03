@@ -492,11 +492,17 @@ def download(url, work_dir, progress_hook):
         video_title = sanitize_filename(info_dict.get('title', 'MyVideo'))
         video_work_dir = Path(work_dir) / sanitize_filename(video_title)
         subtitle_language = info_dict.get('language', None)
+        if subtitle_language:
+            subtitle_language = subtitle_language.lower().split('-')[0]
+
         try:
-            subtitle_download_link = info_dict['automatic_captions'][subtitle_language][-1]['url']
+            for l in info_dict['automatic_captions']:
+                if l.startswith(subtitle_language):
+                    subtitle_download_link = info_dict['automatic_captions'][l][-1]['url']
+                    break
         except Exception as e:
             subtitle_download_link = None
-        
+
         # 设置 yt-dlp 下载选项
         ydl_opts = {
             'paths': {
@@ -507,6 +513,10 @@ def download(url, work_dir, progress_hook):
         }
         # 更新 yt-dlp 的配置
         ydl.params.update(ydl_opts)
+        import json
+        # 保存视频信息
+        with open(video_work_dir / "video_info.json", "w", encoding="utf-8") as f:
+            json.dump(info_dict, f, indent=4)
 
         # 使用 process_info 进行下载，避免重复解析
         ydl.process_info(info_dict)
@@ -521,15 +531,19 @@ def download(url, work_dir, progress_hook):
         # 字幕文件路径， video_work_dir 下遍历所有文件寻找字幕文件，包括子文件夹 original.*
         subtitle_file_path = None
         for file in video_work_dir.glob("**/【下载字幕】*"):
-            subtitle_file_path = str(file)
-            if subtitle_language and subtitle_language not in subtitle_file_path:
-                logger.info("字幕语言错误，重新下载字幕: %s", subtitle_download_link)
-                os.remove(subtitle_file_path)
+            file_path = str(file)
+            if subtitle_language and subtitle_language not in file_path:
+                print("字幕语言错误，重新下载字幕: %s", subtitle_download_link)
+                os.remove(file_path)
                 if subtitle_download_link:
                     response = requests.get(subtitle_download_link)
-                    subtitle_file_path = video_work_dir / "subtitle" / f"【下载字幕】{subtitle_language}.vtt"
-                    with open(subtitle_file_path, 'w', encoding="utf-8") as f:
-                        f.write(response.text)
+                    file_path = video_work_dir / "subtitle" / f"【下载字幕】{subtitle_language}.vtt"
+                    if res := response.text:
+                        with open(file_path, 'w', encoding="utf-8") as f:
+                            f.write(res)
+                        subtitle_file_path = file_path
+            else:
+                subtitle_file_path = file_path
             break
         
         # 缩略图文件路径 video_work_dir 下遍历寻找 thumbnail.jpg
