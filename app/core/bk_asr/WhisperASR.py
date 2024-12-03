@@ -39,10 +39,6 @@ class WhisperASR(BaseASR):
 
         self.process = None
 
-        # 注册退出处理
-        import atexit
-        atexit.register(self.stop)
-
     def _make_segments(self, resp_data: str) -> list[ASRDataSeg]:
         asr_data = from_srt(resp_data)
         # 过滤掉纯音乐标记
@@ -139,7 +135,6 @@ class WhisperASR(BaseASR):
                 
                 # 读取结果文件
                 srt_path = output_path
-                print(srt_path)
                 if not srt_path.exists():
                     raise RuntimeError(f"输出文件未生成: {srt_path}")
                     
@@ -166,20 +161,6 @@ class WhisperASR(BaseASR):
         except Exception as e:
             logger.exception("获取音频时长时出错: %s", str(e))
             return 600
-
-    def stop(self):
-        """停止 ASR 语音识别处理
-        - 终止进程及其子进程
-        """
-        if self.process:
-            logger.info("终止 Whisper ASR 进程")
-            if os.name == 'nt':  # Windows系统
-                subprocess.run(['taskkill', '/F', '/T', '/PID', str(self.process.pid)], 
-                             capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
-            else:  # Linux/Mac系统
-                import signal
-                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-            self.process = None
 
 
 if __name__ == '__main__':
