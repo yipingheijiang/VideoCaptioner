@@ -1,3 +1,5 @@
+import os
+import psutil
 from PyQt5.QtCore import QUrl, QSize, QThread
 from PyQt5.QtGui import QIcon, QDesktopServices
 from PyQt5.QtWidgets import QApplication
@@ -41,6 +43,10 @@ class MainWindow(FluentWindow):
         # 初始化导航界面
         self.initNavigation()
         self.splashScreen.finish()
+
+        # 注册退出处理， 清理进程
+        import atexit
+        atexit.register(self.stop)
 
     def initNavigation(self):
         """初始化导航栏"""
@@ -131,10 +137,15 @@ class MainWindow(FluentWindow):
         self.settingInterface.close()
         super().closeEvent(event)
         
-        # 强制退出应用程序
-        QApplication.quit()
+        # # 强制退出应用程序
+        # QApplication.quit()
 
-        # 确保所有线程和进程都被终止
-        import os
-        os._exit(0)
+        # # 确保所有线程和进程都被终止
+        # import os
+        # os._exit(0)
         
+    def stop(self):
+        # 找到 FFmpeg 进程并关闭
+        process = psutil.Process(os.getpid())
+        for child in process.children(recursive=True):
+            child.kill()
