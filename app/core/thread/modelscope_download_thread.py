@@ -72,11 +72,6 @@ class ModelscopeDownloadThread(QThread):
         except Exception as e:
             self.error.emit(str(e))
 
-    def stop(self):
-        if self.process:
-            self.process.terminate()
-            self.process.wait()
-
 
 if __name__ == "__main__":
     from PyQt5.QtCore import QCoreApplication
