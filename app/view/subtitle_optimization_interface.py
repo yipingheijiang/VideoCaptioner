@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import tempfile
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QColor
@@ -10,6 +11,9 @@ from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHeaderView, QFileDialog
 from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase
 from qfluentwidgets import FluentIcon as FIF, InfoBarPosition
+from PyQt5.QtCore import QUrl
+
+from app.config import SUBTITLE_STYLE_PATH
 
 from ..core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
 from ..common.config import cfg
@@ -19,6 +23,8 @@ from ..core.entities import Task
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..common.signal_bus import signalBus
 from ..components.SubtitleSettingDialog import SubtitleSettingDialog
+from ..components.MyVideoWidget import MyVideoWidget
+
 
 class SubtitleTableModel(QAbstractTableModel):
     def __init__(self, data):
@@ -113,7 +119,7 @@ class SubtitleOptimizationInterface(QWidget):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.task = None
-        self.custom_prompt_text = ""  # 添加提示文本属性
+        self.custom_prompt_text = cfg.custom_prompt_text.value
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._init_ui()
         self._setup_signals()
@@ -156,12 +162,18 @@ class SubtitleOptimizationInterface(QWidget):
         # 添加字幕设置按钮
         self.subtitle_setting_button = ToolButton(FIF.SETTING, self)
         self.subtitle_setting_button.setFixedSize(32, 32)
+        
+        # 添加视频播放按钮
+        self.video_player_button = ToolButton(FIF.VIDEO, self)
+        self.video_player_button.setFixedSize(32, 32)
+        
         self.start_button = PrimaryPushButton(self.tr("开始"), self, icon=FIF.PLAY)
         
         self.right_layout.addWidget(self.open_folder_button)
         self.right_layout.addWidget(self.file_select_button)
         self.right_layout.addWidget(self.prompt_button)
         self.right_layout.addWidget(self.subtitle_setting_button)
+        self.right_layout.addWidget(self.video_player_button)
         self.right_layout.addWidget(self.start_button)
 
         self.top_layout.addLayout(self.left_layout)
@@ -184,6 +196,7 @@ class SubtitleOptimizationInterface(QWidget):
         self.subtitle_table.setColumnWidth(1, 120)
         self.subtitle_table.verticalHeader().setDefaultSectionSize(50)
         self.subtitle_table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
+        self.subtitle_table.clicked.connect(self.on_subtitle_clicked)
         self.main_layout.addWidget(self.subtitle_table)
 
     def _setup_bottom_layout(self):
@@ -205,11 +218,12 @@ class SubtitleOptimizationInterface(QWidget):
         self.layout_combobox.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
         signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
         self.subtitle_setting_button.clicked.connect(self.show_subtitle_settings)
+        self.video_player_button.clicked.connect(self.show_video_player)
 
     def show_prompt_dialog(self):
-        dialog = PromptDialog(self, self.custom_prompt_text)
-        if dialog.exec_():  # 注意这里改用MessageBoxBase.Accepted
-            self.custom_prompt_text = dialog.get_prompt()
+        dialog = PromptDialog(self)
+        if dialog.exec_():
+            self.custom_prompt_text = cfg.custom_prompt_text.value
             self._update_prompt_button_style()
 
     def _update_prompt_button_style(self):
@@ -243,8 +257,6 @@ class SubtitleOptimizationInterface(QWidget):
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(self.tr("已加载文件"))
-        self.custom_prompt_text = ""
-        self._update_prompt_button_style()
 
     def process(self):
         """主处理函数"""
@@ -387,8 +399,6 @@ class SubtitleOptimizationInterface(QWidget):
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(self.tr("已加载文件"))
-        self.custom_custom_prompt_text = ""
-        self._update_prompt_button_style()
 
     def dragEnterEvent(self, event: QDragEnterEvent):
         event.accept() if event.mimeData().hasUrls() else event.ignore()
@@ -434,20 +444,67 @@ class SubtitleOptimizationInterface(QWidget):
         dialog = SubtitleSettingDialog(self.window())
         dialog.exec_()
 
+    def show_video_player(self):
+        """显示视频播放器窗口"""
+        # 创建视频播放器窗口
+        self.video_player = MyVideoWidget()
+        self.video_player.resize(800, 600)
+
+
+        def signal_update():
+            if not self.model._data:
+                return
+            ass_style_name = cfg.subtitle_style_name.value
+            ass_style_path = SUBTITLE_STYLE_PATH / f"{ass_style_name}.txt"
+            if ass_style_path.exists():
+                subtitle_style_srt = ass_style_path.read_text(encoding="utf-8")
+            else:
+                subtitle_style_srt = None
+            temp_srt_path = os.path.join(tempfile.gettempdir(), "temp_subtitle.ass")
+            asr_data = from_json(self.model._data)
+            asr_data.save(temp_srt_path, layout=cfg.subtitle_layout.value, ass_style=subtitle_style_srt)
+            signalBus.add_subtitle(temp_srt_path)
+
+        # 如果有字幕文件,则添加字幕
+        signal_update()
+
+        signalBus.subtitle_layout_changed.connect(signal_update)
+        self.model.dataChanged.connect(signal_update)
+        self.model.layoutChanged.connect(signal_update)
+
+        # 如果有关联的视频文件,则自动加载
+        if self.task and hasattr(self.task, 'video_path') and self.task.video_path:
+            self.video_player.setVideo(QUrl.fromLocalFile(self.task.video_path))
+        
+        self.video_player.show()
+        self.video_player.play()
+
+    def on_subtitle_clicked(self, index):
+        row = index.row()
+        item = list(self.model._data.values())[row]
+        start_time = item['start_time']  # 毫秒
+        end_time = item['end_time'] - 50 if item['end_time'] - 50 > start_time else item['end_time']
+        signalBus.play_video_segment(start_time, end_time)
+
+
 class PromptDialog(MessageBoxBase):
-    def __init__(self, parent=None, current_prompt=""):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.custom_prompt_text = current_prompt
         self.setup_ui()
         self.setWindowTitle(self.tr('文稿提示'))
+        # 连接按钮点击事件
+        self.yesButton.clicked.connect(self.save_prompt)
         
     def setup_ui(self):
         self.titleLabel = BodyLabel(self.tr('文稿提示'), self)
         
         # 添加文本编辑框
         self.text_edit = TextEdit(self)
-        self.text_edit.setPlaceholderText(self.tr("请输入文稿提示（优化字幕或者翻译字幕的提示参考）"))
-        self.text_edit.setText(self.custom_prompt_text)
+        self.text_edit.setPlaceholderText(
+            self.tr("请输入文稿提示（优化字幕或者翻译字幕的提示参考）")
+        )
+        self.text_edit.setText(cfg.custom_prompt_text.value)
+        
         self.text_edit.setMinimumWidth(400)
         self.text_edit.setMinimumHeight(200)
         
@@ -459,9 +516,15 @@ class PromptDialog(MessageBoxBase):
         # 设置按钮文本
         self.yesButton.setText(self.tr('确定'))
         self.cancelButton.setText(self.tr('取消'))
-        
+
     def get_prompt(self):
         return self.text_edit.toPlainText()
+
+    def save_prompt(self):
+        # 在点击确定按钮时保存提示文本到配置
+        prompt_text = self.text_edit.toPlainText()
+        cfg.set(cfg.custom_prompt_text, prompt_text)
+        print(cfg.custom_prompt_text.value)
 
 
 if __name__ == "__main__":
