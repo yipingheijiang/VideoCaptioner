@@ -44,7 +44,7 @@
 
 软件较为轻量，打包大小不足 60M,已集成所有必要环境，下载后可直接运行。
 
-1. 从 [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) 页面下载最新版本的可执行程序。或者：[蓝奏盘下载](https://wwwm.lanzoue.com/iKMhH2g0se9a)
+1. 从 [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) 页面下载最新版本的可执行程序。或者：[蓝奏盘下载](https://wwwm.lanzoue.com/ijmfk2hhgl3c)
 
 2. 打开安装包进行安装
 
@@ -124,6 +124,8 @@ python main.py
 
 
 ### 2. 本地 Whisper 语音识别配置（需软件内下载）
+
+Whisper 版本有 WhisperCpp 和 fasterWhisper 两种，后者效果更好，都需要自行在软件内下载模型。
 
 | 模型 | 磁盘空间 | 内存占用 | 说明 |
 |------|----------|----------|------|
@@ -259,3 +261,12 @@ VideoCaptioner/
 ## ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=WEIFENG2333/VideoCaptioner&type=Date)](https://star-history.com/#WEIFENG2333/VideoCaptioner&Date)
+
+## 💖 支持作者
+
+如果觉得项目对你有帮助，可以给项目点个Star，这将是对我最大的鼓励和支持！
+
+<div align="center">
+  <img src="./docs/images/alipay.jpg" alt="支付宝二维码" width="150" height="210">
+  <img src="./docs/images/wechat.jpg" alt="微信二维码" width="150" height="210">
+</div>
