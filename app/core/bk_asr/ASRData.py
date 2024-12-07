@@ -254,10 +254,10 @@ class ASRData:
                 "Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,"
                 "Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,"
                 "Alignment,MarginL,MarginR,MarginV,Encoding\n"
-                "Style: Default,微软雅黑,66,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,"
-                "0,0,1,2,0,2,10,10,10,1\n"
-                "Style: Translate,微软雅黑,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,"
-                "0,0,1,2,0,2,10,10,10,1"
+                "Style: Default,MicrosoftYaHei-Bold,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,"
+                "0,0,1,2,0,2,10,10,15,1\n"
+                "Style: Secondary,MicrosoftYaHei-Bold,30,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,"
+                "0,0,1,2,0,2,10,10,15,1"
             )
 
         ass_content = (
