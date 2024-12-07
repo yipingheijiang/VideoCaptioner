@@ -2,7 +2,7 @@ import os
 import logging
 from pathlib import Path
 
-VERSION = "v1.1.1"
+VERSION = "v1.2.0"
 YEAR = 2024
 APP_NAME = "VideoCaptioner"
 AUTHOR = "Weifeng"
@@ -39,6 +39,9 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 os.environ["PATH"] = str(BIN_PATH) + os.pathsep + os.environ["PATH"]
 if FASER_WHISPER_PATH.exists():
     os.environ["PATH"] = str(FASER_WHISPER_PATH) + os.pathsep + os.environ["PATH"]
+
+# 添加 VLC 路径
+os.environ['PYTHON_VLC_MODULE_PATH'] = str(BIN_PATH / "vlc")
 
 # 创建路径
 for p in [CACHE_PATH, LOG_PATH, WORK_PATH, MODEL_PATH]:
