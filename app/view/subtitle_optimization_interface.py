@@ -269,6 +269,16 @@ class SubtitleOptimizationInterface(QWidget):
 
     def process(self):
         """主处理函数"""
+        # 检查是否有任务
+        if not self.task:
+            InfoBar.warning(
+                self.tr("警告"),
+                self.tr("请先加载字幕文件"),
+                duration=3000,
+                parent=self
+            )
+            return
+        
         self.start_button.setEnabled(False)
         self.file_select_button.setEnabled(False)
         self.progress_bar.resume()
@@ -535,7 +545,7 @@ class SubtitleOptimizationInterface(QWidget):
         if not rows or len(rows) < 2:
             return
         
-        # 获取选中行的数据
+        # ��取选中行的数据
         data = self.model._data
         data_list = list(data.values())
         
