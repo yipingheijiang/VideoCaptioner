@@ -9,8 +9,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QColor
 from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHeaderView, QFileDialog
-from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase
-from qfluentwidgets import FluentIcon as FIF, InfoBarPosition
+from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase, RoundMenu, Action, FluentIcon as FIF
+from qfluentwidgets import InfoBarPosition
 from PyQt5.QtCore import QUrl
 
 from app.config import SUBTITLE_STYLE_PATH
@@ -196,6 +196,9 @@ class SubtitleOptimizationInterface(QWidget):
         self.subtitle_table.verticalHeader().setDefaultSectionSize(50)
         self.subtitle_table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
         self.subtitle_table.clicked.connect(self.on_subtitle_clicked)
+        # 添加右键菜单支持
+        self.subtitle_table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.subtitle_table.customContextMenuRequested.connect(self.show_context_menu)
         self.main_layout.addWidget(self.subtitle_table)
 
     def _setup_bottom_layout(self):
@@ -484,6 +487,114 @@ class SubtitleOptimizationInterface(QWidget):
         start_time = item['start_time']  # 毫秒
         end_time = item['end_time'] - 50 if item['end_time'] - 50 > start_time else item['end_time']
         signalBus.play_video_segment(start_time, end_time)
+
+    def show_context_menu(self, pos):
+        """显示右键菜单"""
+        menu = RoundMenu(parent=self)
+        
+        # 获取选中的行
+        indexes = self.subtitle_table.selectedIndexes()
+        if not indexes:
+            return
+        
+        # 获取唯一的行号
+        rows = sorted(set(index.row() for index in indexes))
+        if not rows:
+            return
+        
+        # 添加菜单项
+        # retranslate_action = Action(FIF.SYNC, self.tr("重新翻译"))
+        merge_action = Action(FIF.LINK, self.tr("合并"))  # 添加快捷键提示
+        # menu.addAction(retranslate_action)
+        menu.addAction(merge_action)
+        merge_action.setShortcut("Ctrl+M")  # 设置快捷键
+        
+        # 设置动作状态
+        # retranslate_action.setEnabled(cfg.need_translate.value)
+        merge_action.setEnabled(len(rows) > 1)
+        
+        # 连接动作信号
+        # retranslate_action.triggered.connect(lambda: self.retranslate_selected_rows(rows))
+        merge_action.triggered.connect(lambda: self.merge_selected_rows(rows))
+        
+        # 显示菜单
+        menu.exec(self.subtitle_table.viewport().mapToGlobal(pos))
+
+    def merge_selected_rows(self, rows):
+        """合并选中的字幕行"""
+        if not rows or len(rows) < 2:
+            return
+        
+        # 获取选中行的数据
+        data = self.model._data
+        data_list = list(data.values())
+        
+        # 获取第一行和最后一行的时间戳
+        first_row = data_list[rows[0]]
+        last_row = data_list[rows[-1]]
+        start_time = first_row['start_time']
+        end_time = last_row['end_time']
+        
+        # 合并字幕内容
+        original_subtitles = []
+        translated_subtitles = []
+        for row in rows:
+            item = data_list[row]
+            original_subtitles.append(item['original_subtitle'])
+            translated_subtitles.append(item['translated_subtitle'])
+        
+        merged_original = ' '.join(original_subtitles)
+        merged_translated = ' '.join(translated_subtitles)
+        
+        # 创建新的合并后的字幕项
+        merged_item = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'original_subtitle': merged_original,
+            'translated_subtitle': merged_translated
+        }
+        
+        # 获取所有需要保留的键
+        keys = list(data.keys())
+        preserved_keys = keys[:rows[0]] + keys[rows[-1]+1:]
+        
+        # 创建新的数据字典
+        new_data = {}
+        for i, key in enumerate(preserved_keys):
+            if i == rows[0]:
+                new_key = f"{len(new_data)+1}"
+                new_data[new_key] = merged_item
+            new_key = f"{len(new_data)+1}"
+            new_data[new_key] = data[key]
+        
+        # 如果合并的是最后几行，需要确保合并项被添加
+        if rows[0] >= len(preserved_keys):
+            new_key = f"{len(new_data)+1}"
+            new_data[new_key] = merged_item
+        
+        # 更新模型数据
+        self.model.update_all(new_data)
+        
+        # 显示成功提示
+        InfoBar.success(
+            self.tr("合并成功"),
+            self.tr("已成功合并选中的字幕行"),
+            duration=3000,
+            parent=self
+        )
+
+    def keyPressEvent(self, event):
+        """处理键盘事件"""
+        # 处理 Ctrl+M 快捷键
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_M:
+            indexes = self.subtitle_table.selectedIndexes()
+            if indexes:
+                rows = sorted(set(index.row() for index in indexes))
+                if len(rows) > 1:
+                    self.merge_selected_rows(rows)
+            event.accept()
+        else:
+            super().keyPressEvent(event)
 
 
 class PromptDialog(MessageBoxBase):
