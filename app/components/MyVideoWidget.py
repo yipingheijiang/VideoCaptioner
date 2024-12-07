@@ -4,9 +4,8 @@ import vlc
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer, QObject
-from PyQt5.QtGui import QPainter, QIcon
-from PyQt5.QtMultimediaWidgets import QGraphicsVideoItem
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QHBoxLayout, QWidget
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QHBoxLayout
 from PyQt5.QtMultimedia import QMediaPlayer
 
 from qfluentwidgets.common.style_sheet import FluentStyleSheet
@@ -14,18 +13,9 @@ from qfluentwidgets.multimedia.media_play_bar import MediaPlayBarBase, MediaPlay
 from qfluentwidgets.multimedia.media_player import MediaPlayer, MediaPlayerBase
 from qfluentwidgets.common.icon import FluentIcon
 from qfluentwidgets.components.widgets.label import CaptionLabel
-from qfluentwidgets.window import SplashScreen
 
 from ..common.signal_bus import signalBus
 from ..config import RESOURCE_PATH
-
-
-class GraphicsVideoItem(QGraphicsVideoItem):
-    """ Graphics video item """
-
-    def paint(self, painter: QPainter, option, widget):
-        painter.setCompositionMode(QPainter.CompositionMode_Difference)
-        super().paint(painter, option, widget)
 
 
 class MediaPlayerBase(QObject):
