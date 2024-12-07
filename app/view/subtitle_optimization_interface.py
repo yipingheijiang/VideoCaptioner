@@ -165,6 +165,7 @@ class SubtitleOptimizationInterface(QWidget):
         # 添加视频播放按钮
         self.video_player_button = ToolButton(FIF.VIDEO, self)
         self.video_player_button.setFixedSize(32, 32)
+        self.video_player_button.hide()
         
         self.start_button = PrimaryPushButton(self.tr("开始"), self, icon=FIF.PLAY)
         
@@ -545,7 +546,7 @@ class SubtitleOptimizationInterface(QWidget):
         if not rows or len(rows) < 2:
             return
         
-        # ��取选中行的数据
+        # 获取选中行的数据
         data = self.model._data
         data_list = list(data.values())
         
