@@ -282,7 +282,7 @@ class SubtitleOptimizationInterface(QWidget):
         
         self.start_button.setEnabled(False)
         self.file_select_button.setEnabled(False)
-        self.progress_bar.resume()
+        self.progress_bar.reset()
         self.cancel_button.show()
         self._update_task_config()
 

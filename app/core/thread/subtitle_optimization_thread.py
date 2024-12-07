@@ -81,6 +81,7 @@ class SubtitleOptimizationThread(QThread):
             logger.info(f"时间：{datetime.datetime.now()}")
             
             # 获取API配置
+            self.progress.emit(2, self.tr("开始验证API配置..."))
             base_url, api_key, llm_model, thread_num, batch_size = self._setup_api_config()
             logger.info(f"使用 {llm_model} 作为LLM模型")
             os.environ['OPENAI_BASE_URL'] = base_url
