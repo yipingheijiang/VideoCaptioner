@@ -14,6 +14,7 @@ from .subtitle_style_interface import SubtitleStyleInterface
 from .batch_process_interface import BatchProcessInterface
 from .home_interface import HomeInterface
 from .setting_interface import SettingInterface
+from ..components.DonateDialog import DonateDialog
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 
@@ -96,14 +97,18 @@ class MainWindow(FluentWindow):
     def onGithubDialog(self):
         """打开GitHub"""
         w = MessageBox(
-            'GitHub信息',
-            'VideoCaptioner 由本人在课余时间独立开发完成，目前托管在GitHub上，欢迎Star和Fork。项目诚然还有很多地方需要完善，遇到软件的问题或者BUG欢迎提交Issue。\n\n https://github.com/WEIFENG2333/VideoCaptioner',
+            self.tr('GitHub信息'),
+            self.tr('VideoCaptioner 由本人在课余时间独立开发完成，目前托管在GitHub上，欢迎Star和Fork。项目诚然还有很多地方需要完善，遇到软件的问题或者BUG欢迎提交Issue。\n\n https://github.com/WEIFENG2333/VideoCaptioner'),
             self
         )
-        w.yesButton.setText('打开 GitHub')
-        w.cancelButton.setText('取消')
+        w.yesButton.setText(self.tr('打开 GitHub'))
+        w.cancelButton.setText(self.tr('支持作者'))
         if w.exec():
             QDesktopServices.openUrl(QUrl(GITHUB_REPO_URL))
+        else:
+            # 点击"支持作者"按钮时打开捐赠对话框
+            donate_dialog = DonateDialog(self)
+            donate_dialog.exec_()
 
     def onNewVersion(self, version, force_update, update_info, download_url):
         """新版本提示"""
