@@ -207,8 +207,15 @@ class SubtitleOptimizationInterface(QWidget):
         self.status_label = BodyLabel(self.tr("请拖入字幕文件"), self)
         self.status_label.setMinimumWidth(100)
         self.status_label.setAlignment(Qt.AlignCenter)
+        
+        # 添加取消按钮
+        self.cancel_button = PushButton(self.tr("取消"), self, icon=FIF.CANCEL)
+        self.cancel_button.hide() # 初始隐藏
+        self.cancel_button.clicked.connect(self.cancel_optimization)
+        
         self.bottom_layout.addWidget(self.progress_bar, 1)
         self.bottom_layout.addWidget(self.status_label)
+        self.bottom_layout.addWidget(self.cancel_button)
         self.main_layout.addLayout(self.bottom_layout)
 
     def _setup_signals(self):
@@ -265,6 +272,7 @@ class SubtitleOptimizationInterface(QWidget):
         self.start_button.setEnabled(False)
         self.file_select_button.setEnabled(False)
         self.progress_bar.resume()
+        self.cancel_button.show()
         self._update_task_config()
 
         self.subtitle_optimization_thread = SubtitleOptimizationThread(self.task)
@@ -294,6 +302,7 @@ class SubtitleOptimizationInterface(QWidget):
     def on_subtitle_optimization_finished(self, task: Task):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
+        self.cancel_button.hide() # 隐藏取消按钮
         if self.task.status == Task.Status.PENDING:
             self.finished.emit(task)
         InfoBar.success(
@@ -307,6 +316,7 @@ class SubtitleOptimizationInterface(QWidget):
     def on_subtitle_optimization_error(self, error):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
+        self.cancel_button.hide() # 隐藏取消按钮
         self.progress_bar.error()
         InfoBar.error(self.tr("优化失败"), self.tr(error), duration=20000, parent=self)
 
@@ -475,8 +485,8 @@ class SubtitleOptimizationInterface(QWidget):
         self.model.layoutChanged.connect(signal_update)
 
         # 如果有关联的视频文件,则自动加载
-        if self.task and hasattr(self.task, 'video_path') and self.task.video_path:
-            self.video_player.setVideo(QUrl.fromLocalFile(self.task.video_path))
+        if self.task and hasattr(self.task, 'file_path') and self.task.file_path:
+            self.video_player.setVideo(QUrl.fromLocalFile(self.task.file_path))
         
         self.video_player.show()
         self.video_player.play()
@@ -595,6 +605,22 @@ class SubtitleOptimizationInterface(QWidget):
             event.accept()
         else:
             super().keyPressEvent(event)
+
+    def cancel_optimization(self):
+        """取消字幕优化"""
+        if hasattr(self, 'subtitle_optimization_thread'):
+            self.subtitle_optimization_thread.stop()
+            self.start_button.setEnabled(True)
+            self.file_select_button.setEnabled(True)
+            self.cancel_button.hide()
+            self.progress_bar.setValue(0)
+            self.status_label.setText(self.tr("已取消优化"))
+            InfoBar.warning(
+                self.tr("已取消"),
+                self.tr("字幕优化已取消"),
+                duration=3000,
+                parent=self
+            )
 
 
 class PromptDialog(MessageBoxBase):

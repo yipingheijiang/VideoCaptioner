@@ -62,8 +62,17 @@ class SubtitleOptimizer:
 
     def stop(self):
         """关闭线程池"""
-        if hasattr(self, 'executor'):
-            self.executor.shutdown(wait=False)  # 直接关闭,不等待任务完成
+        if hasattr(self, 'executor') and hasattr(self.executor, '_threads'):
+            print("正在强制关闭线程池")
+            for future in self.executor._threads:
+                try:
+                    future._tstate_lock.release()
+                    future._stop()
+                except Exception:
+                    pass
+            #  关闭线程池
+            self.executor.shutdown(wait=False, cancel_futures=True)
+            self.executor = None
 
 
     def optimizer_multi_thread(self, subtitle_json: Dict[int, str],
@@ -119,7 +128,6 @@ class SubtitleOptimizer:
             self.llm_result_logger.info(f"优化字幕：{original_subtitle[k]}")
             self.llm_result_logger.info(f"优化结果：{optimized_text}")
             self.llm_result_logger.info("===========")
-        print(aligned_subtitle)
         return aligned_subtitle
 
     @retry.retry(tries=2)
@@ -139,6 +147,7 @@ class SubtitleOptimizer:
             messages=message,
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
+        # print(response_content)
         optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
         aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
         # 在 translations 中查找对应的翻译  文本-翻译 映射
@@ -152,7 +161,8 @@ class SubtitleOptimizer:
 
         if self.llm_result_logger:
             for k, v in response_content.items():
-                self.llm_result_logger.info(f"原字幕：{v['optimized_subtitle']}")
+                self.llm_result_logger.info(f"原字幕：-----")
+                self.llm_result_logger.info(f"优化字幕：{v['optimized_subtitle']}")
                 self.llm_result_logger.info(f"翻译后字幕：{v['translation']}")
                 self.llm_result_logger.info(f"反思后字幕：{v['revised_translation']}")
                 self.llm_result_logger.info("===========")
@@ -247,7 +257,6 @@ class SubtitleOptimizer:
         punctuation = r'[,.!?;:，。！？；：、]'
         if not need_remove_punctuation or (cjk_only and not is_mainly_cjk(text)):
             return text
-        print(re.sub(f'{punctuation}+$', '', text.strip()))
         # 移除末尾标点符号
         return re.sub(f'{punctuation}+$', '', text.strip())
 
