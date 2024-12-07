@@ -1,14 +1,27 @@
-# coding:utf-8
+"""
+Copyright (c) 2024 [VideoCaptioner]
+All rights reserved.
+
+Author: Weifeng
+"""
 import os
 import sys
+import traceback
+import logging
+from datetime import datetime
 
-# 添加项目根目录到 Python 路径
+# Add project root directory to Python path
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(project_root)
 
-# 修复中文路径问题
+# Fix Chinese path problem
 plugin_path = os.path.join(sys.prefix, 'Lib', 'site-packages', 'PyQt5', 'Qt5', 'plugins')
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
+
+# Delete pyd files app*.pyd
+for file in os.listdir():
+    if file.startswith("app") and file.endswith(".pyd"):
+        os.remove(file)
 
 from PyQt5.QtCore import Qt, QTranslator
 from PyQt5.QtWidgets import QApplication
@@ -17,8 +30,18 @@ from qfluentwidgets import FluentTranslator
 from app.common.config import cfg
 from app.view.main_window import MainWindow
 from app.config import RESOURCE_PATH
+from app.core.utils import logger
 
-# enable dpi scale
+
+# 
+logger = logger.setup_logger("VideoCaptioner")
+def exception_hook(exctype, value, tb):
+    logger.error(''.join(traceback.format_exception(exctype, value, tb)))
+    sys.__excepthook__(exctype, value, tb)  # 调用默认的异常处理
+sys.excepthook = exception_hook
+
+
+# Enable DPI Scale
 if cfg.get(cfg.dpiScale) == "Auto":
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
@@ -26,30 +49,13 @@ if cfg.get(cfg.dpiScale) == "Auto":
 else:
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
     os.environ["QT_SCALE_FACTOR"] = str(cfg.get(cfg.dpiScale))
-
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
-# create application
 app = QApplication(sys.argv)
 app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
 
-# 创建一个全局字体
-# font = QFont("./app/resource/AlibabaPuHuiTi-Medium.ttf")
-# app.setFont(font)
-# 加载自定义字体
-# font_path = os.path.join(os.path.dirname(__file__), "app/resource/AlibabaPuHuiTi-Medium.ttf")  # 替换为你的字体路径
-# font_id = QFontDatabase.addApplicationFont(font_path)
-# if font_id == -1:
-#     print("字体加载失败")
-# else:
-#     # 获取字体系列名称
-#     font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-#     print(font_family)
-#     app.setFont(QFont(font_family, 12))  # 字体大小为 12
-
-# 国际化（多语言）
+# Internationalization (Multi-language)
 locale = cfg.get(cfg.language).value
-
 translator = FluentTranslator(locale)
 myTranslator = QTranslator()
 translations_path = RESOURCE_PATH / "translations" / f"VideoCaptioner_{locale.name()}.qm"
@@ -57,8 +63,7 @@ myTranslator.load(str(translations_path))
 app.installTranslator(translator)
 app.installTranslator(myTranslator)
 
-# create main window
+logger.info("应用程序初始化完成")
 w = MainWindow()
 w.show()
-
-app.exec_()
+sys.exit(app.exec_())
