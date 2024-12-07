@@ -2,15 +2,15 @@
 import sys
 import vlc
 from pathlib import Path
+from enum import Enum
 
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer, QObject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QHBoxLayout
-from PyQt5.QtMultimedia import QMediaPlayer
 
 from qfluentwidgets.common.style_sheet import FluentStyleSheet
 from qfluentwidgets.multimedia.media_play_bar import MediaPlayBarBase, MediaPlayBarButton
-from qfluentwidgets.multimedia.media_player import MediaPlayer, MediaPlayerBase
+# from qfluentwidgets.multimedia.media_player import MediaPlayer, MediaPlayerBase
 from qfluentwidgets.common.icon import FluentIcon
 from qfluentwidgets.components.widgets.label import CaptionLabel
 
@@ -18,10 +18,25 @@ from ..common.signal_bus import signalBus
 from ..config import RESOURCE_PATH
 
 
+class MediaStatus(Enum):
+    NoMedia = 0
+    LoadingMedia = 1
+    LoadedMedia = 2
+    BufferingMedia = 3
+    BufferedMedia = 4
+    EndOfMedia = 5
+    InvalidMedia = 6
+    UnknownMediaStatus = 7
+
+class PlaybackState(Enum):
+    StoppedState = 0
+    PlayingState = 1
+    PausedState = 2
+
 class MediaPlayerBase(QObject):
     """ Media player base class """
 
-    mediaStatusChanged = pyqtSignal(QMediaPlayer.MediaStatus)
+    mediaStatusChanged = pyqtSignal(MediaStatus)
     playbackRateChanged = pyqtSignal(float)
     positionChanged = pyqtSignal(int)
     durationChanged = pyqtSignal(int)
@@ -36,11 +51,11 @@ class MediaPlayerBase(QObject):
         """ Whether the media is playing """
         raise NotImplementedError
 
-    def mediaStatus(self) -> QMediaPlayer.MediaStatus:
+    def mediaStatus(self) -> MediaStatus:
         """ Return the status of the current media stream """
         raise NotImplementedError
 
-    def playbackState(self) -> QMediaPlayer.State:
+    def playbackState(self) -> PlaybackState:
         """ Return the playback status of the current media stream """
         raise NotImplementedError
 
@@ -161,36 +176,36 @@ class MediaPlayer(MediaPlayerBase):
     def isPlaying(self):
         return bool(self._player and self._player.is_playing())
 
-    def mediaStatus(self) -> QMediaPlayer.MediaStatus:
+    def mediaStatus(self) -> MediaStatus:
         if not self._player:
-            return QMediaPlayer.NoMedia
+            return MediaStatus.NoMedia
         
         state = self._player.get_state()
         if state == vlc.State.NothingSpecial:
-            return QMediaPlayer.NoMedia
+            return MediaStatus.NoMedia
         elif state == vlc.State.Opening:
-            return QMediaPlayer.LoadingMedia
+            return MediaStatus.LoadingMedia
         elif state == vlc.State.Playing:
-            return QMediaPlayer.BufferedMedia
+            return MediaStatus.BufferedMedia
         elif state == vlc.State.Paused:
-            return QMediaPlayer.BufferedMedia
+            return MediaStatus.BufferedMedia
         elif state == vlc.State.Stopped:
-            return QMediaPlayer.LoadedMedia
+            return MediaStatus.LoadedMedia
         elif state == vlc.State.Ended:
-            return QMediaPlayer.EndOfMedia
+            return MediaStatus.EndOfMedia
         elif state == vlc.State.Error:
-            return QMediaPlayer.InvalidMedia
-        return QMediaPlayer.UnknownMediaStatus
+            return MediaStatus.InvalidMedia
+        return MediaStatus.UnknownMediaStatus
 
-    def playbackState(self) -> QMediaPlayer.State:
+    def playbackState(self) -> PlaybackState:
         if not self._player:
-            return QMediaPlayer.StoppedState
+            return PlaybackState.StoppedState
         
         if self._player.is_playing():
-            return QMediaPlayer.PlayingState
+            return PlaybackState.PlayingState
         elif self._player.get_state() == vlc.State.Paused:
-            return QMediaPlayer.PausedState
-        return QMediaPlayer.StoppedState
+            return PlaybackState.PausedState
+        return PlaybackState.StoppedState
 
     def duration(self):
         return self._player.get_length() if self._player else 0
