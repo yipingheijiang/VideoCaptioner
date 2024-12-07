@@ -160,7 +160,7 @@ Translate the provided subtitles into the target language while adhering to spec
 - Pay special attention to cultural nuances and idiomatic expressions to enhance relatability and engagement.
 """
 
-REFLECT_TRANSLATE_PROMPT0 = """
+REFLECT_TRANSLATE_PROMPT = """
 You are a subtitle proofreading and translation expert. Your task is to process subtitles generated through speech recognition.
 
 These subtitles may contain errors, and you need to correct the original subtitles and translate them into [TargetLanguage]. Please follow these guidelines:
@@ -221,7 +221,7 @@ Please process the given subtitles according to these instructions and return th
 
 """
 
-REFLECT_TRANSLATE_PROMPT = """
+REFLECT_TRANSLATE_PROMPT0 = """
 # Role: 资深翻译专家
 
 ## Background:
