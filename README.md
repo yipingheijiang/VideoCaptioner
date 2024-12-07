@@ -267,6 +267,6 @@ VideoCaptioner/
 如果觉得项目对你有帮助，可以给项目点个Star，这将是对我最大的鼓励和支持！
 
 <div align="center">
-  <img src="./docs/images/alipay.jpg" alt="支付宝二维码" width="150" height="210">
-  <img src="./docs/images/wechat.jpg" alt="微信二维码" width="150" height="210">
+  <img src="./docs/images/alipay.jpg" alt="支付宝二维码" width="41.67%" height="300">
+  <img src="./docs/images/wechat.jpg" alt="微信二维码" width="41.67%" height="300">
 </div>
