@@ -131,10 +131,10 @@ class VersionManager(QObject):
             self.forceUpdate = True
             logger.info("当前版本不可用，设置为强制更新")
 
-        latest_ver_num = QVersionNumber.fromString(self.latestVersion)
-        current_ver_num = QVersionNumber.fromString(self.currentVersion)
+        latest_ver_num = QVersionNumber.fromString(self.latestVersion.split("v")[1])
+        current_ver_num = QVersionNumber.fromString(self.currentVersion.split("v")[1])
 
-        if latest_ver_num > current_ver_num or self.forceUpdate:
+        if latest_ver_num > current_ver_num:
             logger.info("New version available: %s", self.latestVersion)
             self.newVersionAvailable.emit(
                 self.latestVersion,
@@ -187,7 +187,11 @@ class VersionManager(QObject):
 
     def performCheck(self):
         """执行版本和公告检查"""
-        self.hasNewVersion()
-        self.checkNewVersionAnnouncement()  # 添加新版本公告检查
-        self.checkAnnouncement()
-        self.checkCompleted.emit()
+        try:
+            self.hasNewVersion()
+            self.checkNewVersionAnnouncement()  # 添加新版本公告检查
+            self.checkAnnouncement()
+            self.checkCompleted.emit()
+        except Exception as e:
+            logger.exception("执行版本和公告检查失败: %s", str(e))
+
