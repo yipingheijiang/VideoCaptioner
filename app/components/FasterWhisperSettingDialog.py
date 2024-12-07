@@ -315,10 +315,11 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         
         # 状态
         model_path = os.path.join(MODEL_PATH, model['value'])
+        model_bin_path = os.path.join(model_path, "model.bin")
         status_item = QTableWidgetItem(
-            self.tr("已下载") if os.path.exists(model_path) else self.tr("未下载")
+            self.tr("已下载") if os.path.exists(model_bin_path) else self.tr("未下载")
         )
-        if os.path.exists(model_path):
+        if os.path.exists(model_bin_path):
             status_item.setForeground(Qt.green)
         status_item.setTextAlignment(Qt.AlignCenter)
         self.model_table.setItem(row, 2, status_item)
@@ -330,7 +331,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         
         download_btn = HyperlinkButton(
             "",
-            self.tr("重新下载") if os.path.exists(model_path) else self.tr("下载"),
+            self.tr("重新下载") if os.path.exists(model_bin_path) else self.tr("下载"),
             parent=self
         )
         download_btn.setIcon(FIF.DOWNLOAD)
