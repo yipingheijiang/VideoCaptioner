@@ -23,7 +23,6 @@ from ..core.entities import Task
 from ..core.thread.create_task_thread import CreateTaskThread
 from ..common.signal_bus import signalBus
 from ..components.SubtitleSettingDialog import SubtitleSettingDialog
-from ..components.MyVideoWidget import MyVideoWidget
 
 
 class SubtitleTableModel(QAbstractTableModel):
@@ -447,9 +446,9 @@ class SubtitleOptimizationInterface(QWidget):
     def show_video_player(self):
         """显示视频播放器窗口"""
         # 创建视频播放器窗口
+        from ..components.MyVideoWidget import MyVideoWidget
         self.video_player = MyVideoWidget()
         self.video_player.resize(800, 600)
-
 
         def signal_update():
             if not self.model._data:

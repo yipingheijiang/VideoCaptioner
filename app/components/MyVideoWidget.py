@@ -1,7 +1,5 @@
 # coding:utf-8
 import sys
-import os
-os.environ['PYTHON_VLC_MODULE_PATH'] = r"E:\GithubProject\VideoCaptioner\resource\bin\vlc-3.0.21"
 import vlc
 from pathlib import Path
 
