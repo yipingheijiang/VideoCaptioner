@@ -7,7 +7,6 @@ Author: Weifeng
 import os
 import sys
 import traceback
-import logging
 from datetime import datetime
 
 # Add project root directory to Python path
@@ -33,7 +32,6 @@ from app.config import RESOURCE_PATH
 from app.core.utils import logger
 
 
-# 
 logger = logger.setup_logger("VideoCaptioner")
 def exception_hook(exctype, value, tb):
     logger.error(''.join(traceback.format_exception(exctype, value, tb)))
@@ -63,7 +61,6 @@ myTranslator.load(str(translations_path))
 app.installTranslator(translator)
 app.installTranslator(myTranslator)
 
-logger.info("应用程序初始化完成")
 w = MainWindow()
 w.show()
 sys.exit(app.exec_())
