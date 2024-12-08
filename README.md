@@ -44,7 +44,7 @@
 
 软件较为轻量，打包大小不足 60M,已集成所有必要环境，下载后可直接运行。
 
-1. 从 [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) 页面下载最新版本的可执行程序。或者：[蓝奏盘下载](https://wwwm.lanzoue.com/ijmfk2hhgl3c)
+1. 从 [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) 页面下载最新版本的可执行程序。或者：[蓝奏盘下载](https://wwwm.lanzoue.com/iQ9IB2hi82ra)
 
 2. 打开安装包进行安装
 
