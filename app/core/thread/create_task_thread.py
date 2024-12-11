@@ -64,7 +64,7 @@ class CreateTaskThread(QThread):
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"-{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            whisper_type = f"-{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"-{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
             whisper_type = f"-{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         else:
@@ -177,7 +177,7 @@ class CreateTaskThread(QThread):
         if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            whisper_type = f"{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
             whisper_type = f"{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         else:
