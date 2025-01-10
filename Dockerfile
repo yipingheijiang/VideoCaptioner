@@ -18,8 +18,8 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # 先复制依赖文件并安装
-COPY streamlit/requirements.txt .
-RUN pip3 install --no-cache-dir -r streamlit/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+COPY streamlit_app/requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 复制应用代码
 COPY . .
