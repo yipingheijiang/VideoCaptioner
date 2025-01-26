@@ -1,3 +1,22 @@
+from pathlib import Path
+
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QHBoxLayout, QScrollArea
+from qfluentwidgets import (CardWidget, ComboBox, HyperlinkCard,
+                          ComboBoxSettingCard, SwitchSettingCard, SettingCardGroup,
+                          FluentIcon as FIF, BodyLabel, RangeSettingCard, SingleDirectionScrollArea)
+
+from .LineEditSettingCard import LineEditSettingCard
+from .EditComboBoxSettingCard import EditComboBoxSettingCard
+from app.components.SpinBoxSettingCard import DoubleSpinBoxSettingCard
+from ..common.config import cfg
+from ..core.entities import (TranscribeModelEnum, WhisperModelEnum, 
+                           TranscribeLanguageEnum, FasterWhisperModelEnum,
+                           VadMethodEnum)
+from app.config import MODEL_PATH, BIN_PATH
+from app.thread.modelscope_download_thread import ModelscopeDownloadThread
+
 import sys
 import os
 import subprocess
@@ -17,13 +36,6 @@ from app.core.entities import FasterWhisperModelEnum, TranscribeLanguageEnum, Wh
 from app.components.LineEditSettingCard import LineEditSettingCard
 from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from app.config import BIN_PATH, CACHE_PATH, MODEL_PATH
-
-
-from modelscope.hub.snapshot_download import snapshot_download
-
-from app.thread.file_download_thread import FileDownloadThread
-from app.thread.modelscope_download_thread import ModelscopeDownloadThread
-
 
 # 在文件开头添加常量定义
 FASTER_WHISPER_PROGRAMS = [
@@ -153,14 +165,15 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
     # 添加类变量跟踪下载状态
     is_downloading = False
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, setting_widget=None):
         super().__init__(parent)
         self.widget.setMinimumWidth(600)
         self.program_download_thread = None
         self.model_download_thread = None
         self._setup_ui()
         self._connect_signals()
-        
+        self.setting_widget = setting_widget
+
     def _setup_ui(self):
         """设置UI"""
         layout = QVBoxLayout()
@@ -178,7 +191,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         # 标题
         faster_whisper_title = SubtitleLabel(self.tr("Faster Whisper 下载"), self)
         layout.addWidget(faster_whisper_title)
-        layout.addSpacing(10)
+        layout.addSpacing(8)
 
         # 检查已安装的版本
         has_program, installed_versions = check_faster_whisper_exists()
@@ -202,6 +215,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         program_layout = QHBoxLayout()
         self.program_combo = ComboBox(self)
         self.program_combo.setFixedWidth(300)
+        self.program_combo.hide()
         
         # 只显示未安装的版本
         for program in FASTER_WHISPER_PROGRAMS:
@@ -211,6 +225,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         
         # 如果还有可下载的版本，显示下载控件
         if self.program_combo.count() > 0:
+            self.program_combo.show()
             self.program_download_btn = PushButton(self.tr("下载程序"), self)
             self.program_download_btn.clicked.connect(self._start_download)
             program_layout.addWidget(self.program_combo)
@@ -239,7 +254,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         title_layout.addWidget(open_folder_btn)
         
         layout.addLayout(title_layout)
-        layout.addSpacing(10)
+        layout.addSpacing(8)
 
         # 模型表格
         self.model_table = self._create_model_table()
@@ -274,12 +289,13 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         table.setColumnWidth(3, 150)
         
         # 设置行高
-        row_height = 50
+        row_height = 45
         table.verticalHeader().setDefaultSectionSize(row_height)
         
         # 设置表格高度
-        header_height = 35
-        table_height = row_height * len(FASTER_WHISPER_MODELS) + header_height
+        header_height = 20
+        max_visible_rows = 6
+        table_height = row_height * max_visible_rows + header_height + 15
         table.setFixedHeight(table_height)
         
         return table
@@ -511,13 +527,13 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
                 download_btn.setText(self.tr("重新下载"))
                 download_btn.setEnabled(True)
             
+            model = FASTER_WHISPER_MODELS[row]
+            
             # 更新主设置对话框的模型选择
-            parent = self.parent()
-            if isinstance(parent, FasterWhisperSettingDialog):
-                model = FASTER_WHISPER_MODELS[row]
+            if self.setting_widget:
                 model_text = model['label']
-                if parent.model_card.comboBox.findText(model_text) == -1:
-                    parent.model_card.comboBox.addItem(model_text)
+                if self.setting_widget.model_card.comboBox.findText(model_text) == -1:
+                    self.setting_widget.model_card.comboBox.addItem(model_text)
             
             InfoBar.success(
                 self.tr("下载成功"),
@@ -602,12 +618,15 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         self.progress_bar.hide()
         self.progress_label.hide()
 
-class FasterWhisperSettingDialog(MessageBoxBase):
-    """Faster Whisper设置对话框"""
-    
+
+class FasterWhisperSettingWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.titleLabel = BodyLabel(self.tr('Faster Whisper 设置'), self)
+        self.setup_ui()
+        self._connect_signals()
+
+    def setup_ui(self):
+        self.main_layout = QVBoxLayout(self)
         
         # 创建单向滚动区域和容器
         self.scrollArea = SingleDirectionScrollArea(orient=Qt.Vertical, parent=self)
@@ -617,9 +636,8 @@ class FasterWhisperSettingDialog(MessageBoxBase):
         self.container.setStyleSheet("QWidget{background: transparent}")
         self.containerLayout = QVBoxLayout(self.container)
         
-        # 创建设置卡片组
-        self.settingGroup = SettingCardGroup(self.tr("模型设置"), self)
-        
+        self.setting_group = SettingCardGroup(self.tr("Faster Whisper 设置"), self)
+
         # 模型选择
         self.model_card = ComboBoxSettingCard(
             cfg.faster_whisper_model,
@@ -627,11 +645,10 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             self.tr("模型"),
             self.tr("选择 Faster Whisper 模型"),
             [model.value for model in FasterWhisperModelEnum],
-            self.settingGroup
+            self.setting_group
         )
         
         # 检查未下载的模型并从下拉框中移除
-        # 移除未下载的模型选项
         for i in range(self.model_card.comboBox.count() - 1, -1, -1):
             model_text = self.model_card.comboBox.itemText(i).lower()
             model_config = next(
@@ -650,7 +667,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             FIF.DOWNLOAD,  # 使用下载图标
             self.tr('模型管理'),
             self.tr('下载或更新 Faster Whisper 模型'),
-            self.settingGroup  # 添加到设置组
+            self.setting_group  # 添加到设置组
         )
 
         # 语言选择
@@ -660,7 +677,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             self.tr("源语言"),
             self.tr("音频的源语言"),
             [lang.value for lang in TranscribeLanguageEnum],
-            self.settingGroup
+            self.setting_group
         )
         self.language_card.comboBox.setMaxVisibleItems(6)
 
@@ -671,7 +688,7 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             self.tr("运行设备"),
             self.tr("模型运行设备"),
             ["cuda", "cpu"],
-            self.settingGroup
+            self.setting_group
         )
         _, available_devices = check_faster_whisper_exists()
         if "GPU" not in available_devices:
@@ -742,19 +759,11 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             self.other_group
         )
 
-
-        self.model_card.comboBox.setMinimumWidth(200)
-        self.device_card.comboBox.setMinimumWidth(200)
-        self.language_card.comboBox.setMinimumWidth(200)
-        self.vad_method_card.comboBox.setMinimumWidth(200)
-        self.prompt_card.lineEdit.setMinimumWidth(200)
-
-        
         # 添加模型设置组的卡片
-        self.settingGroup.addSettingCard(self.model_card)
-        self.settingGroup.addSettingCard(self.manage_model_card)
-        self.settingGroup.addSettingCard(self.device_card)
-        self.settingGroup.addSettingCard(self.language_card)
+        self.setting_group.addSettingCard(self.model_card)
+        self.setting_group.addSettingCard(self.manage_model_card)
+        self.setting_group.addSettingCard(self.device_card)
+        self.setting_group.addSettingCard(self.language_card)
 
         # 添加VAD设置组的卡片
         self.vad_group.addSettingCard(self.vad_filter_card)
@@ -766,42 +775,29 @@ class FasterWhisperSettingDialog(MessageBoxBase):
         self.other_group.addSettingCard(self.one_word_card)
         self.other_group.addSettingCard(self.prompt_card)
 
-        # 检查并提示下载 faster-whisper
-        self._check_faster_whisper()
-        
-        self._setup_ui()
-        self._connect_signals()
-
-    def _setup_ui(self):
-        """设置UI布局"""
-        self.viewLayout.addWidget(self.titleLabel)
-        self.viewLayout.addSpacing(20)
-        
         # 将所有设置组添加到容器布局
-        self.containerLayout.addWidget(self.settingGroup)
+        self.containerLayout.addWidget(self.setting_group)
         self.containerLayout.addWidget(self.vad_group)
         self.containerLayout.addWidget(self.other_group)
-        self.containerLayout.addStretch()
+        self.containerLayout.addStretch(1)
+        
+        # 设置组件最小宽度
+        self.model_card.comboBox.setMinimumWidth(200)
+        self.device_card.comboBox.setMinimumWidth(200)
+        self.language_card.comboBox.setMinimumWidth(200)
+        self.vad_method_card.comboBox.setMinimumWidth(200)
+        self.prompt_card.lineEdit.setMinimumWidth(200)
         
         # 设置滚动区域
         self.scrollArea.setWidget(self.container)
         self.scrollArea.setWidgetResizable(True)
         
         # 将滚动区域添加到主布局
-        self.viewLayout.addWidget(self.scrollArea)
-        
-        # 设置按钮文本
-        self.yesButton.setText(self.tr('确定'))
-        self.cancelButton.setText(self.tr('取消'))
-        
-        # 设置最小宽度
-        self.widget.setMinimumWidth(500)
-        self.widget.setFixedHeight(560)
+        self.main_layout.addWidget(self.scrollArea)
 
     def _connect_signals(self):
         """连接信号"""
         self.manage_model_card.linkButton.clicked.connect(self._show_model_manager)
-        self.yesButton.clicked.connect(self._on_yes_button_clicked)
         self.vad_filter_card.checkedChanged.connect(self._on_vad_filter_changed)
         
     def _on_vad_filter_changed(self, checked: bool):
@@ -809,52 +805,14 @@ class FasterWhisperSettingDialog(MessageBoxBase):
         self.vad_threshold_card.setEnabled(checked)
         self.vad_method_card.setEnabled(checked)
 
-    def _on_yes_button_clicked(self):
-        """确定按钮点击处理"""
-        has_program, installed_versions  = check_faster_whisper_exists()
-        if not has_program:
-            self.show_error_info(self.tr('Faster Whisper程序不存在，请先下载程序'))
-            return
-
-        # 根据安装的版本设置程路径 
-        if "GPU" in installed_versions:
-            cfg.faster_whisper_program.value = "faster-whisper-xxl.exe"
-        else:
-            cfg.faster_whisper_program.value = "faster-whisper.exe"
-            cfg.faster_whisper_vad_method.value = VadMethodEnum.NONE
-
-        if self.check_faster_whisper_model():
-            self.accept()
-            InfoBar.success(
-                self.tr("设置已保存"),
-                self.tr("Faster Whisper 设置已更新"),
-                duration=3000,
-                parent=self.window(),
-                position=InfoBarPosition.BOTTOM
-            )
-        
-        if cfg.transcribe_language.value == TranscribeLanguageEnum.JAPANESE:
-            InfoBar.warning(
-                self.tr("请注意身体！！"),
-                self.tr("小心肝儿,注意身体哦~"),
-                duration=2000,
-                parent=self.window(),
-                position=InfoBarPosition.BOTTOM
-            )
-
-    def _check_faster_whisper(self):
-        """检查 faster-whisper 程序是否存在，如不存在则显示下载对话框"""
-        has_program, _ = check_faster_whisper_exists()
-        if not has_program:
-            dialog = FasterWhisperDownloadDialog(self)
-            dialog.show()
-        
     def _show_model_manager(self):
         """显示模型管理对话框"""
-        dialog = FasterWhisperDownloadDialog(self)
+        dialog = FasterWhisperDownloadDialog(self.window(), self)
         dialog.exec_()
 
     def show_error_info(self, error_msg):
+        """显示错误信息"""
+        from qfluentwidgets import InfoBar, InfoBarPosition
         InfoBar.error(
             title=self.tr('错误'),
             content=error_msg,
@@ -889,4 +847,3 @@ class FasterWhisperSettingDialog(MessageBoxBase):
             self.show_error_info(self.tr('模型文件不存在: ') + model_value)
             return False
         return True
-

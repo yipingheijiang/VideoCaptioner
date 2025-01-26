@@ -12,9 +12,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     ProgressRing, InfoBarPosition
 
-from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
-from app.components.WhisperSettingDialog import WhisperSettingDialog
-from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
+from app.components.LanguageSettingDialog import LanguageSettingDialog
 from app.config import RESOURCE_PATH
 from app.common.config import cfg
 from app.core.entities import TranscribeTask, VideoInfo
@@ -23,6 +21,7 @@ from app.thread.transcript_thread import TranscriptThread
 from app.core.entities import TranscribeModelEnum
 from app.core.task_factory import TaskFactory
 from app.thread.video_info_thread import VideoInfoThread
+from ..components.transcription_setting_card import TranscriptionSettingCard
 
 DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
@@ -145,27 +144,18 @@ class VideoInfoCard(CardWidget):
         self.start_button.clicked.connect(self.on_start_button_clicked)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
 
-    def show_whisper_settings(self):
-        """显示Whisper设置对话框"""
-        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_CPP:
-            dialog = WhisperSettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            dialog = WhisperAPISettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
-            dialog = FasterWhisperSettingDialog(self.window())
-            if dialog.exec_():
-                return True
+    def show_language_settings(self):
+        """显示语言设置对话框"""
+        dialog = LanguageSettingDialog(self.window())
+        if dialog.exec_():
+            return True
         return False
 
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         if self.task and not self.task.need_next_task:
-            need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER_CPP, TranscribeModelEnum.WHISPER_API, TranscribeModelEnum.FASTER_WHISPER]
-            if need_whisper_settings and not self.show_whisper_settings():
+            need_language_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER_CPP, TranscribeModelEnum.WHISPER_API, TranscribeModelEnum.FASTER_WHISPER]
+            if need_language_settings and not self.show_language_settings():
                 return
         self.progress_ring.show()
         self.progress_ring.setValue(100)
@@ -266,7 +256,12 @@ class TranscriptionInterface(QWidget):
         self.video_info_card = VideoInfoCard(self)
         self.main_layout.addWidget(self.video_info_card)
 
+        # 添加转录设置卡片
+        self.transcription_setting_card = TranscriptionSettingCard(self)
+        self.main_layout.addWidget(self.transcription_setting_card)
+
         self.file_select_button = PushButton(self.tr("选择视频文件"), self)
+        self.file_select_button.hide()
         self.main_layout.addWidget(self.file_select_button, alignment=Qt.AlignCenter)
 
     def _setup_signals(self):

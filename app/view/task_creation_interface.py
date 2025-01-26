@@ -17,11 +17,9 @@ from app.core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
 from app.thread.create_task_thread import CreateTaskThread
 from app.thread.video_download_thread import VideoDownloadThread
 from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
-from app.components.WhisperSettingDialog import WhisperSettingDialog
-from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from app.view.log_window import LogWindow
 from app.common.signal_bus import signalBus
-from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
+from app.components.LanguageSettingDialog import LanguageSettingDialog
 
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
@@ -78,7 +76,7 @@ class TaskCreationInterface(QWidget):
         # 创建设置按钮
         self.whisper_setting_button = ToolButton(FluentIcon.SETTING)
         self.whisper_setting_button.setFixedSize(32, 32)
-        self.whisper_setting_button.clicked.connect(self.show_whisper_settings)
+        self.whisper_setting_button.clicked.connect(self.show_language_settings)
         transcription_layout.addWidget(self.transcription_model_card)
         transcription_layout.addWidget(self.whisper_setting_button)
 
@@ -277,20 +275,11 @@ class TaskCreationInterface(QWidget):
             value == TranscribeModelEnum.FASTER_WHISPER.value
         )
 
-    def show_whisper_settings(self):
-        """显示Whisper设置对话框"""
-        if self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_CPP.value:
-            dialog = WhisperSettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        elif self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value:
-            dialog = WhisperAPISettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        elif self.transcription_model_card.value() == TranscribeModelEnum.FASTER_WHISPER.value:
-            dialog = FasterWhisperSettingDialog(self.window())
-            if dialog.exec_():
-                return True
+
+    def show_language_settings(self):
+        dialog = LanguageSettingDialog(self.window())
+        if dialog.exec_():
+            return True
         return False
 
     def on_start_clicked(self):
@@ -308,12 +297,12 @@ class TaskCreationInterface(QWidget):
                 self.search_input.setText(file_path)
             return
         
-        need_whisper_settings = cfg.transcribe_model.value in [
+        need_language_settings = cfg.transcribe_model.value in [
             TranscribeModelEnum.WHISPER_CPP, 
             TranscribeModelEnum.WHISPER_API,
             TranscribeModelEnum.FASTER_WHISPER
         ]
-        if need_whisper_settings and not self.show_whisper_settings():
+        if need_language_settings and not self.show_language_settings():
             return
 
         self.process()

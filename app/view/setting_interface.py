@@ -9,7 +9,6 @@ from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, OptionsSettingC
                             ComboBoxSettingCard, ExpandLayout, CustomColorSettingCard,
                             setTheme, setThemeColor, RangeSettingCard, MessageBox)
 
-from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL, RELEASE_URL
 from app.core.entities import TranscribeModelEnum
 from app.thread.version_manager_thread import VersionManager
@@ -17,8 +16,6 @@ from app.common.config import cfg
 from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from app.components.LineEditSettingCard import LineEditSettingCard
 from app.core.utils.test_opanai import test_openai, get_openai_models
-from app.components.WhisperSettingDialog import WhisperSettingDialog
-from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
 from app.common.signal_bus import signalBus
 
 class SettingInterface(ScrollArea):
@@ -43,14 +40,6 @@ class SettingInterface(ScrollArea):
             self.tr('语音转换文字要使用的转录模型'),
             texts=[model.value for model in cfg.transcribe_model.validator.options],
             parent=self.transcribeGroup
-        )
-        self.whisperSettingCard = HyperlinkCard(
-            '',
-            self.tr('打开 Whisper 设置'),
-            FIF.LANGUAGE,
-            self.tr('Whisper 设置'),
-            self.tr('配置 Whisper 模型和转录语言'),
-            self.transcribeGroup
         )
 
         # LLM 配置
@@ -274,7 +263,6 @@ class SettingInterface(ScrollArea):
 
         # 添加卡片到组
         self.transcribeGroup.addSettingCard(self.transcribeModelCard)
-        self.transcribeGroup.addSettingCard(self.whisperSettingCard)
 
         self.llmGroup.addSettingCard(self.apiKeyCard)
         self.llmGroup.addSettingCard(self.apiBaseCard)
@@ -317,10 +305,6 @@ class SettingInterface(ScrollArea):
         """ 连接信号与槽 """
         cfg.appRestartSig.connect(self.__showRestartTooltip)
 
-
-        # Whisper 设置
-        self.whisperSettingCard.linkButton.clicked.connect(self.show_whisper_settings)
-
         # 检查 LLM 连接
         self.checkLLMConnectionCard.clicked.connect(self.checkLLMConnection)
 
@@ -350,30 +334,7 @@ class SettingInterface(ScrollArea):
         signalBus.subtitle_optimization_changed.connect(self.subtitleCorrectCard.setChecked)
         signalBus.subtitle_translation_changed.connect(self.subtitleTranslateCard.setChecked)
         signalBus.target_language_changed.connect(self.targetLanguageCard.comboBox.setCurrentText)
-    
-    def show_whisper_settings(self):
-        """显示Whisper设置对话框"""
-        if self.transcribeModelCard.comboBox.currentText() == TranscribeModelEnum.WHISPER_CPP.value:
-            dialog = WhisperSettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        elif self.transcribeModelCard.comboBox.currentText() == TranscribeModelEnum.WHISPER_API.value:
-            dialog = WhisperAPISettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        elif self.transcribeModelCard.comboBox.currentText() == TranscribeModelEnum.FASTER_WHISPER.value:
-            dialog = FasterWhisperSettingDialog(self.window())
-            if dialog.exec_():
-                return True
-        else:
-            InfoBar.error(
-                self.tr('错误'),
-                self.tr('请先选择Whisper转录模型'),
-                duration=3000,
-                parent=self
-            )
-        return False
-    
+        
     def __showRestartTooltip(self):
         """ 显示重启提示 """
         InfoBar.success(
