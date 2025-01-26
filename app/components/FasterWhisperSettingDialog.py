@@ -1,4 +1,7 @@
 import sys
+import os
+import subprocess
+from pathlib import Path
 import subprocess
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableWidgetItem, QHeaderView, QHBoxLayout
@@ -8,22 +11,18 @@ from qfluentwidgets import (MessageBoxBase, BodyLabel, SubtitleLabel,
                           PushButton, ProgressBar, ComboBox, TableWidget, TableItemDelegate, PushSettingCard, HyperlinkButton, HyperlinkCard)
 from qfluentwidgets import FluentIcon as FIF
 
-from .SpinBoxSettingCard import DoubleSpinBoxSettingCard
-from ..common.config import cfg
-from ..core.entities import FasterWhisperModelEnum, TranscribeLanguageEnum, WhisperModelEnum, VadMethodEnum
-from ..components.LineEditSettingCard import LineEditSettingCard
-from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
-from ..config import BIN_PATH, CACHE_PATH, MODEL_PATH
-import os
-import subprocess
-import tempfile
-import shutil
-from pathlib import Path
+from app.components.SpinBoxSettingCard import DoubleSpinBoxSettingCard
+from app.common.config import cfg
+from app.core.entities import FasterWhisperModelEnum, TranscribeLanguageEnum, WhisperModelEnum, VadMethodEnum
+from app.components.LineEditSettingCard import LineEditSettingCard
+from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
+from app.config import BIN_PATH, CACHE_PATH, MODEL_PATH
+
 
 from modelscope.hub.snapshot_download import snapshot_download
 
-from ..core.thread.download_thread import DownloadThread
-from ..core.thread.modelscope_download_thread import ModelscopeDownloadThread
+from app.thread.file_download_thread import FileDownloadThread
+from app.thread.modelscope_download_thread import ModelscopeDownloadThread
 
 
 # 在文件开头添加常量定义
@@ -395,7 +394,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         # 直接下载到bin目录
         save_path = os.path.join(BIN_PATH, program['value'])
         
-        self.program_download_thread = DownloadThread(program['downloadLink'], save_path)
+        self.program_download_thread = FileDownloadThread(program['downloadLink'], save_path)
         self.program_download_thread.progress.connect(self._on_program_download_progress)
         self.program_download_thread.finished.connect(lambda: self._on_program_download_finished(save_path))
         self.program_download_thread.error.connect(self._on_program_download_error)

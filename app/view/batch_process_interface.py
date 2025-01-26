@@ -15,13 +15,13 @@ from qfluentwidgets import ComboBox, CardWidget, ToolTipFilter, FluentWindow, is
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
-from ..config import RESOURCE_PATH
-from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
-from ..core.entities import Task, VideoInfo
-from ..core.thread.create_task_thread import CreateTaskThread
-from ..core.thread.subtitle_pipeline_thread import SubtitlePipelineThread
-from ..core.thread.transcript_thread import TranscriptThread
-from ..view.subtitle_optimization_interface import SubtitleOptimizationInterface
+from app.config import RESOURCE_PATH
+from app.core.entities import SupportedVideoFormats, SupportedAudioFormats
+from app.core.entities import Task, VideoInfo
+from app.thread.create_task_thread import CreateTaskThread
+from app.thread.subtitle_pipeline_thread import SubtitlePipelineThread
+from app.thread.transcript_thread import TranscriptThread
+from app.view.subtitle_interface import SubtitleInterface
 
 
 class BatchProcessInterface(QWidget):
@@ -565,7 +565,7 @@ class TaskInfoCard(CardWidget):
         if preview_subtitle_path.exists():
             self.subtitle_window = QWidget()
             self.subtitle_window.setWindowTitle(self.tr("字幕预览"))
-            subtitle_interface = SubtitleOptimizationInterface(self.subtitle_window)
+            subtitle_interface = SubtitleInterface(self.subtitle_window)
             subtitle_interface.load_subtitle_file(str(preview_subtitle_path))
             subtitle_interface.remove_widget()
             layout = QHBoxLayout(self.subtitle_window)

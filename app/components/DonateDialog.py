@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from qfluentwidgets import MessageBoxBase, BodyLabel
 
-from ..config import ASSETS_PATH
+from app.config import ASSETS_PATH
 
 class DonateDialog(MessageBoxBase):
     def __init__(self, parent=None):

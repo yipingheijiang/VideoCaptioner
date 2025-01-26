@@ -746,7 +746,7 @@
     </message>
 </context>
 <context>
-    <name>SubtitleOptimizationInterface</name>
+    <name>SubtitleInterface</name>
     <message>
         <location filename="../../app/view/subtitle_optimization_interface.py" line="135"/>
         <source>保存</source>

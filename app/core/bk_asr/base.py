@@ -5,7 +5,7 @@ import tempfile
 import threading
 from typing import Optional, Union
 
-from .ASRData import ASRDataSeg, ASRData
+from .asr_data import ASRDataSeg, ASRData
 from app.config import CACHE_PATH
 
 class BaseASR:

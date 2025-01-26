@@ -133,13 +133,13 @@ class Config(QConfig):
     # ------------------- 字幕配置 -------------------
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
+    need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
     target_language = OptionsConfigItem(
         "Subtitle", "TargetLanguage",
         TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
         OptionsValidator(TargetLanguageEnum),
         EnumSerializer(TargetLanguageEnum)
     )
-    need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
     max_word_count_cjk = ConfigItem("Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 50))
     max_word_count_english = ConfigItem("Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 50))
     needs_remove_punctuation = ConfigItem("Subtitle", "NeedsRemovePunctuation", False, BoolValidator())

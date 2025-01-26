@@ -11,12 +11,12 @@ from qfluentwidgets import (ScrollArea, SettingCardGroup, LineEdit, MessageBoxBa
                             PushSettingCard, FluentIcon as FIF, CardWidget, BodyLabel, ImageLabel,
                             InfoBar, InfoBarPosition)
 
-from ..common.config import cfg
-from ..components.MySettingCard import SpinBoxSettingCard, ComboBoxSettingCard, ColorSettingCard, \
+from app.common.config import cfg
+from app.components.MySettingCard import SpinBoxSettingCard, ComboBoxSettingCard, ColorSettingCard, \
     DoubleSpinBoxSettingCard
-from ..core.utils.subtitle_preview import generate_preview
-from ..config import SUBTITLE_STYLE_PATH
-from ..common.signal_bus import signalBus
+from app.core.utils.subtitle_preview import generate_preview
+from app.config import SUBTITLE_STYLE_PATH
+from app.common.signal_bus import signalBus
 
 PERVIEW_TEXTS = {
     "长文本": ("This is a long text used for testing subtitle preview.",

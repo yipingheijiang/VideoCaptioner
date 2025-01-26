@@ -13,8 +13,8 @@ import sys
 import requests
 from PyQt5.QtCore import QVersionNumber, QObject, pyqtSignal, QSettings
 
-from ...config import VERSION, ROOT_PATH
-from ..utils.logger import setup_logger
+from app.config import VERSION, ROOT_PATH
+from app.core.utils.logger import setup_logger
 
 # 配置日志
 logger = setup_logger("version_manager_thread")

@@ -8,13 +8,13 @@ from typing import Dict
 import retry
 from openai import OpenAI
 
-from .subtitle_config import (
+from .prompt import (
     TRANSLATE_PROMPT,
     OPTIMIZER_PROMPT,
     REFLECT_TRANSLATE_PROMPT,
     SINGLE_TRANSLATE_PROMPT
 )
-from ..subtitle_processor.aligner import SubtitleAligner
+from .alignment import SubtitleAligner
 from ..utils import json_repair
 from ..utils.logger import setup_logger
 
@@ -182,7 +182,6 @@ class SubtitleOptimizer:
             temperature=0.7)
         response_content = json_repair.loads(response.choices[0].message.content)
         assert isinstance(response_content, dict) and len(response_content) == len(original_subtitle), "翻译结果错误"
-        # logger.info(f"翻译结果：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}, 翻译条数：{len(response_content)}")
         translated_subtitle = {}
         original_list = list(original_subtitle.values())
         translated_list = list(response_content.values())
@@ -255,7 +254,7 @@ class SubtitleOptimizer:
             total_chars = len(''.join(text.split()))
             return cjk_count / total_chars > 0.4 if total_chars > 0 else False
 
-        punctuation = r'[,.!?;:，。！？；：、]'
+        punctuation = r'[,.;:，。；：、]'
         if not need_remove_punctuation or (cjk_only and not is_mainly_cjk(text)):
             return text
         # 移除末尾标点符号

@@ -86,6 +86,46 @@ python main.py
 ```
 </details>
 
+<details>
+<summary>Docker 部署（beta）</summary>
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/WEIFENG2333/VideoCaptioner.git
+cd VideoCaptioner
+```
+
+### 2. 构建镜像
+
+```bash
+docker build -t video-captioner .
+```
+
+### 3. 运行容器
+
+使用自定义API配置运行：
+```bash
+docker run -d \
+  -p 8501:8501 \
+  -v $(pwd)/temp:/app/temp \
+  -e OPENAI_BASE_URL="你的API地址" \
+  -e OPENAI_API_KEY="你的API密钥" \
+  --name video-captioner \
+  video-captioner
+```
+
+### 4. 访问应用
+
+打开浏览器访问：`http://localhost:8501`
+
+### 注意事项
+
+- 容器内已预装ffmpeg等必要依赖
+- 如需使用其他模型，请通过环境变量配置
+
+</details>
+
 ## ✨ 主要功能
 
 软件充分利用大语言模型(LLM)在理解上下文方面的优势，对语音识别生成的字幕进一步处理。有效修正错别字、统一专业术语，让字幕内容更加准确连贯，为用户带来出色的观看体验！
@@ -210,6 +250,13 @@ VideoCaptioner/
 ## 更新日志
 
 <details>
+<summary>2024.1.22</summary>
+
+- 字幕优化与翻译操作分离
+TODO: 修复字幕闪烁的问题。
+
+</details>
+
 <summary>2024.12.07</summary>
 
 - 新增 Faster-whisper 支持，音频转字幕质量更优

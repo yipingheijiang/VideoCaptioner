@@ -6,7 +6,7 @@ from typing import List
 from retry import retry
 
 from .split_by_llm import split_by_llm, MAX_WORD_COUNT
-from ..bk_asr.ASRData import ASRData, from_srt, ASRDataSeg
+from ..bk_asr.asr_data import ASRData, from_srt, ASRDataSeg
 from ..utils.logger import setup_logger
 
 logger = setup_logger("subtitle_spliter")

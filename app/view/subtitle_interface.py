@@ -14,15 +14,14 @@ from qfluentwidgets import InfoBarPosition
 from PyQt5.QtCore import QUrl
 
 from app.config import SUBTITLE_STYLE_PATH
-
-from ..core.thread.subtitle_optimization_thread import SubtitleOptimizationThread
-from ..common.config import cfg
-from ..core.bk_asr.ASRData import from_subtitle_file, from_json
-from ..core.entities import OutputSubtitleFormatEnum, SupportedSubtitleFormats
-from ..core.entities import Task
-from ..core.thread.create_task_thread import CreateTaskThread
-from ..common.signal_bus import signalBus
-from ..components.SubtitleSettingDialog import SubtitleSettingDialog
+from app.thread.subtitle_thread import SubtitleThread
+from app.common.config import cfg
+from app.core.bk_asr.asr_data import from_subtitle_file, from_json
+from app.core.entities import OutputSubtitleFormatEnum, SubtitleTask, SupportedSubtitleFormats
+from app.core.entities import Task
+from app.common.signal_bus import signalBus
+from app.components.SubtitleSettingDialog import SubtitleSettingDialog
+from app.core.task_factory import TaskFactory
 
 
 class SubtitleTableModel(QAbstractTableModel):
@@ -111,13 +110,14 @@ class SubtitleTableModel(QAbstractTableModel):
         return None
 
 
-class SubtitleOptimizationInterface(QWidget):
-    finished = pyqtSignal(Task)
+class SubtitleInterface(QWidget):
+    finished = pyqtSignal(str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.task = None
+        self.subtitle_path = None
         self.custom_prompt_text = cfg.custom_prompt_text.value
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._init_ui()
@@ -220,7 +220,7 @@ class SubtitleOptimizationInterface(QWidget):
         self.main_layout.addLayout(self.bottom_layout)
 
     def _setup_signals(self):
-        self.start_button.clicked.connect(self.process)
+        self.start_button.clicked.connect(lambda: self.start_subtitle_optimization(need_create_task=True))
         self.file_select_button.clicked.connect(self.on_file_select)
         self.save_button.clicked.connect(self.on_save_clicked)
         self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
@@ -247,31 +247,27 @@ class SubtitleOptimizationInterface(QWidget):
         cfg.subtitle_layout.value = layout
         self.layout_combobox.setCurrentText(layout)
 
-    def create_task(self, file_path):
-        """创建任务"""
-        self.task = CreateTaskThread.create_subtitle_optimization_task(file_path)
-
-    def set_task(self, task: Task):
+    def set_task(self, task: SubtitleTask):
         """设置任务并更新UI"""
         if hasattr(self, 'subtitle_optimization_thread'):
             self.subtitle_optimization_thread.stop()
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
         self.task = task
+        self.subtitle_path = task.subtitle_path
         self.update_info(task)
 
-    def update_info(self, task: Task):
+    def update_info(self, task: SubtitleTask):
         """更新页面信息"""
-        original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
+        original_subtitle_save_path = Path(self.task.subtitle_path)
         asr_data = from_subtitle_file(original_subtitle_save_path)
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
         self.status_label.setText(self.tr("已加载文件"))
 
-    def process(self):
-        """主处理函数"""
+    def start_subtitle_optimization(self, need_create_task=True):
         # 检查是否有任务
-        if not self.task:
+        if not self.subtitle_path:
             InfoBar.warning(
                 self.tr("警告"),
                 self.tr("请先加载字幕文件"),
@@ -279,14 +275,14 @@ class SubtitleOptimizationInterface(QWidget):
                 parent=self
             )
             return
-        
         self.start_button.setEnabled(False)
         self.file_select_button.setEnabled(False)
         self.progress_bar.reset()
         self.cancel_button.show()
-        self._update_task_config()
 
-        self.subtitle_optimization_thread = SubtitleOptimizationThread(self.task)
+        if need_create_task:
+            self.task = TaskFactory.create_subtitle_task(file_path=self.subtitle_path)
+        self.subtitle_optimization_thread = SubtitleThread(self.task)
         self.subtitle_optimization_thread.finished.connect(self.on_subtitle_optimization_finished)
         self.subtitle_optimization_thread.progress.connect(self.on_subtitle_optimization_progress)
         self.subtitle_optimization_thread.update.connect(self.update_data)
@@ -296,26 +292,18 @@ class SubtitleOptimizationInterface(QWidget):
         self.subtitle_optimization_thread.start()
         InfoBar.info(self.tr("开始优化"), self.tr("开始优化字幕"), duration=3000, parent=self)
 
-    def _update_task_config(self):
-        self.task.need_optimize = cfg.need_optimize.value
-        self.task.need_translate = cfg.need_translate.value
-        self.task.api_key = cfg.api_key.value
-        self.task.base_url = cfg.api_base.value
-        self.task.llm_model = cfg.model.value
-        self.task.batch_size = cfg.batch_size.value
-        self.task.thread_num = cfg.thread_num.value
-        self.task.target_language = cfg.target_language.value.value
-        self.task.subtitle_layout = cfg.subtitle_layout.value
-        self.task.need_split = cfg.need_split.value
-        self.task.max_word_count_cjk = cfg.max_word_count_cjk.value
-        self.task.max_word_count_english = cfg.max_word_count_english.value
 
-    def on_subtitle_optimization_finished(self, task: Task):
+    def process(self):
+        """主处理函数"""
+        # 检查是否有任务
+        self.start_subtitle_optimization(need_create_task=False)
+
+    def on_subtitle_optimization_finished(self, video_path, output_path):
         self.start_button.setEnabled(True)
         self.file_select_button.setEnabled(True)
         self.cancel_button.hide() # 隐藏取消按钮
-        if self.task.status == Task.Status.PENDING:
-            self.finished.emit(task)
+        if self.task.need_next_task:
+            self.finished.emit(video_path, output_path)
         InfoBar.success(
             self.tr("优化完成"),
             self.tr("优化完成字幕..."),
@@ -406,18 +394,21 @@ class SubtitleOptimizationInterface(QWidget):
             )
 
     def on_open_folder_clicked(self):
+        """打开文件夹按钮点击事件"""
         if not self.task:
             InfoBar.warning(self.tr("警告"), self.tr("请先加载字幕文件"), duration=3000, parent=self)
             return
+        output_path = Path(self.task.output_path)
+        target_dir = str(output_path.parent if output_path.exists() else Path(self.task.subtitle_path).parent)
         if sys.platform == "win32":
-            os.startfile(os.path.dirname(self.task.original_subtitle_save_path))
+            os.startfile(target_dir)
         elif sys.platform == "darwin":  # macOS
-            subprocess.run(["open", os.path.dirname(self.task.original_subtitle_save_path)])
+            subprocess.run(["open", target_dir])
         else:  # Linux
-            subprocess.run(["xdg-open", os.path.dirname(self.task.original_subtitle_save_path)])
+            subprocess.run(["xdg-open", target_dir])
 
     def load_subtitle_file(self, file_path):
-        self.create_task(file_path)
+        self.subtitle_file_path = file_path
         asr_data = from_subtitle_file(file_path)
         self.model._data = asr_data.to_json()
         self.model.layoutChanged.emit()
@@ -680,7 +671,7 @@ if __name__ == "__main__":
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
     app = QApplication(sys.argv)
-    window = SubtitleOptimizationInterface()
+    window = SubtitleInterface()
     window.show()
     sys.exit(app.exec_())
 

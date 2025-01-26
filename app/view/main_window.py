@@ -7,14 +7,14 @@ from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
                             SplashScreen)
 
-from ..config import GITHUB_REPO_URL, ASSETS_PATH
-from ..common.config import cfg
-from ..core.thread.version_manager_thread import VersionManager
-from .subtitle_style_interface import SubtitleStyleInterface
-from .batch_process_interface import BatchProcessInterface
-from .home_interface import HomeInterface
-from .setting_interface import SettingInterface
-from ..components.DonateDialog import DonateDialog
+from app.config import GITHUB_REPO_URL, ASSETS_PATH
+from app.common.config import cfg
+from app.thread.version_manager_thread import VersionManager
+from app.view.subtitle_style_interface import SubtitleStyleInterface
+from app.view.batch_process_interface import BatchProcessInterface
+from app.view.home_interface import HomeInterface
+from app.view.setting_interface import SettingInterface
+from app.components.DonateDialog import DonateDialog
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 

@@ -12,14 +12,14 @@ from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, OptionsSettingC
 from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
 from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL, RELEASE_URL
 from app.core.entities import TranscribeModelEnum
-from app.core.thread.version_manager_thread import VersionManager
-from ..common.config import cfg
-from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
-from ..components.LineEditSettingCard import LineEditSettingCard
-from ..core.utils.test_opanai import test_openai, get_openai_models
-from ..components.WhisperSettingDialog import WhisperSettingDialog
-from ..components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
-from ..common.signal_bus import signalBus
+from app.thread.version_manager_thread import VersionManager
+from app.common.config import cfg
+from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
+from app.components.LineEditSettingCard import LineEditSettingCard
+from app.core.utils.test_opanai import test_openai, get_openai_models
+from app.components.WhisperSettingDialog import WhisperSettingDialog
+from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
+from app.common.signal_bus import signalBus
 
 class SettingInterface(ScrollArea):
     """ 设置界面 """
@@ -353,7 +353,7 @@ class SettingInterface(ScrollArea):
     
     def show_whisper_settings(self):
         """显示Whisper设置对话框"""
-        if self.transcribeModelCard.comboBox.currentText() == TranscribeModelEnum.WHISPER.value:
+        if self.transcribeModelCard.comboBox.currentText() == TranscribeModelEnum.WHISPER_CPP.value:
             dialog = WhisperSettingDialog(self.window())
             if dialog.exec_():
                 return True

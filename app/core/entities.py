@@ -3,7 +3,7 @@ import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 from random import randint
-from typing import Optional
+from typing import List, Optional
 
 
 class SupportedAudioFormats(Enum):
@@ -75,7 +75,7 @@ class TranscribeModelEnum(Enum):
     BIJIAN = "B 接口"
     JIANYING = "J 接口"
     FASTER_WHISPER = "FasterWhisper"
-    WHISPER = "WhisperCpp"
+    WHISPER_CPP = "WhisperCpp"
     WHISPER_API = "Whisper [API]"
 
 class VadMethodEnum(Enum):
@@ -194,7 +194,6 @@ class TargetLanguageEnum(Enum):
     CANTONESE = "Cantonese"
 
 
-
 class TranscribeLanguageEnum(Enum):
     """ 转录语言 """
     ENGLISH = "英语"
@@ -298,6 +297,7 @@ class TranscribeLanguageEnum(Enum):
     JAVANESE = "Javanese"
     SUNDANESE = "Sundanese"
     CANTONESE = "Cantonese"
+
 
 LANGUAGES = {
     "英语": "en",
@@ -418,6 +418,7 @@ LANGUAGES = {
 class VideoInfo:
     """视频信息类"""
     file_name: str
+    file_path: str
     width: int
     height: int
     fps: float
@@ -445,6 +446,7 @@ class FasterWhisperModelEnum(Enum):
     LARGE_V1 = "large-v1"
     LARGE_V2 = "large-v2"
     LARGE_V3 = "large-v3"
+
 
 @dataclass
 class Task:
@@ -509,7 +511,7 @@ class Task:
     faster_whisper_one_word: bool = True
     faster_whisper_prompt: Optional[str] = None
 
-    # LLM（优化翻译模型）
+    # 字幕 LLM（优化翻译模型）
     base_url: Optional[str] = None
     api_key: Optional[str] = None
     llm_model: Optional[str] = None
@@ -529,3 +531,155 @@ class Task:
     video_save_path: Optional[str] = None
     soft_subtitle: bool = True
     subtitle_style_srt: Optional[str] = None
+
+
+@dataclass
+class TranscribeConfig:
+    """转录配置类"""
+    transcribe_model: Optional[TranscribeModelEnum] = None
+    transcribe_language: str = ""
+    use_asr_cache: bool = True
+    need_word_time_stamp: bool = False
+    # Whisper Cpp 配置
+    whisper_model: Optional[WhisperModelEnum] = None
+    # Whisper API 配置
+    whisper_api_key: Optional[str] = None
+    whisper_api_base: Optional[str] = None
+    whisper_api_model: Optional[str] = None
+    whisper_api_prompt: Optional[str] = None
+    # Faster Whisper 配置
+    faster_whisper_program: Optional[str] = None
+    faster_whisper_model: Optional[FasterWhisperModelEnum] = None
+    faster_whisper_model_dir: Optional[str] = None
+    faster_whisper_device: str = "cuda"
+    faster_whisper_vad_filter: bool = True
+    faster_whisper_vad_threshold: float = 0.5
+    faster_whisper_vad_method: Optional[VadMethodEnum] = VadMethodEnum.SILERO_V3
+    faster_whisper_ff_mdx_kim2: bool = False
+    faster_whisper_one_word: bool = True
+    faster_whisper_prompt: Optional[str] = None
+
+
+@dataclass
+class SubtitleConfig:
+    """字幕处理配置类"""
+    # LLM配置
+    base_url: Optional[str] = None
+    api_key: Optional[str] = None
+    llm_model: Optional[str] = None
+    # 字幕处理
+    need_translate: bool = False
+    need_optimize: bool = False
+    thread_num: int = 10
+    batch_size: int = 10
+    # 字幕布局和分割
+    subtitle_layout: Optional[str] = None
+    max_word_count_cjk: int = 12
+    max_word_count_english: int = 18
+    need_split: bool = True
+    target_language: Optional[TargetLanguageEnum] = None
+    subtitle_style: Optional[str] = None
+    need_remove_punctuation: bool = False
+
+
+@dataclass
+class SynthesisConfig:
+    """视频合成配置类"""
+    need_video: bool = True
+    soft_subtitle: bool = True
+
+@dataclass
+class TranscribeTask:
+    """转录任务类"""
+    queued_at: Optional[datetime.datetime] = None
+    started_at: Optional[datetime.datetime] = None
+    completed_at: Optional[datetime.datetime] = None
+
+    # 输入文件
+    file_path: Optional[str] = None
+
+    # 输出字幕文件
+    output_path: Optional[str] = None
+
+    # 是否需要执行下一个任务（字幕处理）
+    need_next_task: bool = False
+
+    transcribe_config: Optional[TranscribeConfig] = None
+
+@dataclass
+class SubtitleTask:
+    """字幕任务类"""
+    queued_at: Optional[datetime.datetime] = None
+    started_at: Optional[datetime.datetime] = None 
+    completed_at: Optional[datetime.datetime] = None
+
+    # 输入原始字幕文件
+    subtitle_path: str = ""
+    # 输入原始视频文件
+    video_path: Optional[str] = None
+
+    # 输出 断句、优化、翻译 后的字幕文件
+    output_path: Optional[str] = None
+
+    # 是否需要执行下一个任务（视频合成）
+    need_next_task: bool = True
+
+    subtitle_config: Optional[SubtitleConfig] = None
+
+
+@dataclass 
+class SynthesisTask:
+    """视频合成任务类"""
+    queued_at: Optional[datetime.datetime] = None
+    started_at: Optional[datetime.datetime] = None
+    completed_at: Optional[datetime.datetime] = None
+
+    # 输入
+    video_path: Optional[str] = None
+    subtitle_path: Optional[str] = None
+
+    # 输出
+    output_path: Optional[str] = None
+
+    # 是否需要执行下一个任务（预留）
+    need_next_task: bool = False
+
+    synthesis_config: Optional[SynthesisConfig] = None
+
+
+@dataclass
+class TranscriptAndSubtitleTask:
+    """转录和字幕任务类"""
+    queued_at: Optional[datetime.datetime] = None
+    started_at: Optional[datetime.datetime] = None
+    completed_at: Optional[datetime.datetime] = None
+
+    # 输入
+    file_path: Optional[str] = None
+
+    # 输出
+    output_path: Optional[str] = None
+
+    transcribe_config: Optional[TranscribeConfig] = None
+    subtitle_config: Optional[SubtitleConfig] = None
+
+@dataclass 
+class FullProcessTask:
+    """完整处理任务类(转录+字幕+合成)"""
+    queued_at: Optional[datetime.datetime] = None
+    started_at: Optional[datetime.datetime] = None
+    completed_at: Optional[datetime.datetime] = None
+
+    # 输入
+    file_path: Optional[str] = None
+    # 输出
+    output_path: Optional[str] = None
+
+    transcribe_config: Optional[TranscribeConfig] = None
+    subtitle_config: Optional[SubtitleConfig] = None
+    synthesis_config: Optional[SynthesisConfig] = None
+
+
+
+
+

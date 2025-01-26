@@ -6,10 +6,9 @@ from pathlib import Path
 import tempfile
 from typing import Optional, List, Union
 
-from .ASRData import ASRDataSeg, from_srt
-from .BaseASR import BaseASR
+from .asr_data import ASRDataSeg, from_srt
+from .base import BaseASR
 from ..utils.logger import setup_logger
-from ...config import MODEL_PATH, BIN_PATH
 
 
 logger = setup_logger("faster_whisper")
@@ -18,7 +17,7 @@ logger = setup_logger("faster_whisper")
 class FasterWhisperASR(BaseASR):
     def __init__(self, 
                  audio_path: str,
-                 faster_whisper_path: str,
+                 faster_whisper_program: str,
                  whisper_model: str,
                  model_dir: str,
                  language: str = "zh",
@@ -47,7 +46,7 @@ class FasterWhisperASR(BaseASR):
         # 基本参数
         self.model_path = whisper_model
         self.model_dir = model_dir
-        self.faster_whisper_path = Path(faster_whisper_path)
+        self.faster_whisper_program = faster_whisper_program
         self.need_word_time_stamp = need_word_time_stamp
         self.language = language
         self.device = device
@@ -73,10 +72,10 @@ class FasterWhisperASR(BaseASR):
 
         self.process = None
 
-    def _build_command(self, audio_path: Path) -> List[str]:
+    def _build_command(self, audio_path: str) -> List[str]:
         """构建命令行参数"""
         cmd = [
-            str(self.faster_whisper_path),
+            str(self.faster_whisper_program),
             "-m", str(self.model_path),
             # "--verbose", "true",
             "--print_progress"
@@ -110,7 +109,7 @@ class FasterWhisperASR(BaseASR):
                 cmd.extend(["--vad_method", self.vad_method])
 
         # 人声分离
-        if self.ff_mdx_kim2 and self.faster_whisper_path.name.startswith("faster-whisper-xxl"):
+        if self.ff_mdx_kim2 and self.faster_whisper_program.startswith("faster-whisper-xxl"):
             cmd.append("--ff_mdx_kim2")
 
         # 文本处理参数

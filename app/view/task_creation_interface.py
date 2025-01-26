@@ -10,17 +10,18 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel, ToolButton, HyperlinkButton
 from qfluentwidgets import FluentIcon, FluentStyleSheet
 
-from ..common.config import cfg
-from ..components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
-from ..core.entities import SupportedAudioFormats, SupportedVideoFormats
-from ..core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
-from ..core.thread.create_task_thread import CreateTaskThread
-from ..config import APPDATA_PATH, ASSETS_PATH, VERSION
-from ..components.WhisperSettingDialog import WhisperSettingDialog
-from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
-from .log_window import LogWindow
-from ..common.signal_bus import signalBus
-from ..components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
+from app.common.config import cfg
+from app.components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
+from app.core.entities import SupportedAudioFormats, SupportedVideoFormats
+from app.core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
+from app.thread.create_task_thread import CreateTaskThread
+from app.thread.video_download_thread import VideoDownloadThread
+from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
+from app.components.WhisperSettingDialog import WhisperSettingDialog
+from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
+from app.view.log_window import LogWindow
+from app.common.signal_bus import signalBus
+from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
 
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
@@ -29,7 +30,7 @@ class TaskCreationInterface(QWidget):
     """
     任务创建界面类，用于创建和配置任务。
     """
-    finished = pyqtSignal(Task)  # 该信号用于在任务创建完成后通知主窗口
+    finished = pyqtSignal(str)  # 该信号用于在任务创建完成后通知主窗口
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -254,7 +255,7 @@ class TaskCreationInterface(QWidget):
         self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
         self.search_input.setText("")
         self.whisper_setting_button.setVisible(
-            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value or
+            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_CPP.value or
             self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value or
             self.transcription_model_card.value() == TranscribeModelEnum.FASTER_WHISPER.value
         )
@@ -271,14 +272,14 @@ class TaskCreationInterface(QWidget):
         """当转录模型改变时触发"""
         cfg.set(cfg.transcribe_model, TranscribeModelEnum(value))
         self.whisper_setting_button.setVisible(
-            value == TranscribeModelEnum.WHISPER.value or
+            value == TranscribeModelEnum.WHISPER_CPP.value or
             value == TranscribeModelEnum.WHISPER_API.value or
             value == TranscribeModelEnum.FASTER_WHISPER.value
         )
 
     def show_whisper_settings(self):
         """显示Whisper设置对话框"""
-        if self.transcription_model_card.value() == TranscribeModelEnum.WHISPER.value:
+        if self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_CPP.value:
             dialog = WhisperSettingDialog(self.window())
             if dialog.exec_():
                 return True
@@ -308,7 +309,7 @@ class TaskCreationInterface(QWidget):
             return
         
         need_whisper_settings = cfg.transcribe_model.value in [
-            TranscribeModelEnum.WHISPER, 
+            TranscribeModelEnum.WHISPER_CPP, 
             TranscribeModelEnum.WHISPER_API,
             TranscribeModelEnum.FASTER_WHISPER
         ]
@@ -379,38 +380,46 @@ class TaskCreationInterface(QWidget):
             return False
 
     def _process_file(self, file_path):
-        self.create_task_thread = CreateTaskThread(file_path, 'file')
-        self.create_task_thread.finished.connect(self.on_create_task_finished)
-        self.create_task_thread.progress.connect(self.on_create_task_progress)
-        self.create_task_thread.start()
-
+        self.finished.emit(file_path)
+        
     def _process_url(self, url):
         # 检测 cookies.txt 文件
         cookiefile_path = APPDATA_PATH / "cookies.txt"
         if not cookiefile_path.exists():
             InfoBar.warning(
                 self.tr("警告"),
-                self.tr("建议配置cookies.txt文件，以可以下载高清视频"),
+                self.tr("建议根据文档配置cookies.txt文件，以可以下载高清视频"),
                 duration=5000,
                 parent=self
             )
-        self.create_task_thread = CreateTaskThread(url, 'url')
-        self.create_task_thread.finished.connect(self.on_create_task_finished)
-        self.create_task_thread.progress.connect(self.on_create_task_progress)
-        self.create_task_thread.error.connect(self.on_create_task_error)
-        self.create_task_thread.start()
 
-    def on_create_task_finished(self, task):
-        self.task = task
-        if self.task.status == Task.Status.PENDING:
-            self.finished.emit(task)
-        InfoBar.success(
-            self.tr("任务创建成功"),
-            self.tr("开始自动处理..."),
-            duration=2000,
-            position=InfoBarPosition.BOTTOM,
-            parent=self.parent()
-        )
+        # 创建视频下载线程
+        self.video_download_thread = VideoDownloadThread(url, cfg.work_dir.value)
+        self.video_download_thread.finished.connect(self.on_video_download_finished)
+        self.video_download_thread.progress.connect(self.on_create_task_progress)
+        self.video_download_thread.error.connect(self.on_create_task_error)
+        self.video_download_thread.start()
+
+        InfoBar.info(self.tr("开始下载"), self.tr("开始下载视频..."), duration=3000, parent=self)
+
+    def on_video_download_finished(self, video_file_path):
+        """视频下载完成的回调函数"""
+        if video_file_path:
+            self.finished.emit(video_file_path)
+            InfoBar.success(
+                self.tr("下载成功"),
+                self.tr("视频下载完成，开始自动处理..."),
+                duration=2000,
+                position=InfoBarPosition.BOTTOM,
+                parent=self.parent()
+            )
+        else:
+            InfoBar.error(
+                self.tr("错误"),
+                self.tr("视频下载失败"),
+                duration=3000,
+                parent=self
+            )
 
     def on_create_task_progress(self, value, status):
         self.progress_bar.show()

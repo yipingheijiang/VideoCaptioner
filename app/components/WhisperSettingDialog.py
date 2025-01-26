@@ -11,11 +11,11 @@ from qfluentwidgets import (ComboBoxSettingCard, MessageBoxBase,
                           ProgressBar, ComboBox, HyperlinkButton)
 from qfluentwidgets import FluentIcon as FIF
 
-from ..common.config import cfg
-from ..core.entities import WhisperModelEnum, TranscribeLanguageEnum
-from ..config import MODEL_PATH
-from ..core.utils.logger import setup_logger
-from ..core.thread.download_thread import DownloadThread
+from app.common.config import cfg
+from app.core.entities import WhisperModelEnum, TranscribeLanguageEnum
+from app.config import MODEL_PATH
+from app.core.utils.logger import setup_logger
+from app.thread.file_download_thread import FileDownloadThread
 
 logger = setup_logger("whisper_download")
 
@@ -155,7 +155,7 @@ class DownloadDialog(MessageBoxBase):
         self.progress_label.show()
         self.download_button.setEnabled(False)
         
-        self.download_thread = DownloadThread(
+        self.download_thread = FileDownloadThread(
             model['mirrorLink'],
             save_path
         )

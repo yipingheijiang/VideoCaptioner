@@ -14,8 +14,8 @@ from qfluentwidgets.multimedia.media_play_bar import MediaPlayBarBase, MediaPlay
 from qfluentwidgets.common.icon import FluentIcon
 from qfluentwidgets.components.widgets.label import CaptionLabel
 
-from ..common.signal_bus import signalBus
-from ..config import RESOURCE_PATH
+from app.common.signal_bus import signalBus
+from app.config import RESOURCE_PATH
 
 
 class MediaStatus(Enum):

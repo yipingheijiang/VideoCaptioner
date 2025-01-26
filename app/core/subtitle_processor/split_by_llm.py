@@ -8,7 +8,7 @@ import openai
 import retry
 
 from app.config import CACHE_PATH
-from .subtitle_config import SPLIT_SYSTEM_PROMPT
+from .prompt import SPLIT_SYSTEM_PROMPT
 from ..utils.logger import setup_logger
 
 logger = setup_logger("split_by_llm")

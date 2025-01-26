@@ -4,10 +4,10 @@ from qfluentwidgets import (MessageBoxBase, BodyLabel,
                           SettingCardGroup, InfoBar, InfoBarPosition)
 from qfluentwidgets import FluentIcon as FIF, ComboBoxSettingCard
 
-from ..common.config import cfg
-from ..core.entities import TranscribeLanguageEnum
-from ..components.LineEditSettingCard import LineEditSettingCard
-from ..components.EditComboBoxSettingCard import EditComboBoxSettingCard
+from app.common.config import cfg
+from app.core.entities import TranscribeLanguageEnum
+from app.components.LineEditSettingCard import LineEditSettingCard
+from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
 
 class WhisperAPISettingDialog(MessageBoxBase):
     def __init__(self, parent=None):

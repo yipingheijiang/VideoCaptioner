@@ -4,12 +4,12 @@ import shutil
 import subprocess
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
-from ...config import CACHE_PATH
-from ..utils.logger import setup_logger
+from app.config import CACHE_PATH
+from app.core.utils.logger import setup_logger
 
 logger = setup_logger("download_thread")
 
-class DownloadThread(QThread):
+class FileDownloadThread(QThread):
     progress = pyqtSignal(float, str)
     finished = pyqtSignal()
     error = pyqtSignal(str)

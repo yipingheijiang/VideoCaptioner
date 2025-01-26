@@ -1,19 +1,15 @@
-from .BcutASR import BcutASR
-from .JianYingASR import JianYingASR
-from .KuaiShouASR import KuaiShouASR
-from .WhisperASR import WhisperASR
-from .WhisperAPI import WhisperAPI
-from .FasterWhisperASR import FasterWhisperASR
+from .bcut import BcutASR
+from .jianying import JianYingASR
+from .kuaishou import KuaiShouASR
+from .whisper_cpp import WhisperCppASR
+from .whisper_api import WhisperAPI
+from .faster_whisper import FasterWhisperASR
+from .transcribe import transcribe
 
-__all__ = ["BcutASR",
-            "JianYingASR",
-            "KuaiShouASR",
-            "WhisperASR",
-            "WhisperAPI",
-            "FasterWhisperASR"]
-
-
-def transcribe(audio_file, platform):
-    assert platform in __all__
-    asr = globals()[platform](audio_file)
-    return asr.run()
+__all__ = ["bcut",
+            "jianying",
+            "kuaishou",
+            "whisper_cpp",
+            "whisper_api",
+            "faster_whisper",
+            "transcribe"]

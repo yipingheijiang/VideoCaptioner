@@ -8,7 +8,7 @@ from qfluentwidgets import Dialog, TextEdit, FluentStyleSheet, isDarkTheme
 from pathlib import Path
 import os
 
-from ..config import RESOURCE_PATH, LOG_PATH
+from app.config import RESOURCE_PATH, LOG_PATH
 
 class LogWindow(QWidget):
     def __init__(self, parent=None):

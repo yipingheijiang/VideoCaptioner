@@ -7,11 +7,10 @@ import requests
 import yt_dlp
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from ..entities import Task, TranscribeModelEnum, VideoInfo, LANGUAGES
-from ..utils.video_utils import get_video_info
-from ...common.config import cfg
-from ..utils.logger import setup_logger
-from ...config import SUBTITLE_STYLE_PATH, APPDATA_PATH
+from app.core.entities import Task, TranscribeConfig, TranscribeModelEnum, TranscribeTask, VideoInfo, LANGUAGES
+from app.common.config import cfg
+from app.core.utils.logger import setup_logger
+from app.config import SUBTITLE_STYLE_PATH, APPDATA_PATH
 
 logger = setup_logger("create_task_thread")
 
@@ -61,7 +60,7 @@ class CreateTaskThread(QThread):
         else:
             result_subtitle_type = "【字幕】"
 
-        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_CPP:
             whisper_type = f"-{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
             whisper_type = f"-{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
@@ -174,7 +173,7 @@ class CreateTaskThread(QThread):
         else:
             result_subtitle_type = ""
 
-        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_CPP:
             whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
             whisper_type = f"{cfg.whisper_api_model.value}-{cfg.transcribe_language.value.value}"
@@ -255,69 +254,117 @@ class CreateTaskThread(QThread):
         self.finished.emit(task)
         logger.info(f"URL任务创建完成：{task}")
 
+    # def create_transcription_task(self, file_path):
+    #     logger.info(f"开始创建转录任务：{file_path}")
+    #     task_work_dir = Path(file_path).parent
+    #     file_name = Path(file_path).stem
+
+    #     thumbnail_path = task_work_dir / "thumbnail.jpg"
+
+    #     video_info = get_video_info(file_path, thumbnail_path=str(thumbnail_path))
+    #     video_info = VideoInfo(**video_info)
+
+    #     # 定义各个路径        
+    #     if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_CPP:
+    #         whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+    #     elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
+    #         whisper_type = f"{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+    #     elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
+    #         whisper_type = f"{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+    #     else:
+    #         whisper_type = ""
+
+    #     audio_save_path = task_work_dir / f"【Audio】{file_name}.wav"
+    #     original_subtitle_save_path = task_work_dir / f"【原始字幕】{file_name}-{cfg.transcribe_model.value.value}-{whisper_type}.srt"
+
+    #     # 创建 Task 对象
+    #     task = Task(
+    #         id=0,
+    #         queued_at=datetime.datetime.now(),
+    #         started_at=datetime.datetime.now(),
+    #         completed_at=None,
+    #         status=Task.Status.TRANSCRIBING,
+    #         fraction_downloaded=0,
+    #         work_dir=str(task_work_dir),
+    #         file_path=str(Path(self.file_path)),
+    #         url="",
+    #         source=Task.Source.FILE_IMPORT,
+    #         original_language=None,
+    #         target_language=cfg.target_language.value.value,
+    #         transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
+    #         whisper_model=cfg.whisper_model.value.value,
+    #         whisper_api_key=cfg.whisper_api_key.value,
+    #         whisper_api_base=cfg.whisper_api_base.value,
+    #         whisper_api_model=cfg.whisper_api_model.value,
+    #         whisper_api_prompt=cfg.whisper_api_prompt.value,
+    #         faster_whisper_model=cfg.faster_whisper_model.value,
+    #         faster_whisper_model_dir=cfg.faster_whisper_model_dir.value,
+    #         faster_whisper_device=cfg.faster_whisper_device.value,
+    #         faster_whisper_vad_filter=cfg.faster_whisper_vad_filter.value,
+    #         faster_whisper_vad_threshold=cfg.faster_whisper_vad_threshold.value,
+    #         faster_whisper_vad_method=cfg.faster_whisper_vad_method.value,
+    #         faster_whisper_ff_mdx_kim2=cfg.faster_whisper_ff_mdx_kim2.value,
+    #         faster_whisper_one_word=cfg.faster_whisper_one_word.value,
+    #         faster_whisper_prompt=cfg.faster_whisper_prompt.value,
+    #         video_info=video_info,
+    #         audio_format="mp3",
+    #         audio_save_path=str(audio_save_path),
+    #         transcribe_model=cfg.transcribe_model.value,
+    #         use_asr_cache=cfg.use_asr_cache.value,
+    #         original_subtitle_save_path=str(original_subtitle_save_path),
+    #         max_word_count_cjk=cfg.max_word_count_cjk.value,
+    #         max_word_count_english=cfg.max_word_count_english.value,
+    #     )
+    #     self.finished.emit(task)
+    #     logger.info(f"转录任务创建完成：{task}")
+
     def create_transcription_task(self, file_path):
         logger.info(f"开始创建转录任务：{file_path}")
         task_work_dir = Path(file_path).parent
         file_name = Path(file_path).stem
 
-        thumbnail_path = task_work_dir / "thumbnail.jpg"
-
-        video_info = get_video_info(file_path, thumbnail_path=str(thumbnail_path))
-        video_info = VideoInfo(**video_info)
-
-        # 定义各个路径        
-        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
-            whisper_type = f"{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+        # 定义各个路径
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_CPP:
+            whisper_type = f"-{cfg.whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_API:
-            whisper_type = f"{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"-{cfg.whisper_api_model.value.value}-{cfg.transcribe_language.value.value}"
         elif cfg.transcribe_model.value == TranscribeModelEnum.FASTER_WHISPER:
-            whisper_type = f"{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
+            whisper_type = f"-{cfg.faster_whisper_model.value.value}-{cfg.transcribe_language.value.value}"
         else:
             whisper_type = ""
 
-        audio_save_path = task_work_dir / f"【Audio】{file_name}.wav"
-        original_subtitle_save_path = task_work_dir / f"【原始字幕】{file_name}-{cfg.transcribe_model.value.value}-{whisper_type}.srt"
+        original_subtitle_save_path = task_work_dir / f"【原始字幕】{file_name}-{cfg.transcribe_model.value.value}{whisper_type}.srt"
 
-        # 创建 Task 对象
-        task = Task(
-            id=0,
+        config = TranscribeConfig(
+                                transcribe_model=cfg.transcribe_model.value,
+                                transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
+                                use_asr_cache=cfg.use_asr_cache.value,
+                                need_word_time_stamp=cfg.transcribe_model.value in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN],
+                                # Whisper Cpp 配置
+                                whisper_model=cfg.whisper_model.value,
+                                # Whisper API 配置
+                                whisper_api_key=cfg.whisper_api_key.value,
+                                whisper_api_base=cfg.whisper_api_base.value,
+                                whisper_api_model=cfg.whisper_api_model.value,
+                                whisper_api_prompt=cfg.whisper_api_prompt.value,
+                                # Faster Whisper 配置
+                                faster_whisper_model=cfg.faster_whisper_model.value,
+                                faster_whisper_model_dir=cfg.faster_whisper_model_dir.value,
+                                faster_whisper_device=cfg.faster_whisper_device.value,
+                                faster_whisper_vad_filter=cfg.faster_whisper_vad_filter.value,
+                                faster_whisper_vad_threshold=cfg.faster_whisper_vad_threshold.value,
+                                faster_whisper_vad_method=cfg.faster_whisper_vad_method.value,
+                                faster_whisper_ff_mdx_kim2=cfg.faster_whisper_ff_mdx_kim2.value,
+                                faster_whisper_one_word=cfg.faster_whisper_one_word.value,
+                                faster_whisper_prompt=cfg.faster_whisper_prompt.value
+                            )
+
+        return TranscribeTask(
             queued_at=datetime.datetime.now(),
-            started_at=datetime.datetime.now(),
-            completed_at=None,
-            status=Task.Status.TRANSCRIBING,
-            fraction_downloaded=0,
-            work_dir=str(task_work_dir),
-            file_path=str(Path(self.file_path)),
-            url="",
-            source=Task.Source.FILE_IMPORT,
-            original_language=None,
-            target_language=cfg.target_language.value.value,
-            transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
-            whisper_model=cfg.whisper_model.value.value,
-            whisper_api_key=cfg.whisper_api_key.value,
-            whisper_api_base=cfg.whisper_api_base.value,
-            whisper_api_model=cfg.whisper_api_model.value,
-            whisper_api_prompt=cfg.whisper_api_prompt.value,
-            faster_whisper_model=cfg.faster_whisper_model.value,
-            faster_whisper_model_dir=cfg.faster_whisper_model_dir.value,
-            faster_whisper_device=cfg.faster_whisper_device.value,
-            faster_whisper_vad_filter=cfg.faster_whisper_vad_filter.value,
-            faster_whisper_vad_threshold=cfg.faster_whisper_vad_threshold.value,
-            faster_whisper_vad_method=cfg.faster_whisper_vad_method.value,
-            faster_whisper_ff_mdx_kim2=cfg.faster_whisper_ff_mdx_kim2.value,
-            faster_whisper_one_word=cfg.faster_whisper_one_word.value,
-            faster_whisper_prompt=cfg.faster_whisper_prompt.value,
-            video_info=video_info,
-            audio_format="mp3",
-            audio_save_path=str(audio_save_path),
-            transcribe_model=cfg.transcribe_model.value,
-            use_asr_cache=cfg.use_asr_cache.value,
-            original_subtitle_save_path=str(original_subtitle_save_path),
-            max_word_count_cjk=cfg.max_word_count_cjk.value,
-            max_word_count_english=cfg.max_word_count_english.value,
+            file_path=file_path,
+            output_path=original_subtitle_save_path,
+            transcribe_config=config
         )
-        self.finished.emit(task)
-        logger.info(f"转录任务创建完成：{task}")
 
     def create_subtitle_optimization_task(file_path):
         logger.info(f"开始创建字幕优化任务：{file_path}")

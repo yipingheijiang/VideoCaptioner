@@ -12,10 +12,12 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QApplication,
 from qfluentwidgets import (CardWidget, LineEdit, BodyLabel,
                             InfoBar, InfoBarPosition, ProgressBar, PushButton)
 
-from app.core.thread.create_task_thread import CreateTaskThread
-from app.core.thread.video_synthesis_thread import VideoSynthesisThread
-from ..core.entities import SupportedVideoFormats, SupportedSubtitleFormats
-from ..core.entities import Task
+from app.thread.create_task_thread import CreateTaskThread
+from app.thread.video_synthesis_thread import VideoSynthesisThread
+from app.core.entities import SupportedVideoFormats, SupportedSubtitleFormats
+from app.core.entities import Task
+from app.core.task_factory import TaskFactory
+from app.core.entities import SynthesisTask
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
@@ -128,7 +130,7 @@ class VideoSynthesisInterface(QWidget):
         self.video_button.clicked.connect(self.choose_video_file)
 
         # 合成和文件夹相关信号
-        self.synthesize_button.clicked.connect(self.process)
+        self.synthesize_button.clicked.connect(lambda: self.start_video_synthesis(need_create_task=True))
         self.open_folder_button.clicked.connect(self.open_video_folder)
 
     def set_value(self):
@@ -164,29 +166,23 @@ class VideoSynthesisInterface(QWidget):
                 parent=self
             )
             return None
+        return TaskFactory.create_synthesis_task(video_file, subtitle_file)
 
-        self.task = CreateTaskThread.create_video_synthesis_task(subtitle_file, video_file)
-        return self.task
-
-    def set_task(self, task: Task):
+    def set_task(self, task: SynthesisTask):
         self.task = task
         self.update_info()
 
     def update_info(self):
         if self.task:
-            self.video_input.setText(self.task.file_path)
-            self.subtitle_input.setText(self.task.result_subtitle_save_path)
+            self.video_input.setText(self.task.video_path)
+            self.subtitle_input.setText(self.task.subtitle_path)
 
-    def process(self):
+    def start_video_synthesis(self, need_create_task=True):
         self.synthesize_button.setEnabled(False)
         self.progress_bar.resume()
         
-        if not self.task:
-            self.task = None
-            self.create_task()
-        if self.task.file_path != self.video_input.text() or self.task.result_subtitle_save_path != self.subtitle_input.text():
-            self.task = None
-            self.create_task()
+        if need_create_task:
+            self.task = self.create_task()
 
         if self.task:
             self.video_synthesis_thread = VideoSynthesisThread(self.task)
@@ -202,6 +198,10 @@ class VideoSynthesisInterface(QWidget):
                 position=InfoBarPosition.TOP,
                 parent=self
             )
+
+
+    def process(self):
+        self.start_video_synthesis(need_create_task=False)
 
     def on_video_synthesis_finished(self, task):
         self.synthesize_button.setEnabled(True)
@@ -231,16 +231,16 @@ class VideoSynthesisInterface(QWidget):
         )
 
     def open_video_folder(self):
-        if self.task and self.task.work_dir:
-            file_path = Path(self.task.video_save_path)
-            target_path = str(file_path.parent if file_path.exists() else Path(self.task.work_dir))
+        if self.task and self.task.output_path:
+            file_path = Path(self.task.output_path)
+            target_dir = str(file_path.parent if file_path.exists() else Path(self.task.video_path))
             # Cross-platform folder opening
             if sys.platform == "win32":
-                os.startfile(target_path)
+                os.startfile(target_dir)
             elif sys.platform == "darwin":  # macOS
-                subprocess.run(["open", target_path])
+                subprocess.run(["open", target_dir])
             else:  # Linux
-                subprocess.run(["xdg-open", target_path])
+                subprocess.run(["xdg-open", target_dir])
         else:
             InfoBar.warning(
                 self.tr("警告"),

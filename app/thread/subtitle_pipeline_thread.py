@@ -1,11 +1,11 @@
 import datetime
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from .subtitle_optimization_thread import SubtitleOptimizationThread
+from .subtitle_thread import SubtitleThread
 from .transcript_thread import TranscriptThread
 from .video_synthesis_thread import VideoSynthesisThread
-from ...core.entities import Task
-from ..utils.logger import setup_logger
+from app.core.entities import Task
+from app.core.utils.logger import setup_logger
 
 logger = setup_logger("subtitle_pipeline_thread")
 
@@ -49,7 +49,7 @@ class SubtitlePipelineThread(QThread):
             # 2. 字幕优化/翻译
             # self.task.status = Task.Status.OPTIMIZING
             self.progress.emit(40, self.tr("开始优化字幕"))
-            optimization_thread = SubtitleOptimizationThread(self.task)
+            optimization_thread = SubtitleThread(self.task)
             optimization_thread.progress.connect(lambda value, msg: self.progress.emit(int(40 + value * 0.2), msg))
             optimization_thread.error.connect(handle_error)
             optimization_thread.run()

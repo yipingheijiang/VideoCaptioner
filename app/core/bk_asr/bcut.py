@@ -5,8 +5,8 @@ from typing import Optional
 
 import requests
 
-from .ASRData import ASRDataSeg
-from .BaseASR import BaseASR
+from .asr_data import ASRDataSeg
+from .base import BaseASR
 from ..utils.logger import setup_logger
 
 logger = setup_logger("bcut_asr")

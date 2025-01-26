@@ -6,15 +6,15 @@ from pathlib import Path
 import tempfile
 import time
 
-from .ASRData import ASRDataSeg, from_srt
-from .BaseASR import BaseASR
+from .asr_data import ASRDataSeg, from_srt
+from .base import BaseASR
 from ..utils.logger import setup_logger
 from ...config import MODEL_PATH
 
 logger = setup_logger("whisper_asr")
 
 
-class WhisperASR(BaseASR):
+class WhisperCppASR(BaseASR):
     def __init__(self, audio_path, language="en", whisper_cpp_path="whisper-cpp", whisper_model=None,
                  use_cache: bool = False, need_word_time_stamp: bool = False):
         super().__init__(audio_path, False)
@@ -165,7 +165,7 @@ class WhisperASR(BaseASR):
 
 if __name__ == '__main__':
     # 简短示例
-    asr = WhisperASR(
+    asr = WhisperCppASR(
         audio_path="audio.mp3",
         model_path="models/ggml-tiny.bin",
         whisper_cpp_path="bin/whisper-cpp.exe",

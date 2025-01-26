@@ -2,8 +2,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
 from qfluentwidgets import (MessageBoxBase, BodyLabel, SwitchSettingCard, FluentIcon as FIF)
 
-from ..common.config import cfg
-from .SpinBoxSettingCard import SpinBoxSettingCard
+from app.common.config import cfg
+from app.components.SpinBoxSettingCard import SpinBoxSettingCard
 
 class SubtitleSettingDialog(MessageBoxBase):
     """ 字幕设置对话框 """

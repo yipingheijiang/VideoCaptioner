@@ -12,28 +12,30 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLa
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
     ProgressRing, InfoBarPosition
 
-from ..components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
-from ..components.WhisperSettingDialog import WhisperSettingDialog
-from ..components.WhisperAPISettingDialog import WhisperAPISettingDialog
-from ..config import RESOURCE_PATH
-from ..core.thread.create_task_thread import CreateTaskThread
-from ..common.config import cfg
-from ..core.entities import LANGUAGES, Task, VideoInfo
-from ..core.entities import SupportedVideoFormats, SupportedAudioFormats
-from ..core.thread.transcript_thread import TranscriptThread
-from ..core.entities import TranscribeModelEnum
+from app.components.FasterWhisperSettingDialog import FasterWhisperSettingDialog
+from app.components.WhisperSettingDialog import WhisperSettingDialog
+from app.components.WhisperAPISettingDialog import WhisperAPISettingDialog
+from app.config import RESOURCE_PATH
+from app.common.config import cfg
+from app.core.entities import TranscribeTask, VideoInfo
+from app.core.entities import SupportedVideoFormats, SupportedAudioFormats
+from app.thread.transcript_thread import TranscriptThread
+from app.core.entities import TranscribeModelEnum
+from app.core.task_factory import TaskFactory
+from app.thread.video_info_thread import VideoInfoThread
 
 DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
 
 class VideoInfoCard(CardWidget):
-    finished = pyqtSignal(Task)
+    finished = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.task = None
         self.setup_ui()
         self.setup_signals()
+        self.task = None
+        self.video_info = None
 
     def setup_ui(self):
         self.setFixedHeight(150)
@@ -95,7 +97,8 @@ class VideoInfoCard(CardWidget):
         button = PillPushButton(text, self)
         button.setCheckable(False)
         setFont(button, 11)
-        button.setFixedWidth(width)
+        # button.setFixedWidth(width)
+        button.setMinimumWidth(50)
         return button
 
     def setup_button_layout(self):
@@ -114,9 +117,12 @@ class VideoInfoCard(CardWidget):
 
     def update_info(self, video_info: VideoInfo):
         """更新视频信息显示"""
+        # self.reset_ui()
+        self.video_info = video_info
+
         self.video_title.setText(video_info.file_name.rsplit('.', 1)[0])
         self.resolution_info.setText(self.tr("画质: ") + f"{video_info.width}x{video_info.height}")
-        file_size_mb = os.path.getsize(self.task.file_path) / 1024 / 1024
+        file_size_mb = os.path.getsize(video_info.file_path) / 1024 / 1024
         self.file_size_info.setText(self.tr("大小: ") + f"{file_size_mb:.1f} MB")
         duration = datetime.timedelta(seconds=int(video_info.duration_seconds))
         self.duration_info.setText(self.tr("时长: ") + f"{duration}")
@@ -141,7 +147,7 @@ class VideoInfoCard(CardWidget):
 
     def show_whisper_settings(self):
         """显示Whisper设置对话框"""
-        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER:
+        if cfg.transcribe_model.value == TranscribeModelEnum.WHISPER_CPP:
             dialog = WhisperSettingDialog(self.window())
             if dialog.exec_():
                 return True
@@ -157,8 +163,8 @@ class VideoInfoCard(CardWidget):
 
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
-        if self.task.status == Task.Status.TRANSCRIBING:
-            need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER, TranscribeModelEnum.WHISPER_API, TranscribeModelEnum.FASTER_WHISPER]
+        if self.task and not self.task.need_next_task:
+            need_whisper_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER_CPP, TranscribeModelEnum.WHISPER_API, TranscribeModelEnum.FASTER_WHISPER]
             if need_whisper_settings and not self.show_whisper_settings():
                 return
         self.progress_ring.show()
@@ -168,15 +174,15 @@ class VideoInfoCard(CardWidget):
 
     def on_open_folder_clicked(self):
         """打开文件夹按钮点击事件"""
-        if self.task and self.task.work_dir:
-            original_subtitle_save_path = Path(self.task.original_subtitle_save_path)
-            target_path = str(original_subtitle_save_path.parent if original_subtitle_save_path.exists() else Path(self.task.work_dir))
+        if self.task and self.task.output_path:
+            original_subtitle_save_path = Path(self.task.output_path)
+            target_dir = str(original_subtitle_save_path.parent if original_subtitle_save_path.exists() else Path(self.task.file_path).parent)
             if sys.platform == "win32":
-                os.startfile(target_path)
+                os.startfile(target_dir)
             elif sys.platform == "darwin":  # macOS
-                subprocess.run(["open", target_path])
+                subprocess.run(["open", target_dir])
             else:  # Linux
-                subprocess.run(["xdg-open", target_path])
+                subprocess.run(["xdg-open", target_dir])
         else:
             InfoBar.warning(
                 self.tr("警告"),
@@ -185,42 +191,23 @@ class VideoInfoCard(CardWidget):
                 parent=self
             )
 
-    def start_transcription(self):
+    def start_transcription(self, need_create_task=True):
         """开始转录过程"""
         self.start_button.setEnabled(False)
-        self._update_task_config()
+
+        if need_create_task:
+            self.task = TaskFactory.create_transcribe_task(self.video_info.file_path)        
+
         self.transcript_thread = TranscriptThread(self.task)
         self.transcript_thread.finished.connect(self.on_transcript_finished)
         self.transcript_thread.progress.connect(self.on_transcript_progress)
         self.transcript_thread.error.connect(self.on_transcript_error)
         self.transcript_thread.start()
 
-    def _update_task_config(self):
-        self.task.target_language = cfg.target_language.value.value
-        self.task.transcribe_language = LANGUAGES[cfg.transcribe_language.value.value]
-        self.task.transcribe_model = cfg.transcribe_model.value
-        self.task.whisper_model = cfg.whisper_model.value.value
-        self.task.whisper_api_key = cfg.whisper_api_key.value
-        self.task.whisper_api_base = cfg.whisper_api_base.value
-        self.task.whisper_api_model = cfg.whisper_api_model.value
-        self.task.whisper_api_prompt = cfg.whisper_api_prompt.value
-        self.task.faster_whisper_model = cfg.faster_whisper_model.value
-        self.task.faster_whisper_model_dir = cfg.faster_whisper_model_dir.value
-        self.task.faster_whisper_device = cfg.faster_whisper_device.value
-        self.task.faster_whisper_vad_filter = cfg.faster_whisper_vad_filter.value
-        self.task.faster_whisper_vad_threshold = cfg.faster_whisper_vad_threshold.value
-        self.task.faster_whisper_vad_method = cfg.faster_whisper_vad_method.value
-        self.task.faster_whisper_ff_mdx_kim2 = cfg.faster_whisper_ff_mdx_kim2.value
-        self.task.faster_whisper_one_word = cfg.faster_whisper_one_word.value
-        self.task.faster_whisper_prompt = cfg.faster_whisper_prompt.value
-        self.task.max_word_count_cjk = cfg.max_word_count_cjk.value
-        self.task.max_word_count_english = cfg.max_word_count_english.value
-
     def on_transcript_progress(self, value, message):
         """更新转录进度"""
         self.start_button.setText(message)
         self.progress_ring.setValue(value)
-
 
     def on_transcript_error(self, error):
         """处理转录错误"""
@@ -238,19 +225,17 @@ class VideoInfoCard(CardWidget):
         """转录完成处理"""
         self.start_button.setEnabled(True)
         self.start_button.setText(self.tr("转录完成"))
-        if self.task.status == Task.Status.PENDING:
-            self.finished.emit(task)
+        self.finished.emit()
 
     def reset_ui(self):
         """重置UI状态"""
         self.start_button.setDisabled(False)
         self.start_button.setText(self.tr("开始转录"))
-        self.progress_ring.setValue(100)
+        self.progress_ring.setValue(0)
 
     def set_task(self, task):
         """设置任务并更新UI"""
         self.task = task
-        self.update_info(self.task.video_info)
         self.reset_ui()
     
     def stop(self):
@@ -261,7 +246,7 @@ class VideoInfoCard(CardWidget):
 
 class TranscriptionInterface(QWidget):
     """转录界面类,用于显示视频信息和转录进度"""
-    finished = pyqtSignal(Task)
+    finished = pyqtSignal(str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -289,49 +274,56 @@ class TranscriptionInterface(QWidget):
         self.file_select_button.clicked.connect(self._on_file_select)
         self.video_info_card.finished.connect(self._on_transcript_finished)
 
-    def _on_transcript_finished(self, task):
+    def _on_transcript_finished(self):
         """转录完成处理"""
-        self.finished.emit(task)
-        InfoBar.success(
-            self.tr("转录完成"),
-            self.tr("开始字幕优化..."),
-            duration=3000,
-            position=InfoBarPosition.BOTTOM,
-            parent=self.parent()
-        )
+        if self.task.need_next_task:
+            self.finished.emit(self.task.output_path, self.task.file_path)
+            InfoBar.success(
+                self.tr("转录完成"),
+                self.tr("开始字幕优化..."),
+                duration=3000,
+                position=InfoBarPosition.BOTTOM,
+                parent=self.parent()
+            )
 
     def _on_file_select(self):
         """文件选择处理"""
         desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
         file_dialog = QFileDialog()
 
-        # 构建文件过滤器
         video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
         audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
         filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
 
         file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
         if file_path:
-            self.create_task(file_path)
+            self.update_info(file_path)
 
-    def create_task(self, file_path):
-        """创建任务"""
-        self.create_task_thread = CreateTaskThread(file_path, 'transcription')
-        self.create_task_thread.finished.connect(self.set_task)
-        self.create_task_thread.start()
+    def update_info(self, file_path):
+        """设置UI"""
+        self.video_info_thread = VideoInfoThread(file_path)
+        self.video_info_thread.finished.connect(self.video_info_card.update_info)
+        self.video_info_thread.error.connect(self._on_video_info_error)
+        self.video_info_thread.start()
 
-    def set_task(self, task: Task):
+    def _on_video_info_error(self, error_msg):
+        """处理视频信息提取错误"""
+        InfoBar.error(
+            self.tr("错误"),
+            self.tr(error_msg),
+            duration=3000,
+            parent=self
+        )
+
+    def set_task(self, task: TranscribeTask):
         """设置任务并更新UI"""
         self.task = task
-        self.update_info()
-
-    def update_info(self):
-        """更新页面信息"""
         self.video_info_card.set_task(self.task)
+        self.update_info(self.task.file_path)
 
     def process(self):
         """主处理函数"""
-        self.video_info_card.start_transcription()
+        self.video_info_card.start_transcription(need_create_task=False)
 
     def dragEnterEvent(self, event):
         """拖拽进入事件处理"""
@@ -352,7 +344,7 @@ class TranscriptionInterface(QWidget):
             is_supported = file_ext in supported_formats
 
             if is_supported:
-                self.create_task(file_path)
+                self.update_info(file_path)
                 InfoBar.success(
                     self.tr("导入成功"),
                     self.tr("开始语音转文字"),

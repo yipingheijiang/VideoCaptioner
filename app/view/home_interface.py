@@ -2,11 +2,12 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QSizePolicy
 from qfluentwidgets import SegmentedWidget
 
-from ..core.entities import Task
-from .subtitle_optimization_interface import SubtitleOptimizationInterface
-from .task_creation_interface import TaskCreationInterface
-from .transcription_interface import TranscriptionInterface
-from .video_synthesis_interface import VideoSynthesisInterface
+from app.core.entities import Task
+from app.core.task_factory import TaskFactory
+from app.view.subtitle_interface import SubtitleInterface
+from app.view.task_creation_interface import TaskCreationInterface
+from app.view.transcription_interface import TranscriptionInterface
+from app.view.video_synthesis_interface import VideoSynthesisInterface
 
 
 class HomeInterface(QWidget):
@@ -32,12 +33,12 @@ class HomeInterface(QWidget):
         # 添加子界面
         self.task_creation_interface = TaskCreationInterface(self)
         self.transcription_interface = TranscriptionInterface(self)
-        self.subtitle_optimization_interface = SubtitleOptimizationInterface(self)
+        self.subtitle_optimization_interface = SubtitleInterface(self)
         self.video_synthesis_interface = VideoSynthesisInterface(self)
 
         self.addSubInterface(self.task_creation_interface, 'TaskCreationInterface', self.tr('任务创建'))
         self.addSubInterface(self.transcription_interface, 'TranscriptionInterface', self.tr('语音转录'))
-        self.addSubInterface(self.subtitle_optimization_interface, 'SubtitleOptimizationInterface',
+        self.addSubInterface(self.subtitle_optimization_interface, 'SubtitleInterface',
                              self.tr('字幕优化与翻译'))
         self.addSubInterface(self.video_synthesis_interface, 'VideoSynthesisInterface', self.tr('字幕视频合成'))
 
@@ -53,23 +54,26 @@ class HomeInterface(QWidget):
         self.transcription_interface.finished.connect(self.switch_to_subtitle_optimization)
         self.subtitle_optimization_interface.finished.connect(self.switch_to_video_synthesis)
 
-    def switch_to_transcription(self, task):
+    def switch_to_transcription(self, file_path):
         # 切换到转录界面
-        self.transcription_interface.set_task(task)
+        transcribe_task = TaskFactory.create_transcribe_task(file_path, need_next_task=True)
+        self.transcription_interface.set_task(transcribe_task)
         self.transcription_interface.process()
         self.stackedWidget.setCurrentWidget(self.transcription_interface)
         self.pivot.setCurrentItem('TranscriptionInterface')
 
-    def switch_to_subtitle_optimization(self, task):
-        # 切换到字幕优化界面
-        self.subtitle_optimization_interface.set_task(task)
+    def switch_to_subtitle_optimization(self, file_path, video_path):
+        # 切换到字幕处理界面
+        subtitle_task = TaskFactory.create_subtitle_task(file_path, video_path, need_next_task=True)
+        self.subtitle_optimization_interface.set_task(subtitle_task)
         self.subtitle_optimization_interface.process()
         self.stackedWidget.setCurrentWidget(self.subtitle_optimization_interface)
-        self.pivot.setCurrentItem('SubtitleOptimizationInterface')
+        self.pivot.setCurrentItem('SubtitleInterface')
 
-    def switch_to_video_synthesis(self, task):
+    def switch_to_video_synthesis(self, video_path, subtitle_path):
         # 切换到视频合成界面
-        self.video_synthesis_interface.set_task(task)
+        synthesis_task = TaskFactory.create_synthesis_task(video_path, subtitle_path, need_next_task=True)
+        self.video_synthesis_interface.set_task(synthesis_task)
         self.video_synthesis_interface.process()
         self.stackedWidget.setCurrentWidget(self.video_synthesis_interface)
         self.pivot.setCurrentItem('VideoSynthesisInterface')
