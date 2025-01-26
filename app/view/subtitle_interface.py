@@ -9,7 +9,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QColor
 from PyQt5.QtWidgets import QAbstractItemView
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHeaderView, QFileDialog
-from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase, RoundMenu, Action, FluentIcon as FIF
+from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase, RoundMenu, Action, FluentIcon as FIF, CommandBar, TransparentDropDownPushButton, TransparentToolButton
 from qfluentwidgets import InfoBarPosition
 from PyQt5.QtCore import QUrl
 
@@ -17,7 +17,7 @@ from app.config import SUBTITLE_STYLE_PATH
 from app.thread.subtitle_thread import SubtitleThread
 from app.common.config import cfg
 from app.core.bk_asr.asr_data import from_subtitle_file, from_json
-from app.core.entities import OutputSubtitleFormatEnum, SubtitleTask, SupportedSubtitleFormats
+from app.core.entities import OutputSubtitleFormatEnum, SubtitleTask, SupportedSubtitleFormats, TargetLanguageEnum, TranscribeLanguageEnum
 from app.core.entities import Task
 from app.common.signal_bus import signalBus
 from app.components.SubtitleSettingDialog import SubtitleSettingDialog
@@ -122,7 +122,8 @@ class SubtitleInterface(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._init_ui()
         self._setup_signals()
-        self._update_prompt_button_style()
+        # self._update_prompt_button_style()
+        self.set_values()
 
     def _init_ui(self):
         self.main_layout = QVBoxLayout(self)
@@ -133,54 +134,109 @@ class SubtitleInterface(QWidget):
         self._setup_subtitle_table()
         self._setup_bottom_layout()
 
+    def set_values(self):
+        self.layout_button.setText(cfg.subtitle_layout.value)
+        self.translate_button.setChecked(cfg.need_translate.value)
+        self.optimize_button.setChecked(cfg.need_optimize.value)
+        self.target_language_button.setText(cfg.target_language.value.value)
+        self.target_language_button.setEnabled(cfg.need_translate.value)
+
+
     def _setup_top_layout(self):
-        self.top_layout = QHBoxLayout()
-
-        # =========左侧布局==========
-        self.left_layout = QHBoxLayout()
-        self.save_button = PushButton(self.tr("保存"), self, icon=FIF.SAVE)
+        # 创建水平布局
+        top_layout = QHBoxLayout()
         
-        # 字幕格式下拉框
-        self.format_combobox = ComboBox(self)
-        self.format_combobox.addItems([format.value for format in OutputSubtitleFormatEnum])
+        # 创建命令栏
+        self.command_bar = CommandBar(self)
+        self.command_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)  # 设置图标和文字并排显示
+        top_layout.addWidget(self.command_bar, 1)  # 设置stretch为1，使其尽可能占用空间
 
-        # 添加字幕排布下拉框
-        self.layout_combobox = ComboBox(self)
-        self.layout_combobox.addItems(["译文在上", "原文在上", "仅译文", "仅原文"])
-        self.layout_combobox.setCurrentText(cfg.subtitle_layout.value)
-
-        self.left_layout.addWidget(self.save_button)
-        self.left_layout.addWidget(self.format_combobox)
-        self.left_layout.addWidget(self.layout_combobox)
-
-        # =========右侧布局==========
-        self.right_layout = QHBoxLayout()
-        self.open_folder_button = ToolButton(FIF.FOLDER, self)
-        self.file_select_button = PushButton(self.tr("选择SRT文件"), self, icon=FIF.FOLDER_ADD)
-        self.prompt_button = PushButton(self.tr("文稿提示"), self, icon=FIF.DOCUMENT)
-        # 添加字幕设置按钮
-        self.subtitle_setting_button = ToolButton(FIF.SETTING, self)
-        self.subtitle_setting_button.setFixedSize(32, 32)
+        # 创建保存按钮的下拉菜单
+        save_menu = RoundMenu(parent=self)
+        save_menu.view.setMaxVisibleItems(8)  # 设置菜单最大高度
+        for format in OutputSubtitleFormatEnum:
+            action = Action(text=format.value)
+            action.triggered.connect(lambda checked, f=format.value: self.on_save_format_clicked(f))
+            save_menu.addAction(action)
         
+        # 添加保存按钮(带下拉菜单)
+        save_button = TransparentDropDownPushButton(self.tr('保存'), self, FIF.SAVE)
+        save_button.setMenu(save_menu)
+        save_button.setFixedHeight(34)
+        self.command_bar.addWidget(save_button)
+
+        # 添加字幕排布下拉按钮
+        self.layout_button = TransparentDropDownPushButton(self.tr('字幕排布'), self, FIF.LAYOUT)
+        self.layout_button.setFixedHeight(34)
+        self.layout_button.setMinimumWidth(125)
+        self.layout_menu = RoundMenu(parent=self)
+        for layout in ["译文在上", "原文在上", "仅译文", "仅原文"]:
+            action = Action(text=layout)
+            action.triggered.connect(lambda checked, l=layout: signalBus.subtitle_layout_changed.emit(l))
+            self.layout_menu.addAction(action)
+        self.layout_button.setMenu(self.layout_menu)
+        self.command_bar.addWidget(self.layout_button)
+
+        self.command_bar.addSeparator()
+
+        # 添加字幕优化按钮
+        self.optimize_button = Action(
+            FIF.EDIT,
+            self.tr('字幕优化'),
+            triggered=self.on_subtitle_optimization_changed,
+            checkable=True
+        )
+        self.command_bar.addAction(self.optimize_button)
+
+        # 添加字幕翻译按钮
+        self.translate_button = Action(
+            FIF.LANGUAGE,
+            self.tr('字幕翻译'),
+            triggered=self.on_subtitle_translation_changed,
+            checkable=True
+        )
+        self.command_bar.addAction(self.translate_button)
+
+        # 添加翻译语言选择
+        self.target_language_button = TransparentDropDownPushButton(self.tr('翻译语言'), self, FIF.LANGUAGE)
+        self.target_language_button.setFixedHeight(34)
+        self.target_language_button.setMinimumWidth(125)
+        self.target_language_menu = RoundMenu(parent=self)
+        self.target_language_menu.setMaxVisibleItems(10)
+        for lang in TargetLanguageEnum:
+            action = Action(text=lang.value)
+            action.triggered.connect(lambda checked, l=lang.value: signalBus.target_language_changed.emit(l))
+            self.target_language_menu.addAction(action)
+        self.target_language_button.setMenu(self.target_language_menu)
+
+        self.command_bar.addWidget(self.target_language_button)
+
+        self.command_bar.addSeparator()
+
+        # 添加文稿提示按钮
+        self.command_bar.addAction(Action(FIF.DOCUMENT, self.tr('文稿提示'), triggered=self.show_prompt_dialog))
+
+        # 添加设置按钮
+        self.command_bar.addAction(Action(FIF.SETTING, "", triggered=self.show_subtitle_settings))
+
         # 添加视频播放按钮
-        self.video_player_button = ToolButton(FIF.VIDEO, self)
-        self.video_player_button.setFixedSize(32, 32)
-        self.video_player_button.hide()
-        
-        self.start_button = PrimaryPushButton(self.tr("开始"), self, icon=FIF.PLAY)
-        
-        self.right_layout.addWidget(self.open_folder_button)
-        self.right_layout.addWidget(self.file_select_button)
-        self.right_layout.addWidget(self.prompt_button)
-        self.right_layout.addWidget(self.subtitle_setting_button)
-        self.right_layout.addWidget(self.video_player_button)
-        self.right_layout.addWidget(self.start_button)
+        # self.command_bar.addAction(Action(FIF.VIDEO, "", triggered=self.show_video_player))
 
-        self.top_layout.addLayout(self.left_layout)
-        self.top_layout.addStretch(1)
-        self.top_layout.addLayout(self.right_layout)
+        # 添加打开文件夹按钮
+        self.command_bar.addAction(Action(FIF.FOLDER, "", triggered=self.on_open_folder_clicked))
 
-        self.main_layout.addLayout(self.top_layout)
+        self.command_bar.addSeparator()
+
+        # 添加文件选择按钮
+        self.command_bar.addAction(Action(FIF.FOLDER_ADD, "", triggered=self.on_file_select))
+        
+        # 添加开始按钮到水平布局
+        self.start_button = PrimaryPushButton(self.tr('开始'), self, icon=FIF.PLAY)
+        self.start_button.clicked.connect(lambda: self.start_subtitle_optimization(need_create_task=True))
+        self.start_button.setFixedHeight(34)
+        top_layout.addWidget(self.start_button)
+
+        self.main_layout.addLayout(top_layout)
 
     def _setup_subtitle_table(self):
         self.subtitle_table = TableView(self)
@@ -220,15 +276,17 @@ class SubtitleInterface(QWidget):
         self.main_layout.addLayout(self.bottom_layout)
 
     def _setup_signals(self):
-        self.start_button.clicked.connect(lambda: self.start_subtitle_optimization(need_create_task=True))
-        self.file_select_button.clicked.connect(self.on_file_select)
-        self.save_button.clicked.connect(self.on_save_clicked)
-        self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
-        self.prompt_button.clicked.connect(self.show_prompt_dialog)
-        self.layout_combobox.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
+        # self.start_button.clicked.connect(lambda: self.start_subtitle_optimization(need_create_task=True))
+        # self.save_button.clicked.connect(self.on_save_clicked)
+        # self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
+        # self.prompt_button.clicked.connect(self.show_prompt_dialog)
+        # self.layout_combobox.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
         signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
-        self.subtitle_setting_button.clicked.connect(self.show_subtitle_settings)
-        self.video_player_button.clicked.connect(self.show_video_player)
+        signalBus.target_language_changed.connect(self.on_target_language_changed)
+        signalBus.subtitle_optimization_changed.connect(self.on_subtitle_optimization_changed)
+        signalBus.subtitle_translation_changed.connect(self.on_subtitle_translation_changed)
+        # self.subtitle_setting_button.clicked.connect(self.show_subtitle_settings)
+        # self.video_player_button.clicked.connect(self.show_video_player)
 
     def show_prompt_dialog(self):
         dialog = PromptDialog(self)
@@ -236,17 +294,13 @@ class SubtitleInterface(QWidget):
             self.custom_prompt_text = cfg.custom_prompt_text.value
             self._update_prompt_button_style()
 
-    def _update_prompt_button_style(self):
-        if self.custom_prompt_text.strip():
-            green_icon = FIF.DOCUMENT.colored(QColor(76,255,165), QColor(76,255,165))
-            self.prompt_button.setIcon(green_icon)
-        else:
-            self.prompt_button.setIcon(FIF.DOCUMENT)
-
-    def on_subtitle_layout_changed(self, layout: str):
-        cfg.subtitle_layout.value = layout
-        self.layout_combobox.setCurrentText(layout)
-
+    # def _update_prompt_button_style(self):
+    #     if self.custom_prompt_text.strip():
+    #         green_icon = FIF.DOCUMENT.colored(QColor(76,255,165), QColor(76,255,165))
+    #         self.prompt_button.setIcon(green_icon)
+    #     else:
+    #         self.prompt_button.setIcon(FIF.DOCUMENT)
+        
     def set_task(self, task: SubtitleTask):
         """设置任务并更新UI"""
         if hasattr(self, 'subtitle_optimization_thread'):
@@ -291,7 +345,6 @@ class SubtitleInterface(QWidget):
         self.subtitle_optimization_thread.set_custom_prompt_text(self.custom_prompt_text)
         self.subtitle_optimization_thread.start()
         InfoBar.info(self.tr("开始优化"), self.tr("开始优化字幕"), duration=3000, parent=self)
-
 
     def process(self):
         """主处理函数"""
@@ -344,11 +397,11 @@ class SubtitleInterface(QWidget):
 
         file_path, _ = QFileDialog.getOpenFileName(self, self.tr("选择字幕文件"), "", filter_str)
         if file_path:
-            self.file_select_button.setProperty("selected_file", file_path)
+            self.subtitle_path = file_path
             self.load_subtitle_file(file_path)
 
-    def on_save_clicked(self):
-        # 检查是否有任务
+    def on_save_format_clicked(self, format: str):
+        """处理保存格式的选择"""
         if not self.task:
             InfoBar.warning(
                 self.tr("警告"),
@@ -364,7 +417,7 @@ class SubtitleInterface(QWidget):
             self,
             self.tr("保存字幕文件"),
             default_name,  # 使用原文件名作为默认名
-            f"{self.tr('字幕文件')} (*.{self.format_combobox.currentText()})"
+            f"{self.tr('字幕文件')} (*.{format})"
         )
         if not file_path:
             return
@@ -624,6 +677,30 @@ class SubtitleInterface(QWidget):
                 parent=self
             )
 
+    def on_target_language_changed(self, language: str):
+        """处理翻译语言变更"""
+        for lang in TargetLanguageEnum:
+            if lang.value == language:
+                self.target_language_button.setText(lang.value)
+                cfg.set(cfg.target_language, lang)
+                break
+
+    def on_subtitle_optimization_changed(self, checked: bool):
+        """处理字幕优化开关变更"""
+        cfg.set(cfg.need_optimize, checked)
+        self.optimize_button.setChecked(checked)
+
+    def on_subtitle_translation_changed(self, checked: bool):
+        """处理字幕翻译开关变更"""
+        cfg.set(cfg.need_translate, checked)
+        self.translate_button.setChecked(checked)
+        # 控制翻译语言选择按钮的启用状态
+        self.target_language_button.setEnabled(checked)
+    
+    def on_subtitle_layout_changed(self, layout: str):
+        """处理字幕排布变更"""
+        cfg.set(cfg.subtitle_layout, layout)
+        self.layout_button.setText(layout)
 
 class PromptDialog(MessageBoxBase):
     def __init__(self, parent=None):

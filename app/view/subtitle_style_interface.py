@@ -381,7 +381,7 @@ class SubtitleStyleInterface(QWidget):
         self.openStyleFolderButton.clicked.connect(self.on_open_style_folder_clicked)
 
         # 连接字幕排布信号
-        self.layoutCard.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
+        self.layoutCard.comboBox.currentTextChanged.connect(signalBus.subtitle_layout_changed)
         signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
 
     def on_open_style_folder_clicked(self):

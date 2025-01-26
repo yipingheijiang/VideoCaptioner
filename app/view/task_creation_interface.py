@@ -222,12 +222,12 @@ class TaskCreationInterface(QWidget):
             self.on_transcription_model_changed
         )
 
-        self.subtitle_optimization_card.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
-        self.subtitle_translation_card.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
-        self.target_language_card.valueChanged.connect(signalBus.on_target_language_changed)
-        signalBus.subtitle_optimization_changed.connect(self.on_subtitle_optimization_changed)
-        signalBus.subtitle_translation_changed.connect(self.on_subtitle_translation_changed)
-        signalBus.target_language_changed.connect(self.on_target_language_changed)
+        # self.subtitle_optimization_card.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
+        # self.subtitle_translation_card.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
+        # self.target_language_card.valueChanged.connect(signalBus.on_target_language_changed)
+        # signalBus.subtitle_optimization_changed.connect(self.on_subtitle_optimization_changed)
+        # signalBus.subtitle_translation_changed.connect(self.on_subtitle_translation_changed)
+        # signalBus.target_language_changed.connect(self.on_target_language_changed)
 
     def on_subtitle_optimization_changed(self, optimization: bool):
         """当字幕优化状态改变时触发"""

@@ -329,9 +329,10 @@ class SettingInterface(ScrollArea):
 
         # 全局 signalBus
         self.transcribeModelCard.comboBox.currentTextChanged.connect(signalBus.transcription_model_changed)
-        self.subtitleCorrectCard.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
-        self.subtitleTranslateCard.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
-        self.targetLanguageCard.comboBox.currentTextChanged.connect(signalBus.on_target_language_changed)
+        self.subtitleCorrectCard.checkedChanged.connect(signalBus.subtitle_optimization_changed)
+        self.subtitleTranslateCard.checkedChanged.connect(signalBus.subtitle_translation_changed)
+        self.targetLanguageCard.comboBox.currentTextChanged.connect(signalBus.target_language_changed)
+        self.modelCard.comboBox.currentTextChanged.connect(signalBus.subtitle_layout_changed)
         
         # signalBus.transcription_model_changed.connect(self.transcribeModelCard.comboBox.setCurrentText)
         # signalBus.subtitle_optimization_changed.connect(self.subtitleCorrectCard.setChecked)
