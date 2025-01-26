@@ -328,13 +328,16 @@ class SettingInterface(ScrollArea):
         self.aboutCard.clicked.connect(self.checkUpdate)
 
         # 全局 signalBus
+        self.transcribeModelCard.comboBox.currentTextChanged.connect(signalBus.transcription_model_changed)
         self.subtitleCorrectCard.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
         self.subtitleTranslateCard.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
         self.targetLanguageCard.comboBox.currentTextChanged.connect(signalBus.on_target_language_changed)
-        signalBus.subtitle_optimization_changed.connect(self.subtitleCorrectCard.setChecked)
-        signalBus.subtitle_translation_changed.connect(self.subtitleTranslateCard.setChecked)
-        signalBus.target_language_changed.connect(self.targetLanguageCard.comboBox.setCurrentText)
         
+        # signalBus.transcription_model_changed.connect(self.transcribeModelCard.comboBox.setCurrentText)
+        # signalBus.subtitle_optimization_changed.connect(self.subtitleCorrectCard.setChecked)
+        # signalBus.subtitle_translation_changed.connect(self.subtitleTranslateCard.setChecked)
+        # signalBus.target_language_changed.connect(self.targetLanguageCard.comboBox.setCurrentText)
+    
     def __showRestartTooltip(self):
         """ 显示重启提示 """
         InfoBar.success(

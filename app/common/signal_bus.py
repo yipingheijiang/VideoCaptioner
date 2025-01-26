@@ -10,6 +10,9 @@ class SignalBus(QObject):
     subtitle_translation_changed = pyqtSignal(bool)
     # 翻译语言
     target_language_changed = pyqtSignal(str)
+    # 转录模型
+    transcription_model_changed = pyqtSignal(str)
+
 
     # 新增视频控制相关信号
     video_play = pyqtSignal()  # 播放信号
@@ -36,6 +39,9 @@ class SignalBus(QObject):
 
     def on_target_language_changed(self, language: str):
         self.target_language_changed.emit(language)
+
+    # def on_transcription_model_changed(self, model: str):
+    #     self.transcription_model_changed.emit(model)
 
     # 新增视频控制相关方法
     def play_video(self):

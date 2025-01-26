@@ -2,10 +2,13 @@ from pathlib import Path
 
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QShowEvent
 from PyQt5.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QHBoxLayout, QScrollArea
 from qfluentwidgets import (CardWidget, ComboBox, HyperlinkCard,
                           ComboBoxSettingCard, SwitchSettingCard, SettingCardGroup,
                           FluentIcon as FIF, BodyLabel, RangeSettingCard, SingleDirectionScrollArea)
+
+from app.thread.file_download_thread import FileDownloadThread
 
 from .LineEditSettingCard import LineEditSettingCard
 from .EditComboBoxSettingCard import EditComboBoxSettingCard
@@ -133,6 +136,7 @@ def check_faster_whisper_exists() -> tuple[bool, list[str]]:
         
     return bool(installed_versions), installed_versions
 
+
 # 添加新的解压线程类
 class UnzipThread(QThread):
     """7z解压线程"""
@@ -158,6 +162,7 @@ class UnzipThread(QThread):
             self.error.emit(f"解压失败: {str(e)}")
         except Exception as e:
             self.error.emit(str(e))
+
 
 class FasterWhisperDownloadDialog(MessageBoxBase):
     """Faster Whisper 下载对话框"""
@@ -624,6 +629,16 @@ class FasterWhisperSettingWidget(QWidget):
         super().__init__(parent)
         self.setup_ui()
         self._connect_signals()
+
+    
+    def showEvent(self, a0: QShowEvent) -> None:
+        super().showEvent(a0)
+        # 检查Faster Whisper模型是否存在
+        is_faster_whisper_exists, _ = check_faster_whisper_exists()
+        if not is_faster_whisper_exists:
+            self.show_error_info(self.tr('Faster Whisper程序不存在，请先下载程序'))
+            self._show_model_manager()
+        return 
 
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)

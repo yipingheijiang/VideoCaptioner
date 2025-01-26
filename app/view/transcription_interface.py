@@ -8,9 +8,9 @@ from pathlib import Path
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog, QSizePolicy
 from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
-    ProgressRing, InfoBarPosition
+    ProgressRing, InfoBarPosition, CommandBar, Action, TransparentDropDownPushButton, RoundMenu, FluentIcon
 
 from app.components.LanguageSettingDialog import LanguageSettingDialog
 from app.config import RESOURCE_PATH
@@ -21,7 +21,8 @@ from app.thread.transcript_thread import TranscriptThread
 from app.core.entities import TranscribeModelEnum
 from app.core.task_factory import TaskFactory
 from app.thread.video_info_thread import VideoInfoThread
-from ..components.transcription_setting_card import TranscriptionSettingCard
+from app.components.transcription_setting_card import TranscriptionSettingCard
+from app.common.signal_bus import signalBus
 
 DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
@@ -233,7 +234,6 @@ class VideoInfoCard(CardWidget):
             self.transcript_thread.terminate()
 
 
-
 class TranscriptionInterface(QWidget):
     """转录界面类,用于显示视频信息和转录进度"""
     finished = pyqtSignal(str, str)
@@ -246,12 +246,16 @@ class TranscriptionInterface(QWidget):
 
         self._init_ui()
         self._setup_signals()
+        self._set_value()
 
     def _init_ui(self):
         """初始化UI"""
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setObjectName("main_layout")
         self.main_layout.setSpacing(20)
+
+        # 添加命令栏
+        self._setup_command_bar()
 
         self.video_info_card = VideoInfoCard(self)
         self.main_layout.addWidget(self.video_info_card)
@@ -260,14 +264,64 @@ class TranscriptionInterface(QWidget):
         self.transcription_setting_card = TranscriptionSettingCard(self)
         self.main_layout.addWidget(self.transcription_setting_card)
 
-        self.file_select_button = PushButton(self.tr("选择视频文件"), self)
-        self.file_select_button.hide()
-        self.main_layout.addWidget(self.file_select_button, alignment=Qt.AlignCenter)
+    def _setup_command_bar(self):
+        """设置命令栏"""
+        self.command_bar = CommandBar(self)
+        self.command_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.command_bar.setFixedHeight(40)
+        
+        # 添加打开文件按钮
+        self.open_file_action = Action(FluentIcon.FOLDER, self.tr('打开文件'))
+        self.open_file_action.triggered.connect(self._on_file_select)
+        self.command_bar.addAction(self.open_file_action)
+        
+        self.command_bar.addSeparator()
+        
+        # 添加转录模型选择按钮
+        self.model_button = TransparentDropDownPushButton(self.tr('转录模型'), self, FluentIcon.SETTING)
+        self.model_button.setFixedHeight(34)
+        self.model_button.setMinimumWidth(160)
+        
+        self.model_menu = RoundMenu(parent=self)
+        for model in TranscribeModelEnum:
+            if "接口" in model.value or "api" in model.value.lower():
+                self.model_menu.addActions([
+                    Action(FluentIcon.GLOBE, model.value),
+                ])
+            else:
+                self.model_menu.addActions([
+                    Action(FluentIcon.ROBOT, model.value),
+                ])
+        self.model_button.setMenu(self.model_menu)
+        self.command_bar.addWidget(self.model_button)
+        
+        self.main_layout.addWidget(self.command_bar)
 
     def _setup_signals(self):
         """设置信号连接"""
-        self.file_select_button.clicked.connect(self._on_file_select)
         self.video_info_card.finished.connect(self._on_transcript_finished)
+        
+        # 设置模型选择菜单的信号连接
+        for action in self.model_menu.actions():
+            action.triggered.connect(lambda checked, text=action.text(): self.on_transcription_model_changed(text))
+        
+        # 全局信号连接
+        signalBus.transcription_model_changed.connect(self.on_transcription_model_changed)
+
+    def _set_value(self):
+        """设置转录模型"""
+        model_name = cfg.get(cfg.transcribe_model).value
+        # self.model_button.setText(self.tr(model_name))
+        self.on_transcription_model_changed(model_name)
+
+    def on_transcription_model_changed(self, model_name: str):
+        """处理转录模型改变"""
+        self.model_button.setText(self.tr(model_name))
+        self.transcription_setting_card.on_model_changed(model_name)
+        for model in TranscribeModelEnum:
+            if model.value == model_name:
+                cfg.set(cfg.transcribe_model, model)
+                break
 
     def _on_transcript_finished(self):
         """转录完成处理"""
@@ -358,6 +412,7 @@ class TranscriptionInterface(QWidget):
     def closeEvent(self, event):
         self.video_info_card.stop()
         super().closeEvent(event)
+
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
