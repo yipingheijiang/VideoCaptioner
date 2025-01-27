@@ -7,10 +7,11 @@ import requests
 import yt_dlp
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from app.core.entities import Task, TranscribeConfig, TranscribeModelEnum, TranscribeTask, VideoInfo, LANGUAGES
 from app.common.config import cfg
+from app.config import APPDATA_PATH, SUBTITLE_STYLE_PATH
+from app.core.entities import (LANGUAGES, Task, TranscribeConfig,
+                               TranscribeModelEnum, TranscribeTask, VideoInfo)
 from app.core.utils.logger import setup_logger
-from app.config import SUBTITLE_STYLE_PATH, APPDATA_PATH
 
 logger = setup_logger("create_task_thread")
 

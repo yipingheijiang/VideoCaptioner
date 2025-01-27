@@ -2,27 +2,53 @@
 
 import datetime
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog, QSizePolicy
-from qfluentwidgets import CardWidget, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
-    ProgressRing, InfoBarPosition, CommandBar, Action, TransparentDropDownPushButton, RoundMenu, FluentIcon
+from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+from qfluentwidgets import (
+    Action,
+    BodyLabel,
+    CardWidget,
+    CommandBar,
+    FluentIcon,
+    InfoBar,
+    InfoBarPosition,
+    PillPushButton,
+    PrimaryPushButton,
+    ProgressRing,
+    PushButton,
+    RoundMenu,
+    TransparentDropDownPushButton,
+    setFont,
+)
 
-from app.components.LanguageSettingDialog import LanguageSettingDialog
-from app.config import RESOURCE_PATH
 from app.common.config import cfg
-from app.core.entities import TranscribeTask, VideoInfo
-from app.core.entities import SupportedVideoFormats, SupportedAudioFormats
-from app.thread.transcript_thread import TranscriptThread
-from app.core.entities import TranscribeModelEnum
-from app.core.task_factory import TaskFactory
-from app.thread.video_info_thread import VideoInfoThread
-from app.components.transcription_setting_card import TranscriptionSettingCard
 from app.common.signal_bus import signalBus
+from app.components.LanguageSettingDialog import LanguageSettingDialog
+from app.components.transcription_setting_card import TranscriptionSettingCard
+from app.config import RESOURCE_PATH
+from app.core.entities import (
+    SupportedAudioFormats,
+    SupportedVideoFormats,
+    TranscribeModelEnum,
+    TranscribeTask,
+    VideoInfo,
+)
+from app.core.task_factory import TaskFactory
+from app.thread.transcript_thread import TranscriptThread
+from app.thread.video_info_thread import VideoInfoThread
 
 DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
@@ -56,9 +82,7 @@ class VideoInfoCard(CardWidget):
         self.video_thumbnail.setStyleSheet("background-color: #1E1F22;")
         self.video_thumbnail.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap(default_thumbnail_path).scaled(
-            self.video_thumbnail.size(),
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation
+            self.video_thumbnail.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
         self.video_thumbnail.setPixmap(pixmap)
         self.layout.addWidget(self.video_thumbnail, 0, Qt.AlignLeft)
@@ -120,8 +144,10 @@ class VideoInfoCard(CardWidget):
         # self.reset_ui()
         self.video_info = video_info
 
-        self.video_title.setText(video_info.file_name.rsplit('.', 1)[0])
-        self.resolution_info.setText(self.tr("画质: ") + f"{video_info.width}x{video_info.height}")
+        self.video_title.setText(video_info.file_name.rsplit(".", 1)[0])
+        self.resolution_info.setText(
+            self.tr("画质: ") + f"{video_info.width}x{video_info.height}"
+        )
         file_size_mb = os.path.getsize(video_info.file_path) / 1024 / 1024
         self.file_size_info.setText(self.tr("大小: ") + f"{file_size_mb:.1f} MB")
         duration = datetime.timedelta(seconds=int(video_info.duration_seconds))
@@ -135,9 +161,7 @@ class VideoInfoCard(CardWidget):
             thumbnail_path = RESOURCE_PATH / "assets" / "audio-thumbnail.png"
 
         pixmap = QPixmap(str(thumbnail_path)).scaled(
-            self.video_thumbnail.size(),
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation
+            self.video_thumbnail.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
         self.video_thumbnail.setPixmap(pixmap)
 
@@ -155,7 +179,11 @@ class VideoInfoCard(CardWidget):
     def on_start_button_clicked(self):
         """开始转录按钮点击事件"""
         if self.task and not self.task.need_next_task:
-            need_language_settings = cfg.transcribe_model.value in [TranscribeModelEnum.WHISPER_CPP, TranscribeModelEnum.WHISPER_API, TranscribeModelEnum.FASTER_WHISPER]
+            need_language_settings = cfg.transcribe_model.value in [
+                TranscribeModelEnum.WHISPER_CPP,
+                TranscribeModelEnum.WHISPER_API,
+                TranscribeModelEnum.FASTER_WHISPER,
+            ]
             if need_language_settings and not self.show_language_settings():
                 return
         self.progress_ring.show()
@@ -167,7 +195,11 @@ class VideoInfoCard(CardWidget):
         """打开文件夹按钮点击事件"""
         if self.task and self.task.output_path:
             original_subtitle_save_path = Path(self.task.output_path)
-            target_dir = str(original_subtitle_save_path.parent if original_subtitle_save_path.exists() else Path(self.task.file_path).parent)
+            target_dir = str(
+                original_subtitle_save_path.parent
+                if original_subtitle_save_path.exists()
+                else Path(self.task.file_path).parent
+            )
             if sys.platform == "win32":
                 os.startfile(target_dir)
             elif sys.platform == "darwin":  # macOS
@@ -179,7 +211,7 @@ class VideoInfoCard(CardWidget):
                 self.tr("警告"),
                 self.tr("没有可用的字幕文件夹"),
                 duration=2000,
-                parent=self
+                parent=self,
             )
 
     def start_transcription(self, need_create_task=True):
@@ -187,7 +219,7 @@ class VideoInfoCard(CardWidget):
         self.start_button.setEnabled(False)
 
         if need_create_task:
-            self.task = TaskFactory.create_transcribe_task(self.video_info.file_path)        
+            self.task = TaskFactory.create_transcribe_task(self.video_info.file_path)
 
         self.transcript_thread = TranscriptThread(self.task)
         self.transcript_thread.finished.connect(self.on_transcript_finished)
@@ -209,7 +241,7 @@ class VideoInfoCard(CardWidget):
             self.tr("转录失败"),
             self.tr(error),
             duration=3000,
-            parent=self.parent().parent()
+            parent=self.parent().parent(),
         )
 
     def on_transcript_finished(self, task):
@@ -228,14 +260,15 @@ class VideoInfoCard(CardWidget):
         """设置任务并更新UI"""
         self.task = task
         self.reset_ui()
-    
+
     def stop(self):
-        if hasattr(self, 'transcript_thread'):
+        if hasattr(self, "transcript_thread"):
             self.transcript_thread.terminate()
 
 
 class TranscriptionInterface(QWidget):
     """转录界面类,用于显示视频信息和转录进度"""
+
     finished = pyqtSignal(str, str)
 
     def __init__(self, parent=None):
@@ -269,44 +302,56 @@ class TranscriptionInterface(QWidget):
         self.command_bar = CommandBar(self)
         self.command_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.command_bar.setFixedHeight(40)
-        
+
         # 添加打开文件按钮
-        self.open_file_action = Action(FluentIcon.FOLDER, self.tr('打开文件'))
+        self.open_file_action = Action(FluentIcon.FOLDER, self.tr("打开文件"))
         self.open_file_action.triggered.connect(self._on_file_select)
         self.command_bar.addAction(self.open_file_action)
-        
+
         self.command_bar.addSeparator()
-        
+
         # 添加转录模型选择按钮
-        self.model_button = TransparentDropDownPushButton(self.tr('转录模型'), self, FluentIcon.SETTING)
+        self.model_button = TransparentDropDownPushButton(
+            self.tr("转录模型"), self, FluentIcon.SETTING
+        )
         self.model_button.setFixedHeight(34)
         self.model_button.setMinimumWidth(160)
-        
+
         self.model_menu = RoundMenu(parent=self)
         for model in TranscribeModelEnum:
             if "接口" in model.value or "api" in model.value.lower():
-                self.model_menu.addActions([
-                    Action(FluentIcon.GLOBE, model.value),
-                ])
+                self.model_menu.addActions(
+                    [
+                        Action(FluentIcon.GLOBE, model.value),
+                    ]
+                )
             else:
-                self.model_menu.addActions([
-                    Action(FluentIcon.ROBOT, model.value),
-                ])
+                self.model_menu.addActions(
+                    [
+                        Action(FluentIcon.ROBOT, model.value),
+                    ]
+                )
         self.model_button.setMenu(self.model_menu)
         self.command_bar.addWidget(self.model_button)
-        
+
         self.main_layout.addWidget(self.command_bar)
 
     def _setup_signals(self):
         """设置信号连接"""
         self.video_info_card.finished.connect(self._on_transcript_finished)
-        
+
         # 设置模型选择菜单的信号连接
         for action in self.model_menu.actions():
-            action.triggered.connect(lambda checked, text=action.text(): self.on_transcription_model_changed(text))
-        
+            action.triggered.connect(
+                lambda checked, text=action.text(): self.on_transcription_model_changed(
+                    text
+                )
+            )
+
         # 全局信号连接
-        signalBus.transcription_model_changed.connect(self.on_transcription_model_changed)
+        signalBus.transcription_model_changed.connect(
+            self.on_transcription_model_changed
+        )
 
     def _set_value(self):
         """设置转录模型"""
@@ -332,7 +377,7 @@ class TranscriptionInterface(QWidget):
                 self.tr("开始字幕优化..."),
                 duration=3000,
                 position=InfoBarPosition.BOTTOM,
-                parent=self.parent()
+                parent=self.parent(),
             )
 
     def _on_file_select(self):
@@ -344,7 +389,9 @@ class TranscriptionInterface(QWidget):
         audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
         filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
 
-        file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
+        file_path, _ = file_dialog.getOpenFileName(
+            self, self.tr("选择媒体文件"), desktop_path, filter_str
+        )
         if file_path:
             self.update_info(file_path)
 
@@ -357,12 +404,7 @@ class TranscriptionInterface(QWidget):
 
     def _on_video_info_error(self, error_msg):
         """处理视频信息提取错误"""
-        InfoBar.error(
-            self.tr("错误"),
-            self.tr(error_msg),
-            duration=3000,
-            parent=self
-        )
+        InfoBar.error(self.tr("错误"), self.tr(error_msg), duration=3000, parent=self)
 
     def set_task(self, task: TranscribeTask):
         """设置任务并更新UI"""
@@ -388,8 +430,9 @@ class TranscriptionInterface(QWidget):
             file_ext = os.path.splitext(file_path)[1][1:].lower()
 
             # 检查文件格式是否支持
-            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in
-                                                                                SupportedAudioFormats}
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {
+                fmt.value for fmt in SupportedAudioFormats
+            }
             is_supported = file_ext in supported_formats
 
             if is_supported:
@@ -398,7 +441,7 @@ class TranscriptionInterface(QWidget):
                     self.tr("导入成功"),
                     self.tr("开始语音转文字"),
                     duration=3000,
-                    parent=self
+                    parent=self,
                 )
                 break
             else:
@@ -406,7 +449,7 @@ class TranscriptionInterface(QWidget):
                     self.tr(f"格式错误") + file_ext,
                     self.tr(f"请拖入音频或视频文件"),
                     duration=3000,
-                    parent=self
+                    parent=self,
                 )
 
     def closeEvent(self, event):
@@ -415,7 +458,9 @@ class TranscriptionInterface(QWidget):
 
 
 if __name__ == "__main__":
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 

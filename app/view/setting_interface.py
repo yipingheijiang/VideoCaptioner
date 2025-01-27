@@ -1,22 +1,27 @@
 import webbrowser
-from PyQt5.QtCore import Qt, QUrl, pyqtSignal, QThread
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtWidgets import QWidget, QLabel, QFileDialog
-from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import InfoBar
-from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, OptionsSettingCard, PushSettingCard,
-                            HyperlinkCard, PrimaryPushSettingCard, ScrollArea,
-                            ComboBoxSettingCard, ExpandLayout, CustomColorSettingCard,
-                            setTheme, setThemeColor, RangeSettingCard, MessageBox)
 
-from app.config import VERSION, YEAR, AUTHOR, HELP_URL, FEEDBACK_URL, RELEASE_URL
-from app.core.entities import TranscribeModelEnum
-from app.thread.version_manager_thread import VersionManager
+from PyQt5.QtCore import Qt, QThread, QUrl, pyqtSignal
+from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtWidgets import QFileDialog, QLabel, QWidget
+from qfluentwidgets import (ComboBoxSettingCard, CustomColorSettingCard,
+                            ExpandLayout)
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (HyperlinkCard, InfoBar, MessageBox,
+                            OptionsSettingCard, PrimaryPushSettingCard,
+                            PushSettingCard, RangeSettingCard, ScrollArea,
+                            SettingCardGroup, SwitchSettingCard, setTheme,
+                            setThemeColor)
+
 from app.common.config import cfg
+from app.common.signal_bus import signalBus
 from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from app.components.LineEditSettingCard import LineEditSettingCard
-from app.core.utils.test_opanai import test_openai, get_openai_models
-from app.common.signal_bus import signalBus
+from app.config import (AUTHOR, FEEDBACK_URL, HELP_URL, RELEASE_URL, VERSION,
+                        YEAR)
+from app.core.entities import TranscribeModelEnum
+from app.core.utils.test_opanai import get_openai_models, test_openai
+from app.thread.version_manager_thread import VersionManager
+
 
 class SettingInterface(ScrollArea):
     """ 设置界面 """

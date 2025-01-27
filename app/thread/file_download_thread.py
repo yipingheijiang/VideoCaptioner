@@ -2,6 +2,7 @@ import os
 import platform
 import shutil
 import subprocess
+
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 from app.config import CACHE_PATH

@@ -2,8 +2,8 @@ import os
 from typing import Optional
 
 from openai import OpenAI
-from ..utils.logger import setup_logger
 
+from ..utils.logger import setup_logger
 from .asr_data import ASRData, ASRDataSeg
 from .base import BaseASR
 

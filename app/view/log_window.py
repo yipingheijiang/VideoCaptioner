@@ -1,14 +1,14 @@
-import time
-from PyQt5.QtWidgets import QVBoxLayout, QTextEdit, QWidget
-from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QTextCursor
-
-from qfluentwidgets import Dialog, TextEdit, FluentStyleSheet, isDarkTheme
-
-from pathlib import Path
 import os
+import time
+from pathlib import Path
 
-from app.config import RESOURCE_PATH, LOG_PATH
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QTextCursor
+from PyQt5.QtWidgets import QTextEdit, QVBoxLayout, QWidget
+from qfluentwidgets import Dialog, FluentStyleSheet, TextEdit, isDarkTheme
+
+from app.config import LOG_PATH, RESOURCE_PATH
+
 
 class LogWindow(QWidget):
     def __init__(self, parent=None):

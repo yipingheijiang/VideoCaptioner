@@ -1,19 +1,19 @@
 import datetime
 import os
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import Dict
 
-from PyQt5.QtCore import QThread, pyqtSignal, QSettings
+from PyQt5.QtCore import QSettings, QThread, pyqtSignal
 
-from app.core.subtitle_processor.optimization import SubtitleOptimizer
-from app.core.subtitle_processor.summarization import SubtitleSummarizer
-from app.core.bk_asr.asr_data import from_subtitle_file
-from app.core.entities import SubtitleTask, Task, SubtitleConfig
-from app.core.subtitle_processor.splitting import merge_segments
-from app.core.utils.test_opanai import test_openai
-from app.core.utils.logger import setup_logger
 from app.common.config import cfg
+from app.core.bk_asr.asr_data import from_subtitle_file
+from app.core.entities import SubtitleConfig, SubtitleTask, Task
+from app.core.subtitle_processor.optimization import SubtitleOptimizer
+from app.core.subtitle_processor.splitting import merge_segments
+from app.core.subtitle_processor.summarization import SubtitleSummarizer
+from app.core.utils.logger import setup_logger
+from app.core.utils.test_opanai import test_openai
 
 # 配置日志
 logger = setup_logger("subtitle_optimization_thread")

@@ -87,55 +87,63 @@ class SubtitleAligner:
 
         while True:
             while len(lines) < 4:
-                lines.append(next(diff_iterator, 'X'))
+                lines.append(next(diff_iterator, "X"))
 
-            diff_type = ''.join([line[0] for line in lines])
+            diff_type = "".join([line[0] for line in lines])
 
-            if diff_type.startswith('X'):
+            if diff_type.startswith("X"):
                 blank_lines_to_yield = blank_lines_pending
-            elif diff_type.startswith('-?+?'):
-                yield self._format_line(lines, '?', 0), self._format_line(lines, '?', 1), True
+            elif diff_type.startswith("-?+?"):
+                yield self._format_line(lines, "?", 0), self._format_line(
+                    lines, "?", 1
+                ), True
                 continue
-            elif diff_type.startswith('--++'):
+            elif diff_type.startswith("--++"):
                 blank_lines_pending -= 1
-                yield self._format_line(lines, '-', 0), None, True
+                yield self._format_line(lines, "-", 0), None, True
                 continue
-            elif diff_type.startswith(('--?+', '--+', '- ')):
-                source_line, target_line = self._format_line(lines, '-', 0), None
+            elif diff_type.startswith(("--?+", "--+", "- ")):
+                source_line, target_line = self._format_line(lines, "-", 0), None
                 blank_lines_to_yield, blank_lines_pending = blank_lines_pending - 1, 0
-            elif diff_type.startswith('-+?'):
-                yield self._format_line(lines, None, 0), self._format_line(lines, '?', 1), True
+            elif diff_type.startswith("-+?"):
+                yield self._format_line(lines, None, 0), self._format_line(
+                    lines, "?", 1
+                ), True
                 continue
-            elif diff_type.startswith('-?+'):
-                yield self._format_line(lines, '?', 0), self._format_line(lines, None, 1), True
+            elif diff_type.startswith("-?+"):
+                yield self._format_line(lines, "?", 0), self._format_line(
+                    lines, None, 1
+                ), True
                 continue
-            elif diff_type.startswith('-'):
+            elif diff_type.startswith("-"):
                 blank_lines_pending -= 1
-                yield self._format_line(lines, '-', 0), None, True
+                yield self._format_line(lines, "-", 0), None, True
                 continue
-            elif diff_type.startswith('+--'):
+            elif diff_type.startswith("+--"):
                 blank_lines_pending += 1
-                yield None, self._format_line(lines, '+', 1), True
+                yield None, self._format_line(lines, "+", 1), True
                 continue
-            elif diff_type.startswith(('+ ', '+-')):
-                source_line, target_line = None, self._format_line(lines, '+', 1)
+            elif diff_type.startswith(("+ ", "+-")):
+                source_line, target_line = None, self._format_line(lines, "+", 1)
                 blank_lines_to_yield, blank_lines_pending = blank_lines_pending + 1, 0
-            elif diff_type.startswith('+'):
+            elif diff_type.startswith("+"):
                 blank_lines_pending += 1
-                yield None, self._format_line(lines, '+', 1), True
+                yield None, self._format_line(lines, "+", 1), True
                 continue
-            elif diff_type.startswith(' '):
-                yield self._format_line(lines[:], None, 0), self._format_line(lines, None, 1), False
+            elif diff_type.startswith(" "):
+                yield self._format_line(lines[:], None, 0), self._format_line(
+                    lines, None, 1
+                ), False
                 continue
 
             while blank_lines_to_yield < 0:
                 blank_lines_to_yield += 1
-                yield None, ('', '\n'), True
+                yield None, ("", "\n"), True
             while blank_lines_to_yield > 0:
                 blank_lines_to_yield -= 1
-                yield ('', '\n'), None, True
+                yield ("", "\n"), None, True
 
-            if diff_type.startswith('X'):
+            if diff_type.startswith("X"):
                 return
             else:
                 yield source_line, target_line, True
@@ -155,20 +163,20 @@ class SubtitleAligner:
         self.line_numbers[side] += 1
         if format_key is None:
             return self.line_numbers[side], lines.pop(0)[2:]
-        if format_key == '?':
+        if format_key == "?":
             text, markers = lines.pop(0), lines.pop(0)
             text = text[2:]
         else:
             text = lines.pop(0)[2:]
             if not text:
-                text = ''
+                text = ""
         return self.line_numbers[side], text
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # 简短示例
-    text1 = ['ab', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
-    text2 = ['a', 'b', 'c', 'd', 'f', 'g', 'h', 'i']
+    text1 = ["ab", "b", "c", "d", "e", "f", "g", "h", "i"]
+    text2 = ["a", "b", "c", "d", "f", "g", "h", "i"]
 
     # 使用示例
     text_aligner = SubtitleAligner()

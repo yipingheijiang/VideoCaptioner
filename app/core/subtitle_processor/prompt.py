@@ -1,4 +1,3 @@
-
 SPLIT_SYSTEM_PROMPT = """
 You are a subtitle segmentation expert, skilled in breaking down unsegmented text into individual segments, separated by <br>.
 Requirements:

@@ -1,22 +1,26 @@
 import os
-from pathlib import Path
-import sys
 import subprocess
+import sys
+from pathlib import Path
 from typing import Optional, Tuple
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QColor, QFontDatabase
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFileDialog
-from qfluentwidgets import (ScrollArea, SettingCardGroup, LineEdit, MessageBoxBase,
-                            PushSettingCard, FluentIcon as FIF, CardWidget, BodyLabel, ImageLabel,
-                            InfoBar, InfoBarPosition)
+from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QVBoxLayout, QWidget
+from qfluentwidgets import BodyLabel, CardWidget
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (ImageLabel, InfoBar, InfoBarPosition, LineEdit,
+                            MessageBoxBase, PushSettingCard, ScrollArea,
+                            SettingCardGroup)
 
 from app.common.config import cfg
-from app.components.MySettingCard import SpinBoxSettingCard, ComboBoxSettingCard, ColorSettingCard, \
-    DoubleSpinBoxSettingCard
-from app.core.utils.subtitle_preview import generate_preview
-from app.config import SUBTITLE_STYLE_PATH
 from app.common.signal_bus import signalBus
+from app.components.MySettingCard import (ColorSettingCard,
+                                          ComboBoxSettingCard,
+                                          DoubleSpinBoxSettingCard,
+                                          SpinBoxSettingCard)
+from app.config import SUBTITLE_STYLE_PATH
+from app.core.utils.subtitle_preview import generate_preview
 
 PERVIEW_TEXTS = {
     "长文本": ("This is a long text used for testing subtitle preview.",

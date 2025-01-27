@@ -1,11 +1,13 @@
 import datetime
+
 from PyQt5.QtCore import QThread, pyqtSignal
+
+from app.core.entities import Task
+from app.core.utils.logger import setup_logger
 
 from .subtitle_thread import SubtitleThread
 from .transcript_thread import TranscriptThread
 from .video_synthesis_thread import VideoSynthesisThread
-from app.core.entities import Task
-from app.core.utils.logger import setup_logger
 
 logger = setup_logger("subtitle_pipeline_thread")
 

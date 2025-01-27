@@ -17,7 +17,6 @@ class SignalBus(QObject):
     # 视频合成信号
     need_video_changed = pyqtSignal(bool)
 
-
     # 新增视频控制相关信号
     video_play = pyqtSignal()  # 播放信号
     video_pause = pyqtSignal()  # 暂停信号
@@ -62,7 +61,7 @@ class SignalBus(QObject):
 
     def set_video_source(self, url: QUrl):
         """设置视频源
-        
+
         Args:
             url: 视频文件的URL
         """
@@ -70,7 +69,7 @@ class SignalBus(QObject):
 
     def play_video_segment(self, start_time: int, end_time: int):
         """播放指定时间段的视频
-        
+
         Args:
             start_time: 开始时间(毫秒)
             end_time: 结束时间(毫秒)
@@ -79,7 +78,7 @@ class SignalBus(QObject):
 
     def add_subtitle(self, subtitle_file: str):
         """添加字幕文件
-        
+
         Args:
             subtitle_file: 字幕文件路径
         """

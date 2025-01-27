@@ -1,12 +1,14 @@
 import json
 import os
-import zlib
 import tempfile
 import threading
+import zlib
 from typing import Optional, Union
 
-from .asr_data import ASRDataSeg, ASRData
 from app.config import CACHE_PATH
+
+from .asr_data import ASRData, ASRDataSeg
+
 
 class BaseASR:
     SUPPORTED_SOUND_FORMAT = ["flac", "m4a", "mp3", "wav"]

@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 
 import os
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QDropEvent
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QApplication,
-                             QFileDialog)
-from qfluentwidgets import (CardWidget, LineEdit, BodyLabel,
-                            InfoBar, InfoBarPosition, ProgressBar, PushButton,
-                            CommandBar, Action, FluentIcon as FIF, PrimaryPushButton,
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
+                             QVBoxLayout, QWidget)
+from qfluentwidgets import Action, BodyLabel, CardWidget, CommandBar
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (InfoBar, InfoBarPosition, LineEdit,
+                            PrimaryPushButton, ProgressBar, PushButton,
                             ToolTipFilter, ToolTipPosition)
 
-from app.thread.create_task_thread import CreateTaskThread
-from app.thread.video_synthesis_thread import VideoSynthesisThread
-from app.core.entities import SupportedVideoFormats, SupportedSubtitleFormats
-from app.core.entities import Task
-from app.core.task_factory import TaskFactory
-from app.core.entities import SynthesisTask
 from app.common.config import cfg
 from app.common.signal_bus import signalBus
+from app.core.entities import (SupportedSubtitleFormats, SupportedVideoFormats,
+                               SynthesisTask, Task)
+from app.core.task_factory import TaskFactory
+from app.thread.create_task_thread import CreateTaskThread
+from app.thread.video_synthesis_thread import VideoSynthesisThread
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"

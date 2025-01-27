@@ -3,9 +3,20 @@ from enum import Enum
 
 from PyQt5.QtCore import QLocale
 from PyQt5.QtGui import QColor
-from qfluentwidgets import (qconfig, QConfig, ConfigItem, OptionsConfigItem, BoolValidator,
-                            OptionsValidator, RangeConfigItem, RangeValidator,
-                            Theme, FolderValidator, ConfigSerializer, EnumSerializer)
+from qfluentwidgets import (
+    qconfig,
+    QConfig,
+    ConfigItem,
+    OptionsConfigItem,
+    BoolValidator,
+    OptionsValidator,
+    RangeConfigItem,
+    RangeValidator,
+    Theme,
+    FolderValidator,
+    ConfigSerializer,
+    EnumSerializer,
+)
 
 from app.config import WORK_PATH, SETTINGS_PATH
 from ..core.entities import (
@@ -14,12 +25,13 @@ from ..core.entities import (
     TranscribeLanguageEnum,
     WhisperModelEnum,
     FasterWhisperModelEnum,
-    VadMethodEnum
+    VadMethodEnum,
 )
 
 
 class Language(Enum):
-    """ 软件语言 """
+    """软件语言"""
+
     CHINESE_SIMPLIFIED = QLocale(QLocale.Chinese, QLocale.China)
     CHINESE_TRADITIONAL = QLocale(QLocale.Chinese, QLocale.HongKong)
     ENGLISH = QLocale(QLocale.English)
@@ -27,7 +39,8 @@ class Language(Enum):
 
 
 class SubtitleLayoutEnum(Enum):
-    """ 字幕布局 """
+    """字幕布局"""
+
     TRANSLATE_ON_TOP = "译文在上"
     ORIGINAL_ON_TOP = "原文在上"
     ONLY_ORIGINAL = "仅原文"
@@ -35,7 +48,7 @@ class SubtitleLayoutEnum(Enum):
 
 
 class LanguageSerializer(ConfigSerializer):
-    """ Language serializer """
+    """Language serializer"""
 
     def serialize(self, language):
         return language.value.name() if language != Language.AUTO else "Auto"
@@ -44,61 +57,58 @@ class LanguageSerializer(ConfigSerializer):
         return Language(QLocale(value)) if value != "Auto" else Language.AUTO
 
 
-
 class Config(QConfig):
-    """ 应用配置 """
+    """应用配置"""
+
     # ------------------- LLM 配置 -------------------
     api_key = ConfigItem("LLM", "API_Key", "")
     api_base = ConfigItem("LLM", "API_Base", "")
     model = ConfigItem("LLM", "Model", "gpt-4o-mini")
-    batch_size = RangeConfigItem(
-        "LLM", "BatchSize", 10, RangeValidator(10, 30)
-    )
-    thread_num = RangeConfigItem(
-        "LLM", "ThreadNum", 10, RangeValidator(1, 30)
-    )
+    batch_size = RangeConfigItem("LLM", "BatchSize", 10, RangeValidator(10, 30))
+    thread_num = RangeConfigItem("LLM", "ThreadNum", 10, RangeValidator(1, 30))
 
     # ------------------- 转录配置 -------------------
     transcribe_model = OptionsConfigItem(
-        "Transcribe", "TranscribeModel",
+        "Transcribe",
+        "TranscribeModel",
         TranscribeModelEnum.JIANYING.value,
         OptionsValidator(TranscribeModelEnum),
-        EnumSerializer(TranscribeModelEnum)
+        EnumSerializer(TranscribeModelEnum),
     )
-    use_asr_cache = ConfigItem(
-        "Transcribe", "UseASRCache", True, BoolValidator()
-    )
+    use_asr_cache = ConfigItem("Transcribe", "UseASRCache", True, BoolValidator())
     transcribe_language = OptionsConfigItem(
-        "Transcribe", "TranscribeLanguage",
+        "Transcribe",
+        "TranscribeLanguage",
         TranscribeLanguageEnum.ENGLISH.value,
         OptionsValidator(TranscribeLanguageEnum),
-        EnumSerializer(TranscribeLanguageEnum)
+        EnumSerializer(TranscribeLanguageEnum),
     )
 
     # ------------------- Whisper Cpp 配置 -------------------
     whisper_model = OptionsConfigItem(
-        "Whisper", "WhisperModel",
+        "Whisper",
+        "WhisperModel",
         WhisperModelEnum.TINY.value,
         OptionsValidator(WhisperModelEnum),
-        EnumSerializer(WhisperModelEnum)
+        EnumSerializer(WhisperModelEnum),
     )
 
     # ------------------- Faster Whisper 配置 -------------------
     faster_whisper_program = ConfigItem(
-        "FasterWhisper", "Program",
+        "FasterWhisper",
+        "Program",
         "faster-whisper-xxl.exe",
     )
     faster_whisper_model = OptionsConfigItem(
-        "FasterWhisper", "Model",
+        "FasterWhisper",
+        "Model",
         FasterWhisperModelEnum.TINY.value,
         OptionsValidator(FasterWhisperModelEnum),
-        EnumSerializer(FasterWhisperModelEnum)
+        EnumSerializer(FasterWhisperModelEnum),
     )
     faster_whisper_model_dir = ConfigItem("FasterWhisper", "ModelDir", "")
     faster_whisper_device = OptionsConfigItem(
-        "FasterWhisper", "Device",
-        "cuda",
-        OptionsValidator(["cuda", "cpu"])
+        "FasterWhisper", "Device", "cuda", OptionsValidator(["cuda", "cpu"])
     )
     # VAD 参数
     faster_whisper_vad_filter = ConfigItem(
@@ -108,10 +118,11 @@ class Config(QConfig):
         "FasterWhisper", "VadThreshold", 0.4, RangeValidator(0, 1)
     )
     faster_whisper_vad_method = OptionsConfigItem(
-        "FasterWhisper", "VadMethod",
+        "FasterWhisper",
+        "VadMethod",
         VadMethodEnum.SILERO_V3.value,
         OptionsValidator(VadMethodEnum),
-        EnumSerializer(VadMethodEnum)
+        EnumSerializer(VadMethodEnum),
     )
     # 人声提取
     faster_whisper_ff_mdx_kim2 = ConfigItem(
@@ -135,14 +146,21 @@ class Config(QConfig):
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
     need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
     target_language = OptionsConfigItem(
-        "Subtitle", "TargetLanguage",
+        "Subtitle",
+        "TargetLanguage",
         TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
         OptionsValidator(TargetLanguageEnum),
-        EnumSerializer(TargetLanguageEnum)
+        EnumSerializer(TargetLanguageEnum),
     )
-    max_word_count_cjk = ConfigItem("Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 50))
-    max_word_count_english = ConfigItem("Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 50))
-    needs_remove_punctuation = ConfigItem("Subtitle", "NeedsRemovePunctuation", False, BoolValidator())
+    max_word_count_cjk = ConfigItem(
+        "Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 50)
+    )
+    max_word_count_english = ConfigItem(
+        "Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 50)
+    )
+    needs_remove_punctuation = ConfigItem(
+        "Subtitle", "NeedsRemovePunctuation", False, BoolValidator()
+    )
     custom_prompt_text = ConfigItem("Subtitle", "CustomPromptText", "")
 
     # ------------------- 字幕合成配置 -------------------
@@ -160,17 +178,19 @@ class Config(QConfig):
     # ------------------- 软件页面配置 -------------------
     micaEnabled = ConfigItem("MainWindow", "MicaEnabled", False, BoolValidator())
     dpiScale = OptionsConfigItem(
-        "MainWindow", "DpiScale",
+        "MainWindow",
+        "DpiScale",
         "Auto",
         OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]),
-        restart=True
+        restart=True,
     )
     language = OptionsConfigItem(
-        "MainWindow", "Language",
+        "MainWindow",
+        "Language",
         Language.AUTO,
         OptionsValidator(Language),
         LanguageSerializer(),
-        restart=True
+        restart=True,
     )
 
     # ------------------- 更新配置 -------------------

@@ -2,17 +2,17 @@ import os
 
 from openai import OpenAI
 
-from .prompt import SUMMARIZER_PROMPT
 from ..utils import json_repair
 from ..utils.logger import setup_logger
+from .prompt import SUMMARIZER_PROMPT
 
 logger = setup_logger("subtitle_summarizer")
 
 
 class SubtitleSummarizer:
     def __init__(self, model) -> None:
-        base_url = os.getenv('OPENAI_BASE_URL')
-        api_key = os.getenv('OPENAI_API_KEY')
+        base_url = os.getenv("OPENAI_BASE_URL")
+        api_key = os.getenv("OPENAI_API_KEY")
 
         if not base_url or not api_key:
             raise ValueError("环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置")
@@ -29,19 +29,25 @@ class SubtitleSummarizer:
                 stream=False,
                 messages=[
                     {"role": "system", "content": SUMMARIZER_PROMPT},
-                    {"role": "user", "content": f"summarize the video content:\n{subtitle_content}"}
-                ]
+                    {
+                        "role": "user",
+                        "content": f"summarize the video content:\n{subtitle_content}",
+                    },
+                ],
             )
             return str(json_repair.loads(response.choices[0].message.content))
         except Exception as e:
             logger.exception(f"摘要化字幕内容失败: {e}")
             return ""
-    
-    
+
 
 if __name__ == "__main__":
     summarizer = SubtitleSummarizer()
-    example_subtitles = {0: '既然是想做并发编程', 1: '比如说肯定是想干嘛', 2: '开启多条线程来同时执行任务'}
+    example_subtitles = {
+        0: "既然是想做并发编程",
+        1: "比如说肯定是想干嘛",
+        2: "开启多条线程来同时执行任务",
+    }
     example_subtitles = dict(list(example_subtitles.items())[:5])
 
     content = "".join(example_subtitles.values())

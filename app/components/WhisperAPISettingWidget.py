@@ -1,13 +1,25 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QHBoxLayout, QScrollArea
-from qfluentwidgets import (CardWidget, ComboBox, HyperlinkCard,
-                          ComboBoxSettingCard, SwitchSettingCard, SettingCardGroup,
-                          FluentIcon as FIF, BodyLabel, RangeSettingCard, SingleDirectionScrollArea)
+from PyQt5.QtWidgets import (
+    QHBoxLayout,
+    QScrollArea,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
+from qfluentwidgets import BodyLabel, CardWidget, ComboBox, ComboBoxSettingCard
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (
+    HyperlinkCard,
+    RangeSettingCard,
+    SettingCardGroup,
+    SingleDirectionScrollArea,
+    SwitchSettingCard,
+)
 
-from .LineEditSettingCard import LineEditSettingCard
-from .EditComboBoxSettingCard import EditComboBoxSettingCard
 from ..common.config import cfg
-from ..core.entities import (TranscribeLanguageEnum)
+from ..core.entities import TranscribeLanguageEnum
+from .EditComboBoxSettingCard import EditComboBoxSettingCard
+from .LineEditSettingCard import LineEditSettingCard
 
 
 class WhisperAPISettingWidget(QWidget):
@@ -17,15 +29,17 @@ class WhisperAPISettingWidget(QWidget):
 
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)
-        
+
         # 创建单向滚动区域和容器
         self.scrollArea = SingleDirectionScrollArea(orient=Qt.Vertical, parent=self)
-        self.scrollArea.setStyleSheet("QScrollArea{background: transparent; border: none}")
+        self.scrollArea.setStyleSheet(
+            "QScrollArea{background: transparent; border: none}"
+        )
 
         self.container = QWidget(self)
         self.container.setStyleSheet("QWidget{background: transparent}")
         self.containerLayout = QVBoxLayout(self.container)
-        
+
         self.setting_group = SettingCardGroup(self.tr("Whisper API 设置"), self)
 
         # API Base URL
@@ -35,9 +49,9 @@ class WhisperAPISettingWidget(QWidget):
             self.tr("API Base URL"),
             self.tr("输入 Whisper API Base URL"),
             "https://api.openai.com/v1",
-            self.setting_group
+            self.setting_group,
         )
-        
+
         # API Key
         self.api_key_card = LineEditSettingCard(
             cfg.whisper_api_key,
@@ -45,9 +59,9 @@ class WhisperAPISettingWidget(QWidget):
             self.tr("API Key"),
             self.tr("输入 Whisper API Key"),
             "sk-",
-            self.setting_group
+            self.setting_group,
         )
-        
+
         # Model
         self.model_card = EditComboBoxSettingCard(
             cfg.whisper_api_model,
@@ -55,7 +69,7 @@ class WhisperAPISettingWidget(QWidget):
             self.tr("Whisper 模型"),
             self.tr("选择 Whisper 模型"),
             ["whisper-large-v3", "whisper-large-v3-turbo", "whisper-1"],
-            self.setting_group
+            self.setting_group,
         )
 
         # 添加 Language 选择
@@ -65,7 +79,7 @@ class WhisperAPISettingWidget(QWidget):
             self.tr("原语言"),
             self.tr("音频的原语言"),
             [lang.value for lang in TranscribeLanguageEnum],
-            self.setting_group
+            self.setting_group,
         )
 
         # 添加 Prompt
@@ -75,7 +89,7 @@ class WhisperAPISettingWidget(QWidget):
             self.tr("提示词"),
             self.tr("可选的提示词,默认空"),
             "",
-            self.setting_group
+            self.setting_group,
         )
 
         # 设置最小宽度
@@ -95,11 +109,10 @@ class WhisperAPISettingWidget(QWidget):
         # 将设置组添加到容器布局
         self.containerLayout.addWidget(self.setting_group)
         self.containerLayout.addStretch(1)
-        
+
         # 设置滚动区域
         self.scrollArea.setWidget(self.container)
         self.scrollArea.setWidgetResizable(True)
-        
+
         # 将滚动区域添加到主布局
         self.main_layout.addWidget(self.scrollArea)
-

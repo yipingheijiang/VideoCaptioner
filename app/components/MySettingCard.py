@@ -1,14 +1,10 @@
 # coding:utf-8
-from typing import List
-from typing import Union
+from typing import List, Union
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QPainter
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QFrame, QHBoxLayout, QLabel, QToolButton,
-                             QVBoxLayout)
-from qfluentwidgets import ComboBox, ColorDialog
-from qfluentwidgets import CompactSpinBox, CompactDoubleSpinBox
+from PyQt5.QtGui import QColor, QIcon, QPainter
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QToolButton, QVBoxLayout
+from qfluentwidgets import ColorDialog, ComboBox, CompactDoubleSpinBox, CompactSpinBox
 from qfluentwidgets.common.config import isDarkTheme
 from qfluentwidgets.common.icon import FluentIcon as FIF
 from qfluentwidgets.common.icon import FluentIconBase, drawIcon
@@ -29,9 +25,11 @@ class SettingIconWidget(IconWidget):
 
 
 class SettingCard(QFrame):
-    """ Setting card """
+    """Setting card"""
 
-    def __init__(self, icon: Union[str, QIcon, FluentIconBase], title, content=None, parent=None):
+    def __init__(
+        self, icon: Union[str, QIcon, FluentIconBase], title, content=None, parent=None
+    ):
         """
         Parameters
         ----------
@@ -50,7 +48,7 @@ class SettingCard(QFrame):
         super().__init__(parent=parent)
         self.iconLabel = SettingIconWidget(icon, self)
         self.titleLabel = QLabel(title, self)
-        self.contentLabel = QLabel(content or '', self)
+        self.contentLabel = QLabel(content or "", self)
         self.hBoxLayout = QHBoxLayout(self)
         self.vBoxLayout = QVBoxLayout()
 
@@ -78,24 +76,24 @@ class SettingCard(QFrame):
         self.hBoxLayout.addSpacing(16)
         self.hBoxLayout.addStretch(1)
 
-        self.contentLabel.setObjectName('contentLabel')
+        self.contentLabel.setObjectName("contentLabel")
         FluentStyleSheet.SETTING_CARD.apply(self)
 
     def setTitle(self, title: str):
-        """ set the title of card """
+        """set the title of card"""
         self.titleLabel.setText(title)
 
     def setContent(self, content: str):
-        """ set the content of card """
+        """set the content of card"""
         self.contentLabel.setText(content)
         self.contentLabel.setVisible(bool(content))
 
     def setValue(self, value):
-        """ set the value of config item """
+        """set the value of config item"""
         pass
 
     def setIconSize(self, width: int, height: int):
-        """ set the icon fixed size """
+        """set the icon fixed size"""
         self.iconLabel.setFixedSize(width, height)
 
     def paintEvent(self, e):
@@ -113,12 +111,20 @@ class SettingCard(QFrame):
 
 
 class DoubleSpinBoxSettingCard(SettingCard):
-    """ 小数输入设置卡片 """
+    """小数输入设置卡片"""
 
     valueChanged = pyqtSignal(float)
 
-    def __init__(self, icon: Union[str, QIcon], title: str, content: str = None,
-                 minimum: float = 0.0, maximum: float = 100.0, decimals: int = 1, parent=None):
+    def __init__(
+        self,
+        icon: Union[str, QIcon],
+        title: str,
+        content: str = None,
+        minimum: float = 0.0,
+        maximum: float = 100.0,
+        decimals: int = 1,
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         # 创建CompactDoubleSpinBox
@@ -136,22 +142,29 @@ class DoubleSpinBoxSettingCard(SettingCard):
         self.spinBox.valueChanged.connect(self.__onValueChanged)
 
     def __onValueChanged(self, value: float):
-        """ 数值改变时的槽函数 """
+        """数值改变时的槽函数"""
         self.setValue(value)
         self.valueChanged.emit(value)
 
     def setValue(self, value: float):
-        """ 设置数值 """
+        """设置数值"""
         self.spinBox.setValue(value)
 
 
 class SpinBoxSettingCard(SettingCard):
-    """ 数值输入设置卡片 """
+    """数值输入设置卡片"""
 
     valueChanged = pyqtSignal(int)
 
-    def __init__(self, icon: Union[str, QIcon], title: str, content: str = None,
-                 minimum: int = 0, maximum: int = 100, parent=None):
+    def __init__(
+        self,
+        icon: Union[str, QIcon],
+        title: str,
+        content: str = None,
+        minimum: int = 0,
+        maximum: int = 100,
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         # 创建SpinBox
@@ -168,22 +181,29 @@ class SpinBoxSettingCard(SettingCard):
         self.spinBox.valueChanged.connect(self.__onValueChanged)
 
     def __onValueChanged(self, value: int):
-        """ 数值改变时的槽函数 """
+        """数值改变时的槽函数"""
         self.setValue(value)
         self.valueChanged.emit(value)
 
     def setValue(self, value: int):
-        """ 设置数值 """
+        """设置数值"""
         self.spinBox.setValue(value)
 
 
 class ComboBoxSettingCard(SettingCard):
-    """ 下拉框设置卡片 """
+    """下拉框设置卡片"""
 
     currentTextChanged = pyqtSignal(str)
     currentIndexChanged = pyqtSignal(int)
 
-    def __init__(self, icon: Union[str, QIcon], title: str, content: str = None, texts: List[str] = None, parent=None):
+    def __init__(
+        self,
+        icon: Union[str, QIcon],
+        title: str,
+        content: str = None,
+        texts: List[str] = None,
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         # 创建ComboBox
@@ -201,41 +221,48 @@ class ComboBoxSettingCard(SettingCard):
         self.comboBox.currentIndexChanged.connect(self.__onCurrentIndexChanged)
 
     def __onCurrentTextChanged(self, text: str):
-        """ 当前文本改变时的槽函数 """
+        """当前文本改变时的槽函数"""
         self.currentTextChanged.emit(text)
 
     def __onCurrentIndexChanged(self, index: int):
-        """ 当前索引改变时的槽函数 """
+        """当前索引改变时的槽函数"""
         self.currentIndexChanged.emit(index)
 
     def setCurrentText(self, text: str):
-        """ 设置当前文本 """
+        """设置当前文本"""
         self.comboBox.setCurrentText(text)
 
     def setCurrentIndex(self, index: int):
-        """ 设置当前索引 """
+        """设置当前索引"""
         self.comboBox.setCurrentIndex(index)
 
     def addItem(self, text: str):
-        """ 添加选项 """
+        """添加选项"""
         self.comboBox.addItem(text)
 
     def addItems(self, texts: List[str]):
-        """ 添加多个选项 """
+        """添加多个选项"""
         self.comboBox.addItems(texts)
 
     def clear(self):
-        """ 清空所有选项 """
+        """清空所有选项"""
         self.comboBox.clear()
 
 
 class ColorSettingCard(SettingCard):
-    """ 带颜色选择器的设置卡片 """
+    """带颜色选择器的设置卡片"""
 
     colorChanged = pyqtSignal(QColor)
 
-    def __init__(self, color: QColor, icon: Union[str, QIcon, FluentIconBase],
-                 title: str, content: str = None, parent=None, enableAlpha=False):
+    def __init__(
+        self,
+        color: QColor,
+        icon: Union[str, QIcon, FluentIconBase],
+        title: str,
+        content: str = None,
+        parent=None,
+        enableAlpha=False,
+    ):
         """
         参数
         ----------
@@ -265,16 +292,16 @@ class ColorSettingCard(SettingCard):
         self.colorPicker.colorChanged.connect(self.__onColorChanged)
 
     def __onColorChanged(self, color: QColor):
-        """ 颜色改变时的槽函数 """
+        """颜色改变时的槽函数"""
         self.colorChanged.emit(color)
 
     def setColor(self, color: QColor):
-        """ 设置颜色 """
+        """设置颜色"""
         self.colorPicker.setColor(color)
 
 
 class ColorPickerButton(QToolButton):
-    """ Color picker button """
+    """Color picker button"""
 
     colorChanged = pyqtSignal(QColor)
 
@@ -290,19 +317,20 @@ class ColorPickerButton(QToolButton):
         self.clicked.connect(self.__showColorDialog)
 
     def __showColorDialog(self):
-        """ show color dialog """
-        w = ColorDialog(self.color, self.tr(
-            'Choose ') + self.title, self.window(), self.enableAlpha)
+        """show color dialog"""
+        w = ColorDialog(
+            self.color, self.tr("Choose ") + self.title, self.window(), self.enableAlpha
+        )
         w.colorChanged.connect(self.__onColorChanged)
         w.exec()
 
     def __onColorChanged(self, color):
-        """ color changed slot """
+        """color changed slot"""
         self.setColor(color)
         self.colorChanged.emit(color)
 
     def setColor(self, color):
-        """ set color """
+        """set color"""
         self.color = QColor(color)
         self.update()
 

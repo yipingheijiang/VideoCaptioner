@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from app.config import CACHE_PATH, RESOURCE_PATH
+
 from .logger import setup_logger
 
 logger = setup_logger("subtitle_preview")

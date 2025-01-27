@@ -1,8 +1,9 @@
 import json
-import re
-from typing import List, Tuple
-from pathlib import Path
 import math
+import re
+from pathlib import Path
+from typing import List, Tuple
+
 
 class ASRDataSeg:
     def __init__(self, text: str, start_time: int, end_time: int):

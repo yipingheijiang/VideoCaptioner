@@ -5,9 +5,9 @@ from typing import Optional
 
 import requests
 
+from ..utils.logger import setup_logger
 from .asr_data import ASRDataSeg
 from .base import BaseASR
-from ..utils.logger import setup_logger
 
 logger = setup_logger("bcut_asr")
 
@@ -25,13 +25,19 @@ API_QUERY_RESULT = API_BASE_URL + "/task/result"
 
 class BcutASR(BaseASR):
     """必剪 语音识别接口"""
+
     headers = {
-        'User-Agent': 'Bilibili/1.0.0 (https://www.bilibili.com)',
-        'Content-Type': 'application/json'
+        "User-Agent": "Bilibili/1.0.0 (https://www.bilibili.com)",
+        "Content-Type": "application/json",
     }
     MAX_DAILY_CALLS = 23
 
-    def __init__(self, audio_path: str | bytes, use_cache: bool = False, need_word_time_stamp: bool = False):
+    def __init__(
+        self,
+        audio_path: str | bytes,
+        use_cache: bool = False,
+        need_word_time_stamp: bool = False,
+    ):
         super().__init__(audio_path, use_cache=use_cache)
         self.session = requests.Session()
         self.task_id: Optional[str] = None
@@ -54,19 +60,17 @@ class BcutASR(BaseASR):
         """申请上传"""
         if not self.file_binary:
             raise ValueError("none set data")
-        payload = json.dumps({
-            "type": 2,
-            "name": "audio.mp3",
-            "size": len(self.file_binary),
-            "ResourceFileType": "mp3",
-            "model_id": "8",
-        })
-
-        resp = requests.post(
-            API_REQ_UPLOAD,
-            data=payload,
-            headers=self.headers
+        payload = json.dumps(
+            {
+                "type": 2,
+                "name": "audio.mp3",
+                "size": len(self.file_binary),
+                "ResourceFileType": "mp3",
+                "model_id": "8",
+            }
         )
+
+        resp = requests.post(API_REQ_UPLOAD, data=payload, headers=self.headers)
         resp.raise_for_status()
         resp = resp.json()
         resp_data = resp["data"]
@@ -93,7 +97,7 @@ class BcutASR(BaseASR):
             resp = requests.put(
                 self.__upload_urls[clip],
                 data=self.file_binary[start_range:end_range],
-                headers=self.headers
+                headers=self.headers,
             )
             resp.raise_for_status()
             etag = resp.headers.get("Etag")
@@ -102,18 +106,16 @@ class BcutASR(BaseASR):
 
     def __commit_upload(self) -> None:
         """提交上传数据"""
-        data = json.dumps({
-            "InBossKey": self.__in_boss_key,
-            "ResourceId": self.__resource_id,
-            "Etags": ",".join(self.__etags),
-            "UploadId": self.__upload_id,
-            "model_id": "8",
-        })
-        resp = requests.post(
-            API_COMMIT_UPLOAD,
-            data=data,
-            headers=self.headers
+        data = json.dumps(
+            {
+                "InBossKey": self.__in_boss_key,
+                "ResourceId": self.__resource_id,
+                "Etags": ",".join(self.__etags),
+                "UploadId": self.__upload_id,
+                "model_id": "8",
+            }
         )
+        resp = requests.post(API_COMMIT_UPLOAD, data=data, headers=self.headers)
         resp.raise_for_status()
         resp = resp.json()
         self.__download_url = resp["data"]["download_url"]
@@ -122,7 +124,9 @@ class BcutASR(BaseASR):
     def create_task(self) -> str:
         """开始创建转换任务"""
         resp = requests.post(
-            API_CREATE_TASK, json={"resource": self.__download_url, "model_id": "8"}, headers=self.headers
+            API_CREATE_TASK,
+            json={"resource": self.__download_url, "model_id": "8"},
+            headers=self.headers,
         )
         resp.raise_for_status()
         resp = resp.json()
@@ -132,8 +136,11 @@ class BcutASR(BaseASR):
 
     def result(self, task_id: Optional[str] = None):
         """查询转换结果"""
-        resp = requests.get(API_QUERY_RESULT, params={"model_id": 7, "task_id": task_id or self.task_id},
-                            headers=self.headers)
+        resp = requests.get(
+            API_QUERY_RESULT,
+            params={"model_id": 7, "task_id": task_id or self.task_id},
+            headers=self.headers,
+        )
         resp.raise_for_status()
         resp = resp.json()
         return resp["data"]
@@ -165,13 +172,19 @@ class BcutASR(BaseASR):
 
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
         if self.need_word_time_stamp:
-            return [ASRDataSeg(w['label'].strip(), w['start_time'], w['end_time']) for u in resp_data['utterances'] for
-                    w in u['words']]
+            return [
+                ASRDataSeg(w["label"].strip(), w["start_time"], w["end_time"])
+                for u in resp_data["utterances"]
+                for w in u["words"]
+            ]
         else:
-            return [ASRDataSeg(u['transcript'], u['start_time'], u['end_time']) for u in resp_data['utterances']]
+            return [
+                ASRDataSeg(u["transcript"], u["start_time"], u["end_time"])
+                for u in resp_data["utterances"]
+            ]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Example usage
     audio_file = r"test.mp3"
     asr = BcutASR(audio_file)

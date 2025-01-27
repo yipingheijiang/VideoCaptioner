@@ -1,8 +1,13 @@
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QHBoxLayout
-
-from qfluentwidgets import ComboBox, SwitchButton, CaptionLabel, CardWidget, ToolTipFilter, \
-    ToolTipPosition
+from qfluentwidgets import (
+    CaptionLabel,
+    CardWidget,
+    ComboBox,
+    SwitchButton,
+    ToolTipFilter,
+    ToolTipPosition,
+)
 
 
 class SimpleSettingCard(CardWidget):
@@ -31,6 +36,7 @@ class SimpleSettingCard(CardWidget):
 
 class ComboBoxSimpleSettingCard(SimpleSettingCard):
     """下拉框设置卡片"""
+
     valueChanged = pyqtSignal(str)
 
     def __init__(self, title, content, items=None, parent=None):
@@ -54,6 +60,7 @@ class ComboBoxSimpleSettingCard(SimpleSettingCard):
 
 class SwitchButtonSimpleSettingCard(SimpleSettingCard):
     """开关设置卡片"""
+
     checkedChanged = pyqtSignal(bool)
 
     def __init__(self, title, content, parent=None):
@@ -67,7 +74,9 @@ class SwitchButtonSimpleSettingCard(SimpleSettingCard):
         self.switchButton.checkedChanged.connect(self.checkedChanged)
         self.layout.addWidget(self.switchButton)
 
-        self.clicked.connect(lambda: self.switchButton.setChecked(not self.switchButton.isChecked()))
+        self.clicked.connect(
+            lambda: self.switchButton.setChecked(not self.switchButton.isChecked())
+        )
 
     def setChecked(self, checked):
         self.switchButton.setChecked(checked)

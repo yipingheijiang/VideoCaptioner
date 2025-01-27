@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from pathlib import Path
 
 VERSION = "v1.2.0"
@@ -40,7 +40,7 @@ os.environ["PATH"] = str(BIN_PATH) + os.pathsep + os.environ["PATH"]
 os.environ["PATH"] = str(FASER_WHISPER_PATH) + os.pathsep + os.environ["PATH"]
 
 # 添加 VLC 路径
-os.environ['PYTHON_VLC_MODULE_PATH'] = str(BIN_PATH / "vlc")
+os.environ["PYTHON_VLC_MODULE_PATH"] = str(BIN_PATH / "vlc")
 
 # 创建路径
 for p in [CACHE_PATH, LOG_PATH, WORK_PATH, MODEL_PATH]:

@@ -1,22 +1,18 @@
 import difflib
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor
 import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
 
 import retry
 from openai import OpenAI
 
-from .prompt import (
-    TRANSLATE_PROMPT,
-    OPTIMIZER_PROMPT,
-    REFLECT_TRANSLATE_PROMPT,
-    SINGLE_TRANSLATE_PROMPT
-)
-from .alignment import SubtitleAligner
 from ..utils import json_repair
 from ..utils.logger import setup_logger
+from .alignment import SubtitleAligner
+from .prompt import (OPTIMIZER_PROMPT, REFLECT_TRANSLATE_PROMPT,
+                     SINGLE_TRANSLATE_PROMPT, TRANSLATE_PROMPT)
 
 logger = setup_logger("subtitle_optimizer")
 

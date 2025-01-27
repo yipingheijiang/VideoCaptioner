@@ -1,16 +1,17 @@
 import datetime
-from pathlib import Path
-import tempfile
 import os
+import tempfile
+from pathlib import Path
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
 from app.core.bk_asr import transcribe
 from app.core.entities import TranscribeTask
-from app.core.utils.video_utils import video2audio
 from app.core.utils.logger import setup_logger
+from app.core.utils.video_utils import video2audio
 
 logger = setup_logger("transcript_thread")
+
 
 class TranscriptThread(QThread):
     finished = pyqtSignal(TranscribeTask)
@@ -26,14 +27,14 @@ class TranscriptThread(QThread):
         try:
             logger.info(f"\n===========转录任务开始===========")
             logger.info(f"时间：{datetime.datetime.now()}")
-            
+
             # 检查是否已经存在字幕文件
             if Path(self.task.output_path).exists():
                 logger.info("字幕文件已存在，跳过转录")
                 self.progress.emit(100, self.tr("字幕已存在"))
                 self.finished.emit(self.task)
                 return
-            
+
             # 检查视频文件是否存在
             video_path = Path(self.task.file_path)
             if not video_path.exists():
@@ -43,13 +44,21 @@ class TranscriptThread(QThread):
             # 检查是否存在下载的字幕文件（对于视频url的任务，前面可能已下载字幕文件）
             print(self.task.need_next_task)
             if self.task.need_next_task:
-                subtitle_dir = Path(self.task.file_path).parent / 'subtitle'
+                subtitle_dir = Path(self.task.file_path).parent / "subtitle"
                 print(subtitle_dir)
-                downloaded_subtitles = list(subtitle_dir.glob('【下载字幕】*')) if subtitle_dir.exists() else []
+                downloaded_subtitles = (
+                    list(subtitle_dir.glob("【下载字幕】*"))
+                    if subtitle_dir.exists()
+                    else []
+                )
                 if downloaded_subtitles:
                     subtitle_file = downloaded_subtitles[0]
-                    self.task.output_path = str(subtitle_file)  # 设置task输出路径为下载的字幕文件
-                    logger.info(f"字幕文件已下载，跳过转录。找到下载的字幕文件：{subtitle_file}")
+                    self.task.output_path = str(
+                        subtitle_file
+                    )  # 设置task输出路径为下载的字幕文件
+                    logger.info(
+                        f"字幕文件已下载，跳过转录。找到下载的字幕文件：{subtitle_file}"
+                    )
                     self.progress.emit(100, self.tr("字幕已下载"))
                     self.finished.emit(self.task)
                     return
@@ -57,9 +66,11 @@ class TranscriptThread(QThread):
             self.progress.emit(5, self.tr("转换音频中"))
             logger.info(f"开始转换音频")
 
-            # 转换音频文件 
+            # 转换音频文件
             temp_dir = tempfile.gettempdir()
-            temp_file = tempfile.NamedTemporaryFile(suffix='.wav', dir=temp_dir, delete=False)
+            temp_file = tempfile.NamedTemporaryFile(
+                suffix=".wav", dir=temp_dir, delete=False
+            )
             temp_file.close()
             is_success = video2audio(str(video_path), output=temp_file.name)
             if not is_success:
@@ -73,7 +84,7 @@ class TranscriptThread(QThread):
             asr_data = transcribe(
                 temp_file.name,
                 self.task.transcribe_config,
-                callback=self.progress_callback
+                callback=self.progress_callback,
             )
 
             # 保存字幕文件
@@ -99,4 +110,3 @@ class TranscriptThread(QThread):
     def progress_callback(self, value, message):
         progress = min(20 + (value * 0.8), 100)
         self.progress.emit(int(progress), message)
-

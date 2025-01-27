@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum
@@ -7,7 +6,8 @@ from typing import List, Optional
 
 
 class SupportedAudioFormats(Enum):
-    """ 支持的音频格式 """
+    """支持的音频格式"""
+
     AAC = "aac"
     AC3 = "ac3"
     AIFF = "aiff"
@@ -28,7 +28,8 @@ class SupportedAudioFormats(Enum):
 
 
 class SupportedVideoFormats(Enum):
-    """ 支持的视频格式 """
+    """支持的视频格式"""
+
     MP4 = "mp4"
     WEBM = "webm"
     OGM = "ogm"
@@ -55,14 +56,16 @@ class SupportedVideoFormats(Enum):
 
 
 class SupportedSubtitleFormats(Enum):
-    """ 支持的字幕格式 """
+    """支持的字幕格式"""
+
     SRT = "srt"
     ASS = "ass"
     VTT = "vtt"
 
 
 class OutputSubtitleFormatEnum(Enum):
-    """ 字幕输出格式 """
+    """字幕输出格式"""
+
     SRT = "srt"
     ASS = "ass"
     VTT = "vtt"
@@ -71,15 +74,18 @@ class OutputSubtitleFormatEnum(Enum):
 
 
 class TranscribeModelEnum(Enum):
-    """ 转录模型 """
+    """转录模型"""
+
     BIJIAN = "B 接口"
     JIANYING = "J 接口"
     FASTER_WHISPER = "FasterWhisper"
     WHISPER_CPP = "WhisperCpp"
     WHISPER_API = "Whisper [API]"
 
+
 class VadMethodEnum(Enum):
-    """ VAD方法 """
+    """VAD方法"""
+
     SILERO_V3 = "silero_v3"
     SILERO_V4 = "silero_v4"
     PYANNOTE_V3 = "pyannote_v3"
@@ -88,8 +94,10 @@ class VadMethodEnum(Enum):
     WEBRTC = "webrtc"
     NONE = ""
 
+
 class TargetLanguageEnum(Enum):
-    """ 翻译目标语言 """
+    """翻译目标语言"""
+
     CHINESE_SIMPLIFIED = "简体中文"
     CHINESE_TRADITIONAL = "繁体中文"
     ENGLISH = "英语"
@@ -99,7 +107,7 @@ class TargetLanguageEnum(Enum):
     FRENCH = "法语"
     GERMAN = "德语"
     SPANISH = "西班牙语"
-    RUSSIAN = "俄语" 
+    RUSSIAN = "俄语"
     PORTUGUESE = "葡萄牙语"
     TURKISH = "土耳其语"
     POLISH = "Polish"
@@ -195,7 +203,8 @@ class TargetLanguageEnum(Enum):
 
 
 class TranscribeLanguageEnum(Enum):
-    """ 转录语言 """
+    """转录语言"""
+
     ENGLISH = "英语"
     CHINESE = "中文"
     JAPANESE = "日本語"
@@ -204,7 +213,7 @@ class TranscribeLanguageEnum(Enum):
     FRENCH = "法语"
     GERMAN = "德语"
     SPANISH = "西班牙语"
-    RUSSIAN = "俄语" 
+    RUSSIAN = "俄语"
     PORTUGUESE = "葡萄牙语"
     TURKISH = "土耳其语"
     POLISH = "Polish"
@@ -305,7 +314,7 @@ LANGUAGES = {
     "日本語": "ja",
     "德语": "de",
     "粤语": "yue",
-    "西班牙语": "es", 
+    "西班牙语": "es",
     "俄语": "ru",
     "韩语": "ko",
     "法语": "fr",
@@ -313,7 +322,7 @@ LANGUAGES = {
     "土耳其语": "tr",
     "English": "en",
     "Chinese": "zh",
-    "German": "de", 
+    "German": "de",
     "Spanish": "es",
     "Russian": "ru",
     "Korean": "ko",
@@ -322,7 +331,7 @@ LANGUAGES = {
     "Portuguese": "pt",
     "Turkish": "tr",
     "Polish": "pl",
-    "Catalan": "ca", 
+    "Catalan": "ca",
     "Dutch": "nl",
     "Arabic": "ar",
     "Swedish": "sv",
@@ -410,13 +419,14 @@ LANGUAGES = {
     "Bashkir": "ba",
     "Javanese": "jw",
     "Sundanese": "su",
-    "Cantonese": "yue"
+    "Cantonese": "yue",
 }
 
 
 @dataclass
 class VideoInfo:
     """视频信息类"""
+
     file_name: str
     file_path: str
     width: int
@@ -428,6 +438,7 @@ class VideoInfo:
     audio_codec: str
     audio_sampling_rate: int
     thumbnail_path: str
+
 
 class WhisperModelEnum(Enum):
     TINY = "tiny"
@@ -451,7 +462,8 @@ class FasterWhisperModelEnum(Enum):
 @dataclass
 class Task:
     class Status(Enum):
-        """ 任务状态 (下载、转录、优化、翻译、生成) """
+        """任务状态 (下载、转录、优化、翻译、生成)"""
+
         PENDING = "待处理"
         DOWNLOADING = "下载中"
         TRANSCRIBING = "转录中"
@@ -489,7 +501,9 @@ class Task:
 
     # 转录（转录模型）
     transcribe_model: Optional[TranscribeModelEnum] = TranscribeModelEnum.JIANYING
-    transcribe_language: Optional[TranscribeLanguageEnum] = LANGUAGES[TranscribeLanguageEnum.ENGLISH.value]
+    transcribe_language: Optional[TranscribeLanguageEnum] = LANGUAGES[
+        TranscribeLanguageEnum.ENGLISH.value
+    ]
     use_asr_cache: bool = True
     need_word_time_stamp: bool = False
     original_subtitle_save_path: Optional[str] = None
@@ -525,7 +539,6 @@ class Task:
     max_word_count_english: int = 18
     need_split: bool = True
 
-
     # 视频生成
     need_video: bool = True
     video_save_path: Optional[str] = None
@@ -536,6 +549,7 @@ class Task:
 @dataclass
 class TranscribeConfig:
     """转录配置类"""
+
     transcribe_model: Optional[TranscribeModelEnum] = None
     transcribe_language: str = ""
     use_asr_cache: bool = True
@@ -563,6 +577,7 @@ class TranscribeConfig:
 @dataclass
 class SubtitleConfig:
     """字幕处理配置类"""
+
     # LLM配置
     base_url: Optional[str] = None
     api_key: Optional[str] = None
@@ -585,12 +600,15 @@ class SubtitleConfig:
 @dataclass
 class SynthesisConfig:
     """视频合成配置类"""
+
     need_video: bool = True
     soft_subtitle: bool = True
+
 
 @dataclass
 class TranscribeTask:
     """转录任务类"""
+
     queued_at: Optional[datetime.datetime] = None
     started_at: Optional[datetime.datetime] = None
     completed_at: Optional[datetime.datetime] = None
@@ -606,11 +624,13 @@ class TranscribeTask:
 
     transcribe_config: Optional[TranscribeConfig] = None
 
+
 @dataclass
 class SubtitleTask:
     """字幕任务类"""
+
     queued_at: Optional[datetime.datetime] = None
-    started_at: Optional[datetime.datetime] = None 
+    started_at: Optional[datetime.datetime] = None
     completed_at: Optional[datetime.datetime] = None
 
     # 输入原始字幕文件
@@ -627,9 +647,10 @@ class SubtitleTask:
     subtitle_config: Optional[SubtitleConfig] = None
 
 
-@dataclass 
+@dataclass
 class SynthesisTask:
     """视频合成任务类"""
+
     queued_at: Optional[datetime.datetime] = None
     started_at: Optional[datetime.datetime] = None
     completed_at: Optional[datetime.datetime] = None
@@ -650,6 +671,7 @@ class SynthesisTask:
 @dataclass
 class TranscriptAndSubtitleTask:
     """转录和字幕任务类"""
+
     queued_at: Optional[datetime.datetime] = None
     started_at: Optional[datetime.datetime] = None
     completed_at: Optional[datetime.datetime] = None
@@ -663,9 +685,11 @@ class TranscriptAndSubtitleTask:
     transcribe_config: Optional[TranscribeConfig] = None
     subtitle_config: Optional[SubtitleConfig] = None
 
-@dataclass 
+
+@dataclass
 class FullProcessTask:
     """完整处理任务类(转录+字幕+合成)"""
+
     queued_at: Optional[datetime.datetime] = None
     started_at: Optional[datetime.datetime] = None
     completed_at: Optional[datetime.datetime] = None
@@ -678,8 +702,3 @@ class FullProcessTask:
     transcribe_config: Optional[TranscribeConfig] = None
     subtitle_config: Optional[SubtitleConfig] = None
     synthesis_config: Optional[SynthesisConfig] = None
-
-
-
-
-

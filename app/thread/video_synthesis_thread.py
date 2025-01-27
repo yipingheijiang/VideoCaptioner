@@ -1,13 +1,15 @@
 import datetime
 import logging
+
 from PyQt5.QtCore import QThread, pyqtSignal
 
-from app.core.entities import SynthesisTask
-from app.core.utils.video_utils import add_subtitles
-from app.core.utils.logger import setup_logger
 from app.common.config import cfg
+from app.core.entities import SynthesisTask
+from app.core.utils.logger import setup_logger
+from app.core.utils.video_utils import add_subtitles
 
 logger = setup_logger("video_synthesis_thread")
+
 
 class VideoSynthesisThread(QThread):
     finished = pyqtSignal(SynthesisTask)
@@ -34,16 +36,21 @@ class VideoSynthesisThread(QThread):
                 self.progress.emit(100, self.tr("合成完成"))
                 self.finished.emit(self.task)
                 return
-            
+
             logger.info(f"开始合成视频: {video_file}")
             self.progress.emit(5, self.tr("正在合成"))
 
-            add_subtitles(video_file, subtitle_file, output_path, soft_subtitle=soft_subtitle,
-                          progress_callback=self.progress_callback)
-            
+            add_subtitles(
+                video_file,
+                subtitle_file,
+                output_path,
+                soft_subtitle=soft_subtitle,
+                progress_callback=self.progress_callback,
+            )
+
             self.progress.emit(100, self.tr("合成完成"))
             logger.info(f"视频合成完成，保存路径: {output_path}")
-            
+
             self.finished.emit(self.task)
         except Exception as e:
             logger.exception(f"视频合成失败: {e}")

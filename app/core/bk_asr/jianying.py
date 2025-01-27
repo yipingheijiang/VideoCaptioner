@@ -11,9 +11,9 @@ import requests
 
 from app.config import VERSION
 
+from ..utils.logger import setup_logger
 from .asr_data import ASRDataSeg
 from .base import BaseASR
-from ..utils.logger import setup_logger
 
 logger = setup_logger("jianying_asr")
 

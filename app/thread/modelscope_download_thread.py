@@ -1,7 +1,9 @@
-from PyQt5.QtCore import QThread, pyqtSignal
-from modelscope.hub.snapshot_download import snapshot_download
-import sys
 import re
+import sys
+
+from modelscope.hub.snapshot_download import snapshot_download
+from PyQt5.QtCore import QThread, pyqtSignal
+
 
 class ModelscopeDownloadThread(QThread):
     progress = pyqtSignal(int, str)  # 进度值和状态消息
@@ -74,8 +76,9 @@ class ModelscopeDownloadThread(QThread):
 
 
 if __name__ == "__main__":
-    from PyQt5.QtCore import QCoreApplication
     import sys
+
+    from PyQt5.QtCore import QCoreApplication
     app = QCoreApplication(sys.argv)
     model_id = "pengzhendong/faster-whisper-tiny"
     save_path = r"models\faster-whisper-tiny"  # 保存到当前目录下的models文件夹

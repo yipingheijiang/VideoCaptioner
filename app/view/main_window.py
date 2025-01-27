@@ -1,20 +1,21 @@
 import os
+
 import psutil
-from PyQt5.QtCore import QUrl, QSize, QThread
-from PyQt5.QtGui import QIcon, QDesktopServices
+from PyQt5.QtCore import QSize, QThread, QUrl
+from PyQt5.QtGui import QDesktopServices, QIcon
 from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import (NavigationAvatarWidget, NavigationItemPosition, MessageBox, FluentWindow,
-                            SplashScreen)
+from qfluentwidgets import (FluentWindow, MessageBox, NavigationAvatarWidget,
+                            NavigationItemPosition, SplashScreen)
 
-from app.config import GITHUB_REPO_URL, ASSETS_PATH
 from app.common.config import cfg
+from app.components.DonateDialog import DonateDialog
+from app.config import ASSETS_PATH, GITHUB_REPO_URL
 from app.thread.version_manager_thread import VersionManager
-from app.view.subtitle_style_interface import SubtitleStyleInterface
 from app.view.batch_process_interface import BatchProcessInterface
 from app.view.home_interface import HomeInterface
 from app.view.setting_interface import SettingInterface
-from app.components.DonateDialog import DonateDialog
+from app.view.subtitle_style_interface import SubtitleStyleInterface
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 

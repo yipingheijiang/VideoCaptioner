@@ -1,23 +1,26 @@
 import datetime
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 from threading import Lock
 
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QMainWindow
-from qfluentwidgets import ComboBox, CardWidget, ToolTipFilter, FluentWindow, isDarkTheme, \
-    ToolTipPosition, PrimaryPushButton, PushButton, InfoBar, BodyLabel, PillPushButton, setFont, \
-    InfoBadgePosition, ProgressRing, InfoBarPosition, ScrollArea, Action, RoundMenu, IconInfoBadge, \
-    InfoLevel
+from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtWidgets import (QFileDialog, QHBoxLayout, QLabel, QMainWindow,
+                             QVBoxLayout, QWidget)
+from qfluentwidgets import Action, BodyLabel, CardWidget, ComboBox
 from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (FluentWindow, IconInfoBadge, InfoBadgePosition,
+                            InfoBar, InfoBarPosition, InfoLevel,
+                            PillPushButton, PrimaryPushButton, ProgressRing,
+                            PushButton, RoundMenu, ScrollArea, ToolTipFilter,
+                            ToolTipPosition, isDarkTheme, setFont)
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
 from app.config import RESOURCE_PATH
-from app.core.entities import SupportedVideoFormats, SupportedAudioFormats
-from app.core.entities import Task, VideoInfo
+from app.core.entities import (SupportedAudioFormats, SupportedVideoFormats,
+                               Task, VideoInfo)
 from app.thread.create_task_thread import CreateTaskThread
 from app.thread.subtitle_pipeline_thread import SubtitlePipelineThread
 from app.thread.transcript_thread import TranscriptThread

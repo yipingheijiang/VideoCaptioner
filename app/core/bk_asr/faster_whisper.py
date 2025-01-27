@@ -2,14 +2,13 @@ import os
 import re
 import shutil
 import subprocess
-from pathlib import Path
 import tempfile
-from typing import Optional, List, Union
+from pathlib import Path
+from typing import List, Optional, Union
 
+from ..utils.logger import setup_logger
 from .asr_data import ASRDataSeg, from_srt
 from .base import BaseASR
-from ..utils.logger import setup_logger
-
 
 logger = setup_logger("faster_whisper")
 

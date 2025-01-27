@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from urllib.parse import urlparse
 
-from PyQt5.QtCore import pyqtSignal, Qt, QStandardPaths
+from PyQt5.QtCore import QStandardPaths, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QLabel, QFileDialog
-from qfluentwidgets import LineEdit, ProgressBar, PushButton, InfoBar, InfoBarPosition, BodyLabel, ToolButton, HyperlinkButton
-from qfluentwidgets import FluentIcon, FluentStyleSheet
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
+                             QVBoxLayout, QWidget)
+from qfluentwidgets import (BodyLabel, FluentIcon, FluentStyleSheet,
+                            HyperlinkButton, InfoBar, InfoBarPosition,
+                            LineEdit, ProgressBar, PushButton, ToolButton)
 
 from app.common.config import cfg
-from app.components.SimpleSettingCard import ComboBoxSimpleSettingCard, SwitchButtonSimpleSettingCard
-from app.core.entities import SupportedAudioFormats, SupportedVideoFormats
-from app.core.entities import TargetLanguageEnum, TranscribeModelEnum, Task
-from app.thread.create_task_thread import CreateTaskThread
-from app.thread.video_download_thread import VideoDownloadThread
-from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
-from app.view.log_window import LogWindow
 from app.common.signal_bus import signalBus
 from app.components.LanguageSettingDialog import LanguageSettingDialog
-
+from app.components.SimpleSettingCard import (ComboBoxSimpleSettingCard,
+                                              SwitchButtonSimpleSettingCard)
+from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
+from app.core.entities import (SupportedAudioFormats, SupportedVideoFormats,
+                               TargetLanguageEnum, Task, TranscribeModelEnum)
+from app.thread.create_task_thread import CreateTaskThread
+from app.thread.video_download_thread import VideoDownloadThread
+from app.view.log_window import LogWindow
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
 
