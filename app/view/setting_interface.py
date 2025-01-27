@@ -333,7 +333,9 @@ class SettingInterface(ScrollArea):
         self.subtitleTranslateCard.checkedChanged.connect(signalBus.subtitle_translation_changed)
         self.targetLanguageCard.comboBox.currentTextChanged.connect(signalBus.target_language_changed)
         self.modelCard.comboBox.currentTextChanged.connect(signalBus.subtitle_layout_changed)
-        
+        self.softSubtitleCard.checkedChanged.connect(signalBus.soft_subtitle_changed)
+        self.needVideoCard.checkedChanged.connect(signalBus.need_video_changed)
+
         # signalBus.transcription_model_changed.connect(self.transcribeModelCard.comboBox.setCurrentText)
         # signalBus.subtitle_optimization_changed.connect(self.subtitleCorrectCard.setChecked)
         # signalBus.subtitle_translation_changed.connect(self.subtitleTranslateCard.setChecked)

@@ -1,27 +1,31 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import subprocess
-from pathlib import Path
+import sys
 import tempfile
+from pathlib import Path
 
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QColor
-from PyQt5.QtWidgets import QAbstractItemView
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QHeaderView, QFileDialog
-from qfluentwidgets import ComboBox, PrimaryPushButton, ProgressBar, PushButton, InfoBar, BodyLabel, TableView, ToolButton, TextEdit, MessageBoxBase, RoundMenu, Action, FluentIcon as FIF, CommandBar, TransparentDropDownPushButton, TransparentToolButton
-from qfluentwidgets import InfoBarPosition
 from PyQt5.QtCore import QUrl
+from PyQt5.QtGui import QDragEnterEvent, QDropEvent
+from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QFileDialog,
+                             QHBoxLayout, QHeaderView, QVBoxLayout, QWidget)
+from qfluentwidgets import Action, BodyLabel, CommandBar
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (InfoBar, InfoBarPosition, MessageBoxBase,
+                            PrimaryPushButton, ProgressBar, PushButton,
+                            RoundMenu, TableView, TextEdit,
+                            TransparentDropDownPushButton)
 
-from app.config import SUBTITLE_STYLE_PATH
-from app.thread.subtitle_thread import SubtitleThread
 from app.common.config import cfg
-from app.core.bk_asr.asr_data import from_subtitle_file, from_json
-from app.core.entities import OutputSubtitleFormatEnum, SubtitleTask, SupportedSubtitleFormats, TargetLanguageEnum, TranscribeLanguageEnum
-from app.core.entities import Task
 from app.common.signal_bus import signalBus
 from app.components.SubtitleSettingDialog import SubtitleSettingDialog
+from app.config import SUBTITLE_STYLE_PATH
+from app.core.bk_asr.asr_data import from_json, from_subtitle_file
+from app.core.entities import (OutputSubtitleFormatEnum, SubtitleTask,
+                               SupportedSubtitleFormats, TargetLanguageEnum)
 from app.core.task_factory import TaskFactory
+from app.thread.subtitle_thread import SubtitleThread
 
 
 class SubtitleTableModel(QAbstractTableModel):

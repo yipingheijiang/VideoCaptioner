@@ -10,7 +10,9 @@ from PyQt5.QtGui import QDropEvent
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QApplication,
                              QFileDialog)
 from qfluentwidgets import (CardWidget, LineEdit, BodyLabel,
-                            InfoBar, InfoBarPosition, ProgressBar, PushButton)
+                            InfoBar, InfoBarPosition, ProgressBar, PushButton,
+                            CommandBar, Action, FluentIcon as FIF, PrimaryPushButton,
+                            ToolTipFilter, ToolTipPosition)
 
 from app.thread.create_task_thread import CreateTaskThread
 from app.thread.video_synthesis_thread import VideoSynthesisThread
@@ -18,9 +20,15 @@ from app.core.entities import SupportedVideoFormats, SupportedSubtitleFormats
 from app.core.entities import Task
 from app.core.task_factory import TaskFactory
 from app.core.entities import SynthesisTask
+from app.common.config import cfg
+from app.common.signal_bus import signalBus
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
+
+
+
+
 
 
 class VideoSynthesisInterface(QWidget):
@@ -37,9 +45,30 @@ class VideoSynthesisInterface(QWidget):
         self.setup_signals()
         self.task = None
 
+        self.installEventFilter(ToolTipFilter(self, 100, ToolTipPosition.BOTTOM))
+
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(20)
+
+        # 创建顶部布局
+        top_layout = QHBoxLayout()
+        
+        # 添加顶部命令栏
+        self.command_bar = CommandBar(self)
+        self.command_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        top_layout.addWidget(self.command_bar, 1)  # 设置stretch为1，使其尽可能占用空间
+
+        # 设置命令栏
+        self._setup_command_bar()
+
+        # 添加开始合成按钮到水平布局
+        self.synthesize_button = PrimaryPushButton(self.tr('开始合成'), self, icon=FIF.PLAY)
+        self.synthesize_button.clicked.connect(lambda: self.start_video_synthesis(need_create_task=True))
+        self.synthesize_button.setFixedHeight(34)
+        top_layout.addWidget(self.synthesize_button)
+
+        self.main_layout.addLayout(top_layout)
 
         # 配置卡片
         self.config_card = CardWidget(self)
@@ -75,14 +104,6 @@ class VideoSynthesisInterface(QWidget):
 
         self.main_layout.addWidget(self.config_card)
 
-        # 合成按钮和打开文件夹按钮
-        self.button_layout = QHBoxLayout()
-        self.synthesize_button = PushButton(self.tr("开始合成"), self)
-        self.open_folder_button = PushButton(self.tr("打开视频文件夹"), self)
-        self.button_layout.addWidget(self.synthesize_button)
-        self.button_layout.addWidget(self.open_folder_button)
-        self.main_layout.addLayout(self.button_layout)
-
         self.main_layout.addStretch(1)
 
         # 底部进度条和状态信息
@@ -94,6 +115,43 @@ class VideoSynthesisInterface(QWidget):
         self.bottom_layout.addWidget(self.progress_bar, 1)  # 进度条使用剩余空间
         self.bottom_layout.addWidget(self.status_label)  # 状态标签使用固定宽度
         self.main_layout.addLayout(self.bottom_layout)
+
+    def _setup_command_bar(self):
+        """设置顶部命令栏"""
+        # 添加软字幕选项
+        self.soft_subtitle_action = Action(
+            FIF.FONT,
+            self.tr('软字幕'),
+            triggered=self.on_soft_subtitle_changed,
+            checkable=True
+        )
+        self.soft_subtitle_action.setToolTip(self.tr('使用软字幕嵌入视频'))
+        self.command_bar.addAction(self.soft_subtitle_action)
+
+        # 添加分隔符
+        self.command_bar.addSeparator()
+
+        # 添加是否合成视频选项
+        self.need_video_action = Action(
+            FIF.VIDEO,
+            self.tr('合成视频'),
+            triggered=self.on_need_video_changed,
+            checkable=True
+        )
+        self.need_video_action.setToolTip(self.tr('是否生成新的视频文件'))
+        self.command_bar.addAction(self.need_video_action)
+
+        self.command_bar.addSeparator()
+
+        # 添加打开文件夹按钮
+        folder_action = Action(FIF.FOLDER, "", triggered=self.open_video_folder)
+        folder_action.setToolTip(self.tr('打开输出文件夹'))
+        self.command_bar.addAction(folder_action)
+
+        # 添加文件选择按钮
+        file_action = Action(FIF.FOLDER_ADD, "", triggered=self.choose_video_file)
+        file_action.setToolTip(self.tr('选择视频文件'))
+        self.command_bar.addAction(file_action)
 
     def setup_style(self):
         self.subtitle_input.focusOutEvent = lambda e: super(LineEdit, self.subtitle_input).focusOutEvent(e)
@@ -130,11 +188,26 @@ class VideoSynthesisInterface(QWidget):
         self.video_button.clicked.connect(self.choose_video_file)
 
         # 合成和文件夹相关信号
-        self.synthesize_button.clicked.connect(lambda: self.start_video_synthesis(need_create_task=True))
-        self.open_folder_button.clicked.connect(self.open_video_folder)
+        self.synthesize_button.clicked.connect(self.start_video_synthesis)
+
+        # 全局 signalBus
+        signalBus.soft_subtitle_changed.connect(self.on_soft_subtitle_changed)
+        signalBus.need_video_changed.connect(self.on_need_video_changed)
 
     def set_value(self):
-        pass
+        """设置初始值"""
+        self.soft_subtitle_action.setChecked(cfg.soft_subtitle.value)
+        self.need_video_action.setChecked(cfg.need_video.value)
+
+    def on_soft_subtitle_changed(self, checked: bool):
+        """处理软字幕选项变更"""
+        cfg.set(cfg.soft_subtitle, checked)
+        self.soft_subtitle_action.setChecked(checked)
+
+    def on_need_video_changed(self, checked: bool):
+        """处理视频合成选项变更"""
+        cfg.set(cfg.need_video, checked)
+        self.need_video_action.setChecked(checked)
 
     def choose_subtitle_file(self):
         # 构建文件过滤器
@@ -191,14 +264,14 @@ class VideoSynthesisInterface(QWidget):
             self.video_synthesis_thread.error.connect(self.on_video_synthesis_error)
             self.video_synthesis_thread.start()
         else:
+            self.synthesize_button.setEnabled(True)
             InfoBar.error(
                 self.tr("错误"),
-                self.tr("无法创建任务"),
+                self.tr("请选择字幕文件和视频文件"),
                 duration=3000,
                 position=InfoBarPosition.TOP,
                 parent=self
             )
-
 
     def process(self):
         self.start_video_synthesis(need_create_task=False)
