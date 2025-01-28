@@ -35,7 +35,7 @@ class BcutASR(BaseASR):
     def __init__(
         self,
         audio_path: str | bytes,
-        use_cache: bool = False,
+        use_cache: bool = True,
         need_word_time_stamp: bool = False,
     ):
         super().__init__(audio_path, use_cache=use_cache)

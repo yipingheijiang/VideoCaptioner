@@ -3,7 +3,7 @@ from .faster_whisper import FasterWhisperASR
 from .jianying import JianYingASR
 from .kuaishou import KuaiShouASR
 
-# from .transcribe import transcribe
+from .transcribe import transcribe
 from .whisper_api import WhisperAPI
 from .whisper_cpp import WhisperCppASR
 
