@@ -7,28 +7,34 @@ from pathlib import Path
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QDropEvent
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
-                             QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QVBoxLayout, QWidget
 from qfluentwidgets import Action, BodyLabel, CardWidget, CommandBar
 from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import (InfoBar, InfoBarPosition, LineEdit,
-                            PrimaryPushButton, ProgressBar, PushButton,
-                            ToolTipFilter, ToolTipPosition)
+from qfluentwidgets import (
+    InfoBar,
+    InfoBarPosition,
+    LineEdit,
+    PrimaryPushButton,
+    ProgressBar,
+    PushButton,
+    ToolTipFilter,
+    ToolTipPosition,
+)
 
 from app.common.config import cfg
 from app.common.signal_bus import signalBus
-from app.core.entities import (SupportedSubtitleFormats, SupportedVideoFormats,
-                               SynthesisTask, Task)
+from app.core.entities import (
+    SupportedSubtitleFormats,
+    SupportedVideoFormats,
+    SynthesisTask,
+    Task,
+)
 from app.core.task_factory import TaskFactory
 from app.thread.create_task_thread import CreateTaskThread
 from app.thread.video_synthesis_thread import VideoSynthesisThread
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"
-
-
-
-
 
 
 class VideoSynthesisInterface(QWidget):
@@ -53,7 +59,7 @@ class VideoSynthesisInterface(QWidget):
 
         # 创建顶部布局
         top_layout = QHBoxLayout()
-        
+
         # 添加顶部命令栏
         self.command_bar = CommandBar(self)
         self.command_bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
@@ -63,8 +69,12 @@ class VideoSynthesisInterface(QWidget):
         self._setup_command_bar()
 
         # 添加开始合成按钮到水平布局
-        self.synthesize_button = PrimaryPushButton(self.tr('开始合成'), self, icon=FIF.PLAY)
-        self.synthesize_button.clicked.connect(lambda: self.start_video_synthesis(need_create_task=True))
+        self.synthesize_button = PrimaryPushButton(
+            self.tr("开始合成"), self, icon=FIF.PLAY
+        )
+        self.synthesize_button.clicked.connect(
+            lambda: self.start_video_synthesis(need_create_task=True)
+        )
         self.synthesize_button.setFixedHeight(34)
         top_layout.addWidget(self.synthesize_button)
 
@@ -121,11 +131,11 @@ class VideoSynthesisInterface(QWidget):
         # 添加软字幕选项
         self.soft_subtitle_action = Action(
             FIF.FONT,
-            self.tr('软字幕'),
+            self.tr("软字幕"),
             triggered=self.on_soft_subtitle_changed,
-            checkable=True
+            checkable=True,
         )
-        self.soft_subtitle_action.setToolTip(self.tr('使用软字幕嵌入视频'))
+        self.soft_subtitle_action.setToolTip(self.tr("使用软字幕嵌入视频"))
         self.command_bar.addAction(self.soft_subtitle_action)
 
         # 添加分隔符
@@ -134,29 +144,35 @@ class VideoSynthesisInterface(QWidget):
         # 添加是否合成视频选项
         self.need_video_action = Action(
             FIF.VIDEO,
-            self.tr('合成视频'),
+            self.tr("合成视频"),
             triggered=self.on_need_video_changed,
-            checkable=True
+            checkable=True,
         )
-        self.need_video_action.setToolTip(self.tr('是否生成新的视频文件'))
+        self.need_video_action.setToolTip(self.tr("是否生成新的视频文件"))
         self.command_bar.addAction(self.need_video_action)
 
         self.command_bar.addSeparator()
 
         # 添加打开文件夹按钮
         folder_action = Action(FIF.FOLDER, "", triggered=self.open_video_folder)
-        folder_action.setToolTip(self.tr('打开输出文件夹'))
+        folder_action.setToolTip(self.tr("打开输出文件夹"))
         self.command_bar.addAction(folder_action)
 
         # 添加文件选择按钮
         file_action = Action(FIF.FOLDER_ADD, "", triggered=self.choose_video_file)
-        file_action.setToolTip(self.tr('选择视频文件'))
+        file_action.setToolTip(self.tr("选择视频文件"))
         self.command_bar.addAction(file_action)
 
     def setup_style(self):
-        self.subtitle_input.focusOutEvent = lambda e: super(LineEdit, self.subtitle_input).focusOutEvent(e)
-        self.subtitle_input.paintEvent = lambda e: super(LineEdit, self.subtitle_input).paintEvent(e)
-        self.subtitle_input.setStyleSheet(self.subtitle_input.styleSheet() + """
+        self.subtitle_input.focusOutEvent = lambda e: super(
+            LineEdit, self.subtitle_input
+        ).focusOutEvent(e)
+        self.subtitle_input.paintEvent = lambda e: super(
+            LineEdit, self.subtitle_input
+        ).paintEvent(e)
+        self.subtitle_input.setStyleSheet(
+            self.subtitle_input.styleSheet()
+            + """
             QLineEdit {
                 border-radius: 15px;
                 padding: 0 20px;
@@ -166,11 +182,18 @@ class VideoSynthesisInterface(QWidget):
             QLineEdit:focus[transparent=true] {
                 border: 1px solid rgba(47,141, 99, 0.48);
             }
-        """)
+        """
+        )
 
-        self.video_input.focusOutEvent = lambda e: super(LineEdit, self.video_input).focusOutEvent(e)
-        self.video_input.paintEvent = lambda e: super(LineEdit, self.video_input).paintEvent(e)
-        self.video_input.setStyleSheet(self.video_input.styleSheet() + """
+        self.video_input.focusOutEvent = lambda e: super(
+            LineEdit, self.video_input
+        ).focusOutEvent(e)
+        self.video_input.paintEvent = lambda e: super(
+            LineEdit, self.video_input
+        ).paintEvent(e)
+        self.video_input.setStyleSheet(
+            self.video_input.styleSheet()
+            + """
             QLineEdit {
                 border-radius: 15px;
                 padding: 0 20px;
@@ -180,7 +203,8 @@ class VideoSynthesisInterface(QWidget):
             QLineEdit:focus[transparent=true] {
                 border: 1px solid rgba(47,141, 99, 0.48);
             }
-        """)
+        """
+        )
 
     def setup_signals(self):
         # 文件选择相关信号
@@ -211,10 +235,14 @@ class VideoSynthesisInterface(QWidget):
 
     def choose_subtitle_file(self):
         # 构建文件过滤器
-        subtitle_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedSubtitleFormats)
+        subtitle_formats = " ".join(
+            f"*.{fmt.value}" for fmt in SupportedSubtitleFormats
+        )
         filter_str = f"{self.tr('字幕文件')} ({subtitle_formats})"
 
-        file_path, _ = QFileDialog.getOpenFileName(self, self.tr("选择字幕文件"), "", filter_str)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, self.tr("选择字幕文件"), "", filter_str
+        )
         if file_path:
             self.subtitle_input.setText(file_path)
 
@@ -223,7 +251,9 @@ class VideoSynthesisInterface(QWidget):
         video_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedVideoFormats)
         filter_str = f"{self.tr('视频文件')} ({video_formats})"
 
-        file_path, _ = QFileDialog.getOpenFileName(self, self.tr("选择视频文件"), "", filter_str)
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, self.tr("选择视频文件"), "", filter_str
+        )
         if file_path:
             self.video_input.setText(file_path)
 
@@ -236,7 +266,7 @@ class VideoSynthesisInterface(QWidget):
                 self.tr("请选择字幕文件和视频文件"),
                 duration=3000,
                 position=InfoBarPosition.TOP,
-                parent=self
+                parent=self,
             )
             return None
         return TaskFactory.create_synthesis_task(video_file, subtitle_file)
@@ -253,25 +283,22 @@ class VideoSynthesisInterface(QWidget):
     def start_video_synthesis(self, need_create_task=True):
         self.synthesize_button.setEnabled(False)
         self.progress_bar.resume()
-        
+
         if need_create_task:
             self.task = self.create_task()
 
         if self.task:
             self.video_synthesis_thread = VideoSynthesisThread(self.task)
-            self.video_synthesis_thread.finished.connect(self.on_video_synthesis_finished)
-            self.video_synthesis_thread.progress.connect(self.on_video_synthesis_progress)
+            self.video_synthesis_thread.finished.connect(
+                self.on_video_synthesis_finished
+            )
+            self.video_synthesis_thread.progress.connect(
+                self.on_video_synthesis_progress
+            )
             self.video_synthesis_thread.error.connect(self.on_video_synthesis_error)
             self.video_synthesis_thread.start()
         else:
             self.synthesize_button.setEnabled(True)
-            InfoBar.error(
-                self.tr("错误"),
-                self.tr("请选择字幕文件和视频文件"),
-                duration=3000,
-                position=InfoBarPosition.TOP,
-                parent=self
-            )
 
     def process(self):
         self.start_video_synthesis(need_create_task=False)
@@ -284,7 +311,7 @@ class VideoSynthesisInterface(QWidget):
             self.tr("视频合成已完成"),
             duration=3000,
             position=InfoBarPosition.TOP,
-            parent=self
+            parent=self,
         )
         self.task.status = Task.Status.COMPLETED
 
@@ -300,13 +327,17 @@ class VideoSynthesisInterface(QWidget):
             str(error),
             duration=3000,
             position=InfoBarPosition.TOP,
-            parent=self
+            parent=self,
         )
 
     def open_video_folder(self):
         if self.task and self.task.output_path:
             file_path = Path(self.task.output_path)
-            target_dir = str(file_path.parent if file_path.exists() else Path(self.task.video_path))
+            target_dir = str(
+                file_path.parent
+                if file_path.exists()
+                else Path(self.task.video_path).parent
+            )
             # Cross-platform folder opening
             if sys.platform == "win32":
                 os.startfile(target_dir)
@@ -320,7 +351,7 @@ class VideoSynthesisInterface(QWidget):
                 self.tr("没有可用的视频文件夹"),
                 duration=2000,
                 position=InfoBarPosition.TOP,
-                parent=self
+                parent=self,
             )
 
     def dragEnterEvent(self, event):
@@ -343,7 +374,7 @@ class VideoSynthesisInterface(QWidget):
                     self.tr("导入成功"),
                     self.tr("字幕文件已放入输入框"),
                     duration=2000,
-                    parent=self
+                    parent=self,
                 )
                 break
             elif file_ext in {fmt.value for fmt in SupportedVideoFormats}:
@@ -352,7 +383,7 @@ class VideoSynthesisInterface(QWidget):
                     self.tr("导入成功"),
                     self.tr("视频文件已输入框"),
                     duration=2000,
-                    parent=self
+                    parent=self,
                 )
                 break
             else:
@@ -360,12 +391,14 @@ class VideoSynthesisInterface(QWidget):
                     self.tr(f"格式错误") + file_ext,
                     self.tr("请拖入视频或者字幕文件"),
                     duration=3000,
-                    parent=self
+                    parent=self,
                 )
 
 
 if __name__ == "__main__":
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
