@@ -8,7 +8,7 @@ from pathlib import Path
 
 from ...config import MODEL_PATH
 from ..utils.logger import setup_logger
-from .asr_data import ASRDataSeg, from_srt
+from .asr_data import ASRDataSeg, ASRData
 from .base import BaseASR
 
 logger = setup_logger("whisper_asr")
@@ -49,7 +49,7 @@ class WhisperCppASR(BaseASR):
         self.process = None
 
     def _make_segments(self, resp_data: str) -> list[ASRDataSeg]:
-        asr_data = from_srt(resp_data)
+        asr_data = ASRData.from_srt(resp_data)
         # 过滤掉纯音乐标记
         filtered_segments = []
         for seg in asr_data.segments:
