@@ -34,7 +34,7 @@ class DatabaseManager:
             )
             Base.metadata.create_all(self._engine)
             self._session_maker = sessionmaker(bind=self._engine)
-            logger.info(f"Database initialized at {self.db_path}")
+            # logger.info(f"Database initialized at {self.db_path}")
         except Exception as e:
             logger.error(f"Failed to initialize database: {str(e)}")
             raise

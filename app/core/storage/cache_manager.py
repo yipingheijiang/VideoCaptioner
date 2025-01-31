@@ -71,12 +71,12 @@ class CacheManager:
         hash_key = self._generate_hash(text, params)
         try:
             with self.db_manager.get_session() as session:
-                result = (
+                cache_result = (
                     session.query(TranslationCache)
                     .filter_by(content_hash=hash_key, translator_type=translator_type)
                     .first()
                 )
-                return result.translated_text if result else None
+                return str(cache_result.translated_text) if cache_result else None
         except Exception as e:
             self.logger.error(f"Error getting translation cache: {str(e)}")
             return None
@@ -101,7 +101,7 @@ class CacheManager:
                 )
                 session.add(translation)
                 session.commit()
-                self.logger.info(f"Cached translation for {translator_type}")
+                # self.logger.info(f"Cached translation for {translator_type}")
         except Exception as e:
             self.logger.error(f"Error setting translation cache: {str(e)}")
             raise
@@ -119,7 +119,7 @@ class CacheManager:
                     .filter_by(content_hash=hash_key, model_name=model_name)
                     .first()
                 )
-                return result.result if result else None
+                return str(result.result) if result else None
         except Exception as e:
             self.logger.error(f"Error getting LLM cache: {str(e)}")
             return None
@@ -141,7 +141,7 @@ class CacheManager:
                 )
                 session.add(llm_result)
                 session.commit()
-                self.logger.info(f"Cached LLM result for {model_name}")
+                # self.logger.info(f"Cached LLM result for {model_name}")
         except Exception as e:
             self.logger.error(f"Error setting LLM cache: {str(e)}")
             raise
@@ -172,10 +172,18 @@ class CacheManager:
                         token_count=0,
                     )
                     session.add(stats)
+                    session.flush()
 
-                stats.call_count += 1
-                stats.token_count += token_count
-                stats.last_updated = datetime.utcnow()
+                session.query(UsageStatistics).filter_by(
+                    operation_type=operation_type, service_name=service_name
+                ).update(
+                    {
+                        "call_count": UsageStatistics.call_count + 1,
+                        "token_count": UsageStatistics.token_count + token_count,
+                        "last_updated": datetime.utcnow(),
+                    }
+                )
+
                 session.commit()
                 self.logger.info(
                     f"Updated usage stats for {operation_type}:{service_name}"
@@ -222,7 +230,7 @@ class CacheManager:
                     .filter_by(crc32_hex=crc32_hex, asr_type=asr_type)
                     .first()
                 )
-                return result.result_data if result else None
+                return result.result_data if result else None  # type: ignore
         except Exception as e:
             self.logger.error(f"Error getting ASR cache: {str(e)}")
             return None
@@ -240,10 +248,12 @@ class CacheManager:
                     .filter_by(crc32_hex=crc32_hex, asr_type=asr_type)
                     .first()
                 )
-
                 if existing_cache:
-                    existing_cache.result_data = result_data
-                    existing_cache.updated_at = datetime.utcnow()
+                    session.query(ASRCache).filter_by(
+                        crc32_hex=crc32_hex, asr_type=asr_type
+                    ).update(
+                        {"result_data": result_data, "updated_at": datetime.utcnow()}
+                    )
                 else:
                     asr_cache = ASRCache(
                         crc32_hex=crc32_hex, asr_type=asr_type, result_data=result_data
