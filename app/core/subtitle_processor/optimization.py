@@ -11,8 +11,12 @@ from openai import OpenAI
 from ..utils import json_repair
 from ..utils.logger import setup_logger
 from .alignment import SubtitleAligner
-from .prompt import (OPTIMIZER_PROMPT, REFLECT_TRANSLATE_PROMPT,
-                     SINGLE_TRANSLATE_PROMPT, TRANSLATE_PROMPT)
+from .prompt import (
+    OPTIMIZER_PROMPT,
+    REFLECT_TRANSLATE_PROMPT,
+    SINGLE_TRANSLATE_PROMPT,
+    TRANSLATE_PROMPT,
+)
 
 logger = setup_logger("subtitle_optimizer")
 
@@ -33,11 +37,13 @@ class SubtitleOptimizer:
         target_language: str = "Chinese",
         llm_result_logger: logging.Logger = None,
         need_remove_punctuation: bool = True,
-        cjk_only: bool = True
+        cjk_only: bool = True,
     ) -> None:
-        base_url = os.getenv('OPENAI_BASE_URL')
-        api_key = os.getenv('OPENAI_API_KEY')
-        assert base_url and api_key, "环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置"
+        base_url = os.getenv("OPENAI_BASE_URL")
+        api_key = os.getenv("OPENAI_API_KEY")
+        assert (
+            base_url and api_key
+        ), "环境变量 OPENAI_BASE_URL 和 OPENAI_API_KEY 必须设置"
 
         self.model = model
         self.client = OpenAI(base_url=base_url, api_key=api_key)
@@ -54,11 +60,12 @@ class SubtitleOptimizer:
 
         # 注册退出处理
         import atexit
+
         atexit.register(self.stop)
 
     def stop(self):
         """关闭线程池"""
-        if hasattr(self, 'executor') and hasattr(self.executor, '_threads'):
+        if hasattr(self, "executor") and hasattr(self.executor, "_threads"):
             print("正在强制关闭线程池")
             for future in self.executor._threads:
                 try:
@@ -70,14 +77,18 @@ class SubtitleOptimizer:
             self.executor.shutdown(wait=False, cancel_futures=True)
             self.executor = None
 
-
-    def optimizer_multi_thread(self, subtitle_json: Dict[int, str],
-                               translate=False,
-                               reflect=False,
-                               callback=None):
+    def optimizer_multi_thread(
+        self,
+        subtitle_json: Dict[int, str],
+        translate=False,
+        reflect=False,
+        callback=None,
+    ):
         batch_num = self.batch_num
         items = list(subtitle_json.items())[:]
-        chunks = [dict(items[i:i + batch_num]) for i in range(0, len(items), batch_num)]
+        chunks = [
+            dict(items[i : i + batch_num]) for i in range(0, len(items), batch_num)
+        ]
 
         def process_chunk(chunk):
             if translate:
@@ -101,23 +112,25 @@ class SubtitleOptimizer:
         # 合并结果
         optimizer_result = {k: v for result in results for k, v in result.items()}
         return optimizer_result
-    
+
     @retry.retry(tries=2)
     def optimize(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
-        """ Optimize the given subtitle. """
-        logger.info(f"[+]正在优化字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
+        """Optimize the given subtitle."""
+        logger.info(
+            f"[+]正在优化字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}"
+        )
 
         message = self._create_optimizer_message(original_subtitle)
 
         response = self.client.chat.completions.create(
-            model=self.model,
-            stream=False,
-            messages=message,
-            timeout=80)
+            model=self.model, stream=False, messages=message, timeout=80
+        )
 
         optimized_text = json_repair.loads(response.choices[0].message.content)
 
-        aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
+        aligned_subtitle = repair_subtitle(
+            original_subtitle, optimized_text
+        )  # 修复字幕对齐问题
 
         for k, v in aligned_subtitle.items():
             optimized_text = self.remove_punctuation(v)
@@ -128,7 +141,9 @@ class SubtitleOptimizer:
         return aligned_subtitle
 
     @retry.retry(tries=2)
-    def translate(self, original_subtitle: Dict[int, str], reflect=False) -> Dict[int, str]:
+    def translate(
+        self, original_subtitle: Dict[int, str], reflect=False
+    ) -> Dict[int, str]:
         """优化并翻译给定的字幕。"""
         if reflect:
             return self._reflect_translate(original_subtitle)
@@ -136,24 +151,31 @@ class SubtitleOptimizer:
             return self._normal_translate(original_subtitle)
 
     def _reflect_translate(self, original_subtitle: Dict[int, str]):
-        logger.info(f"[+]正在反思翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
+        logger.info(
+            f"[+]正在反思翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}"
+        )
         message = self._create_translate_message(original_subtitle)
         response = self.client.chat.completions.create(
-            model=self.model,
-            stream=False,
-            messages=message,
-            temperature=0.7)
+            model=self.model, stream=False, messages=message, temperature=0.7
+        )
         response_content = json_repair.loads(response.choices[0].message.content)
         # print(response_content)
-        optimized_text = {k: v["optimized_subtitle"] for k, v in response_content.items()}  # 字幕文本
-        aligned_subtitle = repair_subtitle(original_subtitle, optimized_text)  # 修复字幕对齐问题
+        optimized_text = {
+            k: v["optimized_subtitle"] for k, v in response_content.items()
+        }  # 字幕文本
+        aligned_subtitle = repair_subtitle(
+            original_subtitle, optimized_text
+        )  # 修复字幕对齐问题
         # 在 translations 中查找对应的翻译  文本-翻译 映射
-        translations = {item["optimized_subtitle"]: item["revised_translation"] for item in response_content.values()}
-        
+        translations = {
+            item["optimized_subtitle"]: item["revised_translation"]
+            for item in response_content.values()
+        }
+
         translated_subtitle = {}
         for k, v in aligned_subtitle.items():
             original_text = self.remove_punctuation(v)
-            translated_text = self.remove_punctuation(translations.get(v, ' '))
+            translated_text = self.remove_punctuation(translations.get(v, " "))
             translated_subtitle[k] = f"{original_text}\n{translated_text}"
 
         if self.llm_result_logger:
@@ -166,18 +188,24 @@ class SubtitleOptimizer:
         return translated_subtitle
 
     def _normal_translate(self, original_subtitle: Dict[int, str]):
-        logger.info(f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}")
+        logger.info(
+            f"[+]正在翻译字幕：{next(iter(original_subtitle))} - {next(reversed(original_subtitle))}"
+        )
         prompt = TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
-        message = [{"role": "system", "content": prompt},
-                   {"role": "user",
-                    "content": f"Please translate the input into {self.target_language}:\n<input>{str(original_subtitle)}</input>"}]
+        message = [
+            {"role": "system", "content": prompt},
+            {
+                "role": "user",
+                "content": f"Please translate the input into {self.target_language}:\n<input>{str(original_subtitle)}</input>",
+            },
+        ]
         response = self.client.chat.completions.create(
-            model=self.model,
-            stream=False,
-            messages=message,
-            temperature=0.7)
+            model=self.model, stream=False, messages=message, temperature=0.7
+        )
         response_content = json_repair.loads(response.choices[0].message.content)
-        assert isinstance(response_content, dict) and len(response_content) == len(original_subtitle), "翻译结果错误"
+        assert isinstance(response_content, dict) and len(response_content) == len(
+            original_subtitle
+        ), "翻译结果错误"
         translated_subtitle = {}
         original_list = list(original_subtitle.values())
         translated_list = list(response_content.values())
@@ -192,17 +220,23 @@ class SubtitleOptimizer:
         input_content = f"correct the original subtitles, and translate them into {self.target_language}:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
             input_content += f"\nThe following is reference material related to subtitles, based on which the subtitles will be corrected, optimized, and translated:\n<prompt>{self.summary_content}</prompt>\n"
-        prompt = REFLECT_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)
-        message = [{"role": "system", "content": prompt},
-                   {"role": "user", "content": input_content}]
+        prompt = REFLECT_TRANSLATE_PROMPT.replace(
+            "[TargetLanguage]", self.target_language
+        )
+        message = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": input_content},
+        ]
         return message
 
     def _create_optimizer_message(self, original_subtitle):
         input_content = f"Optimize the following subtitles:\n<input_subtitle>{str(original_subtitle)}</input_subtitle>"
         if self.summary_content:
             input_content += f"\nThe following is reference material related to subtitles, based on which the subtitles will be corrected and optimized.:\n<prompt>{self.summary_content}</prompt>\n"
-        message = [{"role": "system", "content": OPTIMIZER_PROMPT},
-                   {"role": "user", "content": input_content}]
+        message = [
+            {"role": "system", "content": OPTIMIZER_PROMPT},
+            {"role": "user", "content": input_content},
+        ]
         return message
 
     def translate_single(self, original_subtitle: Dict[int, str]) -> Dict[int, str]:
@@ -210,13 +244,18 @@ class SubtitleOptimizer:
         translate_result = {}
         for key, value in original_subtitle.items():
             try:
-                message = [{"role": "system",
-                            "content": SINGLE_TRANSLATE_PROMPT.replace("[TargetLanguage]", self.target_language)},
-                           {"role": "user", "content": value}]
+                message = [
+                    {
+                        "role": "system",
+                        "content": SINGLE_TRANSLATE_PROMPT.replace(
+                            "[TargetLanguage]", self.target_language
+                        ),
+                    },
+                    {"role": "user", "content": value},
+                ]
                 response = self.client.chat.completions.create(
-                    model=self.model,
-                    stream=False,
-                    messages=message)
+                    model=self.model, stream=False, messages=message
+                )
                 translate = response.choices[0].message.content.replace("\n", "")
                 original_text = self.remove_punctuation(value)
                 translated_text = self.remove_punctuation(translate)
@@ -233,28 +272,29 @@ class SubtitleOptimizer:
         """
         cjk_only = self.cjk_only
         need_remove_punctuation = self.need_remove_punctuation
+
         def is_mainly_cjk(text: str) -> bool:
             """
             判断文本是否主要由中日韩文字组成
             """
             # 定义CJK字符的Unicode范围
             cjk_patterns = [
-                r'[\u4e00-\u9fff]',           # 中日韩统一表意文字
-                r'[\u3040-\u309f]',           # 平假名
-                r'[\u30a0-\u30ff]',           # 片假名
-                r'[\uac00-\ud7af]',           # 韩文音节
+                r"[\u4e00-\u9fff]",  # 中日韩统一表意文字
+                r"[\u3040-\u309f]",  # 平假名
+                r"[\u30a0-\u30ff]",  # 片假名
+                r"[\uac00-\ud7af]",  # 韩文音节
             ]
             cjk_count = 0
             for pattern in cjk_patterns:
                 cjk_count += len(re.findall(pattern, text))
-            total_chars = len(''.join(text.split()))
+            total_chars = len("".join(text.split()))
             return cjk_count / total_chars > 0.4 if total_chars > 0 else False
 
-        punctuation = r'[,.;:，。；：、]'
+        punctuation = r"[,.;:，。；：、]"
         if not need_remove_punctuation or (cjk_only and not is_mainly_cjk(text)):
             return text
         # 移除末尾标点符号
-        return re.sub(f'{punctuation}+$', '', text.strip())
+        return re.sub(f"{punctuation}+$", "", text.strip())
 
 
 def repair_subtitle(dict1, dict2) -> Dict[int, str]:
@@ -269,10 +309,14 @@ def repair_subtitle(dict1, dict2) -> Dict[int, str]:
     if similar_list.count(True) / len(similar_list) >= 0.89:
         # logger.info(f"修复成功！序列匹配相似度：{similar_list.count(True) / len(similar_list):.2f}")
         start_id = next(iter(dict1.keys()))
-        modify_dict = {str(int(start_id) + i): value for i, value in enumerate(aligned_target)}
+        modify_dict = {
+            str(int(start_id) + i): value for i, value in enumerate(aligned_target)
+        }
         return modify_dict
     else:
-        logger.error(f"修复失败！相似度：{similar_list.count(True) / len(similar_list):.2f}")
+        logger.error(
+            f"修复失败！相似度：{similar_list.count(True) / len(similar_list):.2f}"
+        )
         logger.error(f"源字幕：{list1}")
         logger.error(f"目标字幕：{list2}")
         raise ValueError("Fail to repair.")
@@ -297,6 +341,6 @@ if __name__ == "__main__":
     # os.environ['OPENAI_BASE_URL'] = 'https://api.gptgod.online/v1'
     # os.environ['OPENAI_API_KEY'] = 'sk-4StuHHm6Z1q0VcPHdPTUBdmKMsHW9JNZKe4jV7pJikBsGRuj'
     # MODEL = "gpt-4o-mini"
-    os.environ['OPENAI_BASE_URL'] = 'https://api.turboai.one/v1'
-    os.environ['OPENAI_API_KEY'] = 'sk-ZOCYCz5kexAS3X8JD3A33a5eB20f486eA26896798055F2C5'
+    os.environ["OPENAI_BASE_URL"] = "https://api.turboai.one/v1"
+    os.environ["OPENAI_API_KEY"] = "sk-ZOCYCz5kexAS3X8JD3A33a5eB20f486eA26896798055F2C5"
     MODEL = "gpt-4o-mini"
