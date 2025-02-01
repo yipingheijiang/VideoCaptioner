@@ -5,9 +5,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-from PyQt5.QtCore import *
-from PyQt5.QtCore import QUrl
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent
+from PyQt5.QtCore import Qt, QTime, QUrl, QAbstractTableModel, pyqtSignal
+from PyQt5.QtGui import QColor, QDragEnterEvent, QDropEvent
 from PyQt5.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -44,6 +43,7 @@ from app.core.entities import (
     TargetLanguageEnum,
 )
 from app.core.task_factory import TaskFactory
+from app.core.utils.get_subtitle_style import get_subtitle_style
 from app.thread.subtitle_thread import SubtitleThread
 
 
@@ -157,7 +157,7 @@ class SubtitleInterface(QWidget):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._init_ui()
         self._setup_signals()
-        # self._update_prompt_button_style()
+        self._update_prompt_button_style()
         self.set_values()
 
     def _init_ui(self):
@@ -260,9 +260,10 @@ class SubtitleInterface(QWidget):
         self.command_bar.addSeparator()
 
         # 添加文稿提示按钮
-        self.command_bar.addAction(
-            Action(FIF.DOCUMENT, self.tr("文稿提示"), triggered=self.show_prompt_dialog)
+        self.prompt_button = Action(
+            FIF.DOCUMENT, self.tr("文稿提示"), triggered=self.show_prompt_dialog
         )
+        self.command_bar.addAction(self.prompt_button)
 
         # 添加设置按钮
         self.command_bar.addAction(
@@ -338,11 +339,6 @@ class SubtitleInterface(QWidget):
         self.main_layout.addLayout(self.bottom_layout)
 
     def _setup_signals(self):
-        # self.start_button.clicked.connect(lambda: self.start_subtitle_optimization(need_create_task=True))
-        # self.save_button.clicked.connect(self.on_save_clicked)
-        # self.open_folder_button.clicked.connect(self.on_open_folder_clicked)
-        # self.prompt_button.clicked.connect(self.show_prompt_dialog)
-        # self.layout_combobox.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
         signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
         signalBus.target_language_changed.connect(self.on_target_language_changed)
         signalBus.subtitle_optimization_changed.connect(
@@ -360,12 +356,14 @@ class SubtitleInterface(QWidget):
             self.custom_prompt_text = cfg.custom_prompt_text.value
             self._update_prompt_button_style()
 
-    # def _update_prompt_button_style(self):
-    #     if self.custom_prompt_text.strip():
-    #         green_icon = FIF.DOCUMENT.colored(QColor(76,255,165), QColor(76,255,165))
-    #         self.prompt_button.setIcon(green_icon)
-    #     else:
-    #         self.prompt_button.setIcon(FIF.DOCUMENT)
+    def _update_prompt_button_style(self):
+        if self.custom_prompt_text.strip():
+            green_icon = FIF.DOCUMENT.colored(
+                QColor(76, 255, 165), QColor(76, 255, 165)
+            )
+            self.prompt_button.setIcon(green_icon)
+        else:
+            self.prompt_button.setIcon(FIF.DOCUMENT)
 
     def set_task(self, task: SubtitleTask):
         """设置任务并更新UI"""
@@ -475,16 +473,14 @@ class SubtitleInterface(QWidget):
 
     def on_save_format_clicked(self, format: str):
         """处理保存格式的选择"""
-        if not self.task:
+        if not self.subtitle_path:
             InfoBar.warning(
                 self.tr("警告"), self.tr("请先加载字幕文件"), duration=3000, parent=self
             )
             return
 
         # 获取保存路径
-        default_name = os.path.splitext(
-            os.path.basename(self.task.original_subtitle_save_path)
-        )[0]
+        default_name = Path(self.subtitle_path).stem
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             self.tr("保存字幕文件"),
@@ -500,7 +496,7 @@ class SubtitleInterface(QWidget):
             layout = cfg.subtitle_layout.value
 
             if file_path.endswith(".ass"):
-                style_str = self.task.subtitle_style_srt
+                style_str = get_subtitle_style(cfg.subtitle_style_name.value)
                 asr_data.to_ass(style_str, layout, file_path)
             else:
                 asr_data.save(file_path, layout=layout)
