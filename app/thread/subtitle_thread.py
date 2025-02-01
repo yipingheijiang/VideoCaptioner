@@ -50,7 +50,6 @@ class SubtitleThread(QThread):
         self.subtitle_length = 0
         self.finished_subtitle_length = 0
         self.custom_prompt_text = ""
-        self.llm_result_logger = None
 
     def set_custom_prompt_text(self, text: str):
         self.custom_prompt_text = text
@@ -111,13 +110,6 @@ class SubtitleThread(QThread):
             os.environ["OPENAI_API_KEY"] = subtitle_config.api_key
 
             self.progress.emit(3, self.tr("开始优化字幕..."))
-
-            self.llm_result_logger = setup_logger(
-                "llm_result",
-                info_fmt="%(message)s",
-                log_file=str(Path(subtitle_path).parent / "优化日志.log"),
-                console_output=False,
-            )
 
             asr_data = ASRData.from_subtitle_file(subtitle_path)
 
