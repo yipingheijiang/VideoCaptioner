@@ -2,10 +2,11 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
 from qfluentwidgets import BodyLabel
 from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import MessageBoxBase, SwitchSettingCard
+from qfluentwidgets import MessageBoxBase, SwitchSettingCard, ComboBoxSettingCard
 
 from app.common.config import cfg
 from app.components.SpinBoxSettingCard import SpinBoxSettingCard
+from app.core.entities import SplitTypeEnum
 
 
 class SubtitleSettingDialog(MessageBoxBase):
@@ -24,13 +25,22 @@ class SubtitleSettingDialog(MessageBoxBase):
             self,
         )
 
+        self.split_type_card = ComboBoxSettingCard(
+            cfg.split_type,
+            FIF.TILES,
+            self.tr("字幕分割类型"),
+            self.tr("按句子幕或者按语义对字幕进行断句"),
+            texts=[model.value for model in cfg.split_type.validator.options],
+            parent=self,
+        )
+
         self.word_count_cjk_card = SpinBoxSettingCard(
             cfg.max_word_count_cjk,
             FIF.TILES,
             self.tr("中文最大字数"),
             self.tr("单条字幕的最大字数 (对于中日韩等字符)"),
             minimum=8,
-            maximum=30,
+            maximum=40,
             parent=self,
         )
 
@@ -40,7 +50,7 @@ class SubtitleSettingDialog(MessageBoxBase):
             self.tr("英文最大单词数"),
             self.tr("单条字幕的最大单词数 (英文)"),
             minimum=8,
-            maximum=30,
+            maximum=40,
             parent=self,
         )
 
@@ -55,6 +65,7 @@ class SubtitleSettingDialog(MessageBoxBase):
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
         self.viewLayout.addWidget(self.split_card)
+        self.viewLayout.addWidget(self.split_type_card)
         self.viewLayout.addWidget(self.word_count_cjk_card)
         self.viewLayout.addWidget(self.word_count_english_card)
         self.viewLayout.addWidget(self.remove_punctuation_card)

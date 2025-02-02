@@ -20,6 +20,7 @@ from qfluentwidgets import (
 
 from app.config import WORK_PATH, SETTINGS_PATH
 from ..core.entities import (
+    SplitTypeEnum,
     TargetLanguageEnum,
     TranscribeModelEnum,
     TranscribeLanguageEnum,
@@ -157,6 +158,13 @@ class Config(QConfig):
     need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
     need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
+    split_type = OptionsConfigItem(
+        "Subtitle",
+        "SplitType",
+        SplitTypeEnum.SENTENCE.value,
+        OptionsValidator(SplitTypeEnum),
+        EnumSerializer(SplitTypeEnum),
+    )
     target_language = OptionsConfigItem(
         "Subtitle",
         "TargetLanguage",
