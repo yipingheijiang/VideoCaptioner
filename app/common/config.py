@@ -23,6 +23,7 @@ from ..core.entities import (
     TargetLanguageEnum,
     TranscribeModelEnum,
     TranscribeLanguageEnum,
+    TranslatorService,
     WhisperModelEnum,
     FasterWhisperModelEnum,
     VadMethodEnum,
@@ -60,12 +61,23 @@ class LanguageSerializer(ConfigSerializer):
 class Config(QConfig):
     """应用配置"""
 
-    # ------------------- LLM 配置 -------------------
-    api_key = ConfigItem("LLM", "API_Key", "")
-    api_base = ConfigItem("LLM", "API_Base", "")
-    model = ConfigItem("LLM", "Model", "gpt-4o-mini")
-    batch_size = RangeConfigItem("LLM", "BatchSize", 10, RangeValidator(10, 30))
-    thread_num = RangeConfigItem("LLM", "ThreadNum", 10, RangeValidator(1, 30))
+    # ------------------- 翻译配置 -------------------
+    translator_service = OptionsConfigItem(
+        "Translate",
+        "TranslatorService",
+        TranslatorService.OPENAI.value,
+        OptionsValidator(TranslatorService),
+        EnumSerializer(TranslatorService),
+    )
+    api_key = ConfigItem("Translate", "API_Key", "")
+    api_base = ConfigItem("Translate", "API_Base", "")
+    model = ConfigItem("Translate", "LLM_Model", "gpt-4o-mini")
+    need_reflect_translate = ConfigItem(
+        "Translate", "NeedReflectTranslate", False, BoolValidator()
+    )
+    deeplx_endpoint = ConfigItem("Translate", "DeeplxEndpoint", "")
+    batch_size = RangeConfigItem("Translate", "BatchSize", 10, RangeValidator(10, 30))
+    thread_num = RangeConfigItem("Translate", "ThreadNum", 10, RangeValidator(1, 30))
 
     # ------------------- 转录配置 -------------------
     transcribe_model = OptionsConfigItem(

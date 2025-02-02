@@ -83,6 +83,20 @@ class TranscribeModelEnum(Enum):
     WHISPER_API = "Whisper [API]"
 
 
+class TranslatorService(Enum):
+    """翻译器服务"""
+
+    OPENAI = "OpenAI 翻译"
+    SILICONCLOUD = "SiliconCloud 翻译"
+    DEEPSEEK = "DeepSeek 翻译"
+    OLLAMA = "Ollama 本地翻译"
+    GEMINI = "Gemini 翻译"
+    ZHIPU = "ChatGLM 翻译"
+    DEEPLX = "DeepLx 翻译"
+    BING = "Bing 翻译"
+    GOOGLE = "Google 翻译"
+
+
 class VadMethodEnum(Enum):
     """VAD方法"""
 
