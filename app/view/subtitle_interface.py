@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import json
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, QTime, QUrl, QAbstractTableModel, pyqtSignal
@@ -48,9 +49,96 @@ from app.thread.subtitle_thread import SubtitleThread
 
 
 class SubtitleTableModel(QAbstractTableModel):
-    def __init__(self, data):
+    def __init__(self, data=""):
         super().__init__()
-        self._data = data
+        self._data = {}
+        if isinstance(data, str):
+            self.load_data(data)
+        else:
+            self._data = data
+
+    def load_data(self, data: str):
+        """加载字幕数据"""
+        try:
+            self._data = json.loads(data)
+            self.layoutChanged.emit()
+        except json.JSONDecodeError:
+            pass
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid() or not self._data:
+            return None
+
+        row = index.row()
+        col = index.column()
+        segment = self._data.get(str(row + 1))
+
+        if not segment:
+            return None
+
+        if role == Qt.DisplayRole:
+            if col == 0:
+                return (
+                    QTime(0, 0)
+                    .addMSecs(segment["start_time"])
+                    .toString("hh:mm:ss.zzz")[:-2]
+                )
+            elif col == 1:
+                return (
+                    QTime(0, 0)
+                    .addMSecs(segment["end_time"])
+                    .toString("hh:mm:ss.zzz")[:-2]
+                )
+            elif col == 2:
+                return segment["original_subtitle"]
+            elif col == 3:
+                return segment["translated_subtitle"]
+        elif role == Qt.TextAlignmentRole:
+            if col in [0, 1]:
+                return Qt.AlignCenter
+        return None
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid() or not self._data:
+            return False
+
+        if role == Qt.EditRole:
+            row = index.row()
+            col = index.column()
+            segment = self._data.get(str(row + 1))
+
+            if not segment:
+                return False
+
+            if col == 2:
+                segment["original_subtitle"] = value
+            elif col == 3:
+                segment["translated_subtitle"] = value
+            else:
+                return False
+
+            self.dataChanged.emit(index, index)
+            return True
+        return False
+
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return [
+                    self.tr("开始时间"),
+                    self.tr("结束时间"),
+                    self.tr("字幕内容"),
+                    (
+                        self.tr("翻译字幕")
+                        if cfg.need_translate.value
+                        else self.tr("优化字幕")
+                    ),
+                ][section]
+            elif orientation == Qt.Vertical:
+                return str(section + 1)  # 显示行号
+        elif role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter  # 居中对齐
+        return None
 
     def rowCount(self, parent=None):
         return len(self._data)
@@ -58,33 +146,22 @@ class SubtitleTableModel(QAbstractTableModel):
     def columnCount(self, parent=None):
         return 4
 
-    def data(self, index, role):
-        if role == Qt.DisplayRole or role == Qt.EditRole:
-            row = index.row()
-            col = index.column()
-            item = list(self._data.values())[row]
-            if col == 0:
-                return (
-                    QTime(0, 0, 0).addMSecs(item["start_time"]).toString("hh:mm:ss.zzz")
-                )
-            elif col == 1:
-                return (
-                    QTime(0, 0, 0).addMSecs(item["end_time"]).toString("hh:mm:ss.zzz")
-                )
-            elif col == 2:
-                return item["original_subtitle"]
-            elif col == 3:
-                return item["translated_subtitle"]
-        return None
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlags
+        if index.column() in [2, 3]:
+            return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
     def update_data(self, new_data):
+        """更新字幕数据"""
         updated_rows = set()
 
         # 更新内部数据
         for key, value in new_data.items():
             if key in self._data:
-                if "\n" in value:
-                    original_subtitle, translated_subtitle = value.split("\n", 1)
+                if "||" in value:
+                    original_subtitle, translated_subtitle = value.split("||", 1)
                     self._data[key]["original_subtitle"] = original_subtitle
                     self._data[key]["translated_subtitle"] = translated_subtitle
                 else:
@@ -100,49 +177,10 @@ class SubtitleTableModel(QAbstractTableModel):
             bottom_right = self.index(max_row, 3)
             self.dataChanged.emit(top_left, bottom_right, [Qt.DisplayRole, Qt.EditRole])
 
-    def update_all(self, data):
+    def update_all(self, data: dict):
+        """更新所有数据"""
         self._data = data
         self.layoutChanged.emit()
-
-    def setData(self, index, value, role):
-        if role == Qt.EditRole:
-            row = index.row()
-            col = index.column()
-            item = list(self._data.values())[row]
-            if col == 0:
-                time = QTime.fromString(value, "hh:mm:ss.zzz")
-                item["start_time"] = QTime(0, 0, 0).msecsTo(time)
-            elif col == 1:
-                time = QTime.fromString(value, "hh:mm:ss.zzz")
-                item["end_time"] = QTime(0, 0, 0).msecsTo(time)
-            elif col == 2:
-                item["original_subtitle"] = value
-            elif col == 3:
-                item["translated_subtitle"] = value
-            self.dataChanged.emit(index, index, [Qt.DisplayRole, Qt.EditRole])
-            return True
-        return False
-
-    def flags(self, index):
-        return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                headers = [
-                    self.tr("开始时间"),
-                    self.tr("结束时间"),
-                    self.tr("字幕内容"),
-                    (
-                        self.tr("翻译字幕")
-                        if cfg.need_translate.value
-                        else self.tr("优化字幕")
-                    ),
-                ]
-                return headers[section]
-            elif orientation == Qt.Vertical:
-                return str(section + 1)
-        return None
 
 
 class SubtitleInterface(QWidget):
@@ -311,7 +349,15 @@ class SubtitleInterface(QWidget):
         )
         self.subtitle_table.setColumnWidth(0, 120)
         self.subtitle_table.setColumnWidth(1, 120)
-        self.subtitle_table.verticalHeader().setDefaultSectionSize(50)
+
+        # 配置垂直表头
+        self.subtitle_table.verticalHeader().setVisible(True)  # 显示垂直表头
+        self.subtitle_table.verticalHeader().setDefaultAlignment(
+            Qt.AlignCenter
+        )  # 居中对齐
+        self.subtitle_table.verticalHeader().setDefaultSectionSize(50)  # 行高
+        self.subtitle_table.verticalHeader().setMinimumWidth(20)  # 设置最小宽度
+
         self.subtitle_table.setEditTriggers(
             QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed
         )
