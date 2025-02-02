@@ -7,6 +7,7 @@ from app.config import MODEL_PATH, SUBTITLE_STYLE_PATH
 from app.core.entities import (
     LANGUAGES,
     FullProcessTask,
+    SplitTypeEnum,
     SubtitleConfig,
     SubtitleTask,
     SynthesisConfig,
@@ -101,12 +102,18 @@ class TaskFactory:
         if need_next_task:
             output_path = str(
                 Path(file_path).parent
-                / f"【样式字幕】{output_name}-{cfg.model.value}.ass"
+                / f"【样式字幕】{output_name}-{cfg.translator_service.value.value}.ass"
             )
         else:
             output_path = str(
-                Path(file_path).parent / f"【字幕】{output_name}-{cfg.model.value}.srt"
+                Path(file_path).parent
+                / f"【字幕】{output_name}-{cfg.translator_service.value.value}.srt"
             )
+
+        if cfg.split_type.value == SplitTypeEnum.SENTENCE.value:
+            split_type = "sentence"
+        else:
+            split_type = "semantic"
 
         config = SubtitleConfig(
             # 翻译配置
@@ -117,6 +124,7 @@ class TaskFactory:
             # 翻译服务
             translator_service=cfg.translator_service.value,
             # 字幕处理
+            split_type=split_type,
             need_reflect=cfg.need_reflect_translate.value,
             need_translate=cfg.need_translate.value,
             need_optimize=cfg.need_optimize.value,
