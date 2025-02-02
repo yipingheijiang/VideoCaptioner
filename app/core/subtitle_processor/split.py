@@ -446,7 +446,7 @@ class SubtitleSplitter:
                     logger.warning(f"缓存数据解析失败: {str(e)}")
 
         # 调用API
-        logger.info(f"开始调用API进行分段，文本长度: {len(txt)}")
+        logger.info(f"开始调用API进行分段，文本长度: {count_words(txt)}")
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
