@@ -159,8 +159,9 @@ class SubtitleThread(QThread):
             self.subtitle_length = len(asr_data.segments)
 
             if subtitle_config.need_optimize:
-                self.progress.emit(30, self.tr("优化字幕..."))
+                self.progress.emit(0, self.tr("优化字幕..."))
                 logger.info("正在优化字幕...")
+                self.finished_subtitle_length = 0  # 重置计数器
                 optimizer = SubtitleOptimizer(
                     summary_content=summarize_result,
                     model=subtitle_config.llm_model,
@@ -179,8 +180,9 @@ class SubtitleThread(QThread):
                 TranslatorService.GOOGLE: TranslatorType.GOOGLE,
             }
             if subtitle_config.need_translate:
-                self.progress.emit(30, self.tr("翻译字幕..."))
+                self.progress.emit(0, self.tr("翻译字幕..."))
                 logger.info("正在翻译字幕...")
+                self.finished_subtitle_length = 0  # 重置计数器
                 os.environ["DEEPLX_ENDPOINT"] = subtitle_config.deeplx_endpoint
                 translator = TranslatorFactory.create_translator(
                     translator_type=translator_map[subtitle_config.translator_service],
@@ -193,6 +195,7 @@ class SubtitleThread(QThread):
                     update_callback=self.callback,
                 )
                 asr_data = translator.translate_subtitle(asr_data)
+                # 移除末尾标点符号
                 if subtitle_config.need_remove_punctuation:
                     asr_data.remove_punctuation()
                 self.update_all.emit(asr_data.to_json())
@@ -257,10 +260,11 @@ class SubtitleThread(QThread):
 
     def callback(self, result: Dict):
         self.finished_subtitle_length += len(result)
-        progress_num = (
-            int((self.finished_subtitle_length / self.subtitle_length) * 70) + 30
+        # 简单计算当前进度（0-100%）
+        progress = min(
+            int((self.finished_subtitle_length / self.subtitle_length) * 100), 100
         )
-        self.progress.emit(progress_num, self.tr("{0}% 处理字幕").format(progress_num))
+        self.progress.emit(progress, self.tr("{0}% 处理字幕").format(progress))
         self.update.emit(result)
 
     def stop(self):
