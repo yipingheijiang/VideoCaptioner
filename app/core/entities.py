@@ -104,6 +104,13 @@ class VadMethodEnum(Enum):
     NONE = ""
 
 
+class SplitTypeEnum(Enum):
+    """字幕分段类型"""
+
+    SEMANTIC = "语义分段"
+    SENTENCE = "句子分段"
+
+
 class TargetLanguageEnum(Enum):
     """翻译目标语言"""
 
@@ -600,6 +607,7 @@ class SubtitleConfig:
     thread_num: int = 10
     batch_size: int = 10
     # 字幕布局和分割
+    split_type: Optional[SplitTypeEnum] = None
     subtitle_layout: Optional[str] = None
     max_word_count_cjk: int = 12
     max_word_count_english: int = 18
