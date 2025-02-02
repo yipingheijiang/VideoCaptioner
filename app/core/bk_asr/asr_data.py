@@ -141,6 +141,15 @@ class ASRData:
         self.segments = new_segments
         return self
 
+    def remove_punctuation(self) -> "ASRData":
+        """
+        移除字幕中的标点符号
+        """
+        punctuation = r"[，。]"
+        for seg in self.segments:
+            seg.text = re.sub(f"{punctuation}+$", "", seg.text.strip())
+        return self
+
     def save(
         self, save_path: str, ass_style: str = None, layout: str = "原文在上"
     ) -> None:
