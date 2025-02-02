@@ -28,6 +28,7 @@ from app.config import AUTHOR, FEEDBACK_URL, HELP_URL, RELEASE_URL, VERSION, YEA
 from app.core.entities import TranscribeModelEnum, TranslatorService
 from app.core.utils.test_opanai import get_openai_models, test_openai
 from app.thread.version_manager_thread import VersionManager
+from app.components.MySettingCard import ComboBoxSettingCard as MyComboBoxSettingCard
 
 
 class SettingInterface(ScrollArea):
@@ -54,20 +55,22 @@ class SettingInterface(ScrollArea):
             parent=self.transcribeGroup,
         )
 
-        # 翻译配置
-        self.llmGroup = SettingCardGroup(self.tr("翻译配置"), self.scrollWidget)
-
-        self.translatorServiceCard = ComboBoxSettingCard(
-            cfg.translator_service,
+        # LLM配置
+        self.llmGroup = SettingCardGroup(self.tr("LLM配置"), self.scrollWidget)
+        self.llmServiceCard = MyComboBoxSettingCard(
             FIF.ROBOT,
-            self.tr("翻译器服务"),
-            self.tr("选择翻译器服务"),
+            self.tr("LLM服务"),
+            self.tr("选择LLM服务"),
             texts=[
-                service.value for service in cfg.translator_service.validator.options
+                "OpenAI",
+                "SiliconCloud",
+                "DeepSeek",
+                "Ollama",
+                "Gemini",
+                "ChatGLM",
             ],
             parent=self.llmGroup,
         )
-
         self.apiKeyCard = LineEditSettingCard(
             cfg.api_key,
             FIF.FINGERPRINT,
@@ -99,12 +102,27 @@ class SettingInterface(ScrollArea):
             self.tr("点击检查 API 连接是否正常，并获取模型列表"),
             self.llmGroup,
         )
+
+        # 翻译配置
+        self.translate_serviceGroup = SettingCardGroup(
+            self.tr("翻译服务"), self.scrollWidget
+        )
+        self.translatorServiceCard = ComboBoxSettingCard(
+            cfg.translator_service,
+            FIF.ROBOT,
+            self.tr("翻译服务"),
+            self.tr("选择翻译服务"),
+            texts=[
+                service.value for service in cfg.translator_service.validator.options
+            ],
+            parent=self.translate_serviceGroup,
+        )
         self.needReflectTranslateCard = SwitchSettingCard(
             FIF.EDIT,
             self.tr("需要反思翻译"),
             self.tr("启用反思翻译可以提高翻译质量，但耗费更多时间和token"),
             cfg.need_reflect_translate,
-            self.llmGroup,
+            self.translate_serviceGroup,
         )
         self.deeplxEndpointCard = LineEditSettingCard(
             cfg.deeplx_endpoint,
@@ -112,21 +130,23 @@ class SettingInterface(ScrollArea):
             self.tr("DeepLx 端点"),
             self.tr("输入 DeepLx 的端点(开启deeplx翻译时必填)"),
             "https://api.deeplx.org/translate",
-            self.llmGroup,
+            self.translate_serviceGroup,
         )
         self.batchSizeCard = RangeSettingCard(
             cfg.batch_size,
             FIF.ALIGNMENT,
             self.tr("批处理大小"),
             self.tr("每批处理字幕的数量，建议为 10 的倍数"),
-            parent=self.llmGroup,
+            parent=self.translate_serviceGroup,
         )
         self.threadNumCard = RangeSettingCard(
             cfg.thread_num,
             FIF.SPEED_HIGH,
             self.tr("线程数"),
-            self.tr("模型并行处理的数量，模型服务商允许的情况下建议尽可能大"),
-            parent=self.llmGroup,
+            self.tr(
+                "模型进行LLM请求和翻译请求并行处理的数量，模型服务商允许的情况下建议尽可能大"
+            ),
+            parent=self.translate_serviceGroup,
         )
 
         # 翻译与优化配置
@@ -310,15 +330,17 @@ class SettingInterface(ScrollArea):
         # 添加卡片到组
         self.transcribeGroup.addSettingCard(self.transcribeModelCard)
 
-        self.llmGroup.addSettingCard(self.translatorServiceCard)
+        self.llmGroup.addSettingCard(self.llmServiceCard)
         self.llmGroup.addSettingCard(self.apiKeyCard)
         self.llmGroup.addSettingCard(self.apiBaseCard)
         self.llmGroup.addSettingCard(self.modelCard)
         self.llmGroup.addSettingCard(self.checkLLMConnectionCard)
-        self.llmGroup.addSettingCard(self.deeplxEndpointCard)
-        self.llmGroup.addSettingCard(self.needReflectTranslateCard)
-        self.llmGroup.addSettingCard(self.batchSizeCard)
-        self.llmGroup.addSettingCard(self.threadNumCard)
+
+        self.translate_serviceGroup.addSettingCard(self.translatorServiceCard)
+        self.translate_serviceGroup.addSettingCard(self.needReflectTranslateCard)
+        self.translate_serviceGroup.addSettingCard(self.deeplxEndpointCard)
+        self.translate_serviceGroup.addSettingCard(self.batchSizeCard)
+        self.translate_serviceGroup.addSettingCard(self.threadNumCard)
 
         self.translateGroup.addSettingCard(self.subtitleCorrectCard)
         self.translateGroup.addSettingCard(self.subtitleTranslateCard)
@@ -344,6 +366,7 @@ class SettingInterface(ScrollArea):
         self.expandLayout.setContentsMargins(36, 10, 36, 0)
         self.expandLayout.addWidget(self.transcribeGroup)
         self.expandLayout.addWidget(self.llmGroup)
+        self.expandLayout.addWidget(self.translate_serviceGroup)
         self.expandLayout.addWidget(self.translateGroup)
         self.expandLayout.addWidget(self.subtitleGroup)
         self.expandLayout.addWidget(self.saveGroup)
@@ -353,6 +376,11 @@ class SettingInterface(ScrollArea):
     def __connectSignalToSlot(self):
         """连接信号与槽"""
         cfg.appRestartSig.connect(self.__showRestartTooltip)
+
+        # 翻译服务切换
+        self.llmServiceCard.comboBox.currentTextChanged.connect(
+            self.__onLLMServiceChanged
+        )
 
         # 翻译服务切换
         self.translatorServiceCard.comboBox.currentTextChanged.connect(
@@ -477,22 +505,21 @@ class SettingInterface(ScrollArea):
     def checkUpdate(self):
         webbrowser.open(RELEASE_URL)
 
-    def __onTranslatorServiceChanged(self, service):
+    def __onLLMServiceChanged(self, service):
         """处理翻译服务切换事件"""
         base_url_map = {
-            TranslatorService.OPENAI.value: ("https://api.openai.com/v1"),
-            TranslatorService.SILICONCLOUD.value: "https://api.siliconflow.cn/v1",
-            TranslatorService.DEEPSEEK.value: "https://api.deepseek.com/v1",
-            TranslatorService.OLLAMA.value: "http://localhost:11434/v1",
-            TranslatorService.GEMINI.value: "https://generativelanguage.googleapis.com/v1beta/openai/",
-            TranslatorService.ZHIPU.value: "https://open.bigmodel.cn/api/paas/v4",
+            "OpenAI": "https://api.openai.com/v1",
+            "SiliconCloud": "https://api.siliconflow.cn/v1",
+            "DeepSeek": "https://api.deepseek.com/v1",
+            "Ollama": "http://localhost:11434/v1",
+            "Gemini": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "ChatGLM": "https://open.bigmodel.cn/api/paas/v4",
         }
-        # 隐藏所有配置卡片
+        if service in base_url_map:
+            self.apiBaseCard.lineEdit.setText(base_url_map[service])
+
+    def __onTranslatorServiceChanged(self, service):
         openai_cards = [
-            self.apiKeyCard,
-            self.apiBaseCard,
-            self.modelCard,
-            self.checkLLMConnectionCard,
             self.needReflectTranslateCard,
             self.batchSizeCard,
         ]
@@ -503,16 +530,15 @@ class SettingInterface(ScrollArea):
             card.setVisible(False)
 
         # 根据选择的服务显示相应的配置卡片
-        if service in base_url_map:
-            for card in openai_cards:
-                card.setVisible(True)
-            self.apiBaseCard.lineEdit.setText(base_url_map[service])
-        elif service in [TranslatorService.DEEPLX.value]:
+        if service in [TranslatorService.DEEPLX.value]:
             for card in deeplx_cards:
+                card.setVisible(True)
+        elif service in [TranslatorService.OPENAI.value]:
+            for card in openai_cards:
                 card.setVisible(True)
 
         # 更新布局
-        self.llmGroup.adjustSize()
+        self.translate_serviceGroup.adjustSize()
         self.expandLayout.update()
 
 

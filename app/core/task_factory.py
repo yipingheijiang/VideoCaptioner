@@ -109,11 +109,15 @@ class TaskFactory:
             )
 
         config = SubtitleConfig(
-            # LLM配置
+            # 翻译配置
             base_url=cfg.api_base.value,
             api_key=cfg.api_key.value,
             llm_model=cfg.model.value,
+            deeplx_endpoint=cfg.deeplx_endpoint.value,
+            # 翻译服务
+            translator_service=cfg.translator_service.value,
             # 字幕处理
+            need_reflect=cfg.need_reflect_translate.value,
             need_translate=cfg.need_translate.value,
             need_optimize=cfg.need_optimize.value,
             thread_num=cfg.thread_num.value,

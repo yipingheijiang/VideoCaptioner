@@ -34,8 +34,7 @@ logger = logging.getLogger("subtitle_translator")
 class TranslatorType(Enum):
     """翻译器类型"""
 
-    OPENAI_NORMAL = "openai_normal"
-    OPENAI_REFLECT = "openai_reflect"
+    OPENAI = "openai"
     GOOGLE = "google"
     BING = "bing"
     DEEPLX = "deeplx"
@@ -260,10 +259,12 @@ class OpenAITranslator(BaseTranslator):
             response = self._call_api(
                 prompt, json.dumps(subtitle_chunk, ensure_ascii=False)
             )
+            print("=========")
+            print(response.choices[0].message.content)
 
             # 解析结果
             result = json_repair.loads(response.choices[0].message.content)
-
+            print(result)
             # 检查翻译结果数量是否匹配
             if len(result) != len(subtitle_chunk):
                 logger.warning(f"翻译结果数量不匹配，将使用单条翻译模式重试")
@@ -386,14 +387,18 @@ class GoogleTranslator(BaseTranslator):
             "User-Agent": "Mozilla/4.0 (compatible;MSIE 6.0;Windows NT 5.1;SV1;.NET CLR 1.1.4322;.NET CLR 2.0.50727;.NET CLR 3.0.04506.30)"
         }
         self.lang_map = {
-            "Chinese": "zh-CN",
-            "English": "en",
-            "Japanese": "ja",
-            "Korean": "ko",
-            "French": "fr",
-            "German": "de",
-            "Russian": "ru",
-            "Spanish": "es",
+            "简体中文": "zh-cn",
+            "繁体中文": "zh-tw",
+            "英语": "en",
+            "日本語": "ja",
+            "韩语": "ko",
+            "粤语": "yue",
+            "法语": "fr",
+            "德语": "de",
+            "西班牙语": "es",
+            "俄语": "ru",
+            "葡萄牙语": "pt",
+            "土耳其语": "tr",
         }
 
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
@@ -476,6 +481,18 @@ class BingTranslator(BaseTranslator):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
         }
         self.lang_map = {
+            "简体中文": "zh-Hans",
+            "繁体中文": "zh-Hant",
+            "英语": "en",
+            "日本語": "ja",
+            "韩语": "ko",
+            "粤语": "yue",
+            "法语": "fr",
+            "德语": "de",
+            "西班牙语": "es",
+            "俄语": "ru",
+            "葡萄牙语": "pt",
+            "土耳其语": "tr",
             "Chinese": "zh-Hans",
             "English": "en",
             "Japanese": "ja",
@@ -505,6 +522,7 @@ class BingTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
+        print(self.target_language)
         target_lang = self.lang_map.get(self.target_language, "zh-Hans")
 
         for idx, text in subtitle_chunk.items():
@@ -576,26 +594,41 @@ class DeepLXTranslator(BaseTranslator):
         )
         self.session = requests.Session()
         self.endpoint = os.getenv("DEEPLX_ENDPOINT", "https://api.deeplx.org/translate")
+        print(self.endpoint)
         self.lang_map = {
+            "简体中文": "zh",
+            "繁体中文": "zh-TW",
+            "英语": "en",
+            "日本語": "ja",
+            "韩语": "ko",
+            "法语": "fr",
+            "德语": "de",
+            "西班牙语": "es",
+            "俄语": "ru",
+            "葡萄牙语": "pt",
+            "土耳其语": "tr",
             "Chinese": "zh",
             "English": "en",
             "Japanese": "ja",
             "Korean": "ko",
             "French": "fr",
             "German": "de",
-            "Russian": "ru",
             "Spanish": "es",
+            "Russian": "ru",
         }
 
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        target_lang = self.lang_map.get(self.target_language, "zh")
+        target_lang = self.lang_map.get(self.target_language, "zh").lower()
 
         for idx, text in subtitle_chunk.items():
             try:
                 # 检查缓存
-                cache_params = {"target_language": target_lang}
+                cache_params = {
+                    "target_language": target_lang,
+                    "endpoint": self.endpoint,
+                }
                 cache_result = self.cache_manager.get_translation(
                     text, TranslatorType.DEEPLX.value, **cache_params
                 )
@@ -614,6 +647,7 @@ class DeepLXTranslator(BaseTranslator):
                     },
                     timeout=self.timeout,
                 )
+                print(response.json())
                 response.raise_for_status()
                 translated_text = response.json()["data"]
 
@@ -635,31 +669,30 @@ class TranslatorFactory:
     @staticmethod
     def create_translator(
         translator_type: TranslatorType,
-        thread_num: int = 10,
-        batch_num: int = 20,
+        thread_num: int = 5,
+        batch_num: int = 10,
         target_language: str = "Chinese",
         model: str = "gpt-4o-mini",
         summary_content: str = "",
         temperature: float = 0.7,
+        is_reflect: bool = False,
         update_callback: Optional[Callable] = None,
     ) -> BaseTranslator:
         """创建翻译器实例"""
         try:
-            if translator_type in [
-                TranslatorType.OPENAI_NORMAL,
-                TranslatorType.OPENAI_REFLECT,
-            ]:
+            if translator_type == TranslatorType.OPENAI:
                 return OpenAITranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,
                     target_language=target_language,
                     model=model,
                     summary_content=summary_content,
-                    is_reflect=translator_type == TranslatorType.OPENAI_REFLECT,
+                    is_reflect=is_reflect,
                     temperature=temperature,
                     update_callback=update_callback,
                 )
             elif translator_type == TranslatorType.GOOGLE:
+                batch_num = 3
                 return GoogleTranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,
@@ -667,6 +700,7 @@ class TranslatorFactory:
                     update_callback=update_callback,
                 )
             elif translator_type == TranslatorType.BING:
+                batch_num = 3
                 return BingTranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,
@@ -674,6 +708,7 @@ class TranslatorFactory:
                     update_callback=update_callback,
                 )
             elif translator_type == TranslatorType.DEEPLX:
+                batch_num = 3
                 return DeepLXTranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,

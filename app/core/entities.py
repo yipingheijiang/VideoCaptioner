@@ -86,12 +86,7 @@ class TranscribeModelEnum(Enum):
 class TranslatorService(Enum):
     """翻译器服务"""
 
-    OPENAI = "OpenAI 翻译"
-    SILICONCLOUD = "SiliconCloud 翻译"
-    DEEPSEEK = "DeepSeek 翻译"
-    OLLAMA = "Ollama 本地翻译"
-    GEMINI = "Gemini 翻译"
-    ZHIPU = "ChatGLM 翻译"
+    OPENAI = "OpenAI"
     DEEPLX = "DeepLx 翻译"
     BING = "Bing 翻译"
     GOOGLE = "Google 翻译"
@@ -592,13 +587,16 @@ class TranscribeConfig:
 class SubtitleConfig:
     """字幕处理配置类"""
 
-    # LLM配置
+    # 翻译配置
     base_url: Optional[str] = None
     api_key: Optional[str] = None
     llm_model: Optional[str] = None
-    # 字幕处理
+    deeplx_endpoint: Optional[str] = None
+    # 翻译服务
+    translator_service: Optional[TranslatorService] = None
     need_translate: bool = False
     need_optimize: bool = False
+    need_reflect: bool = False
     thread_num: int = 10
     batch_size: int = 10
     # 字幕布局和分割

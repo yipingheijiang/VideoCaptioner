@@ -7,7 +7,7 @@ from PyQt5.QtCore import QSettings, QThread, pyqtSignal
 
 from app.common.config import cfg
 from app.core.bk_asr.asr_data import ASRData
-from app.core.entities import SubtitleConfig, SubtitleTask, Task
+from app.core.entities import SubtitleConfig, SubtitleTask, Task, TranslatorService
 from app.core.subtitle_processor.split import SubtitleSplitter
 from app.core.subtitle_processor.summarization import SubtitleSummarizer
 from app.core.subtitle_processor.optimize import SubtitleOptimizer
@@ -62,7 +62,11 @@ class SubtitleThread(QThread):
                 self.task.subtitle_config.api_key,
                 self.task.subtitle_config.llm_model,
             )[0]:
-                raise Exception(self.tr("OpenAI API 测试失败, 请检查设置"))
+                raise Exception(
+                    self.tr(
+                        "（字幕断句或字幕修正需要大模型）\nOpenAI API 测试失败, 请检查LLM配置"
+                    )
+                )
             return self.task.subtitle_config
 
         logger.info("尝试使用自带的API配置")
@@ -102,20 +106,35 @@ class SubtitleThread(QThread):
             )
             assert subtitle_path is not None, self.tr("字幕文件路径为空")
 
-            # 获取API配置，会先检查可用性（优先使用设置的API，其次使用自带的公益API）
-            self.progress.emit(2, self.tr("开始验证API配置..."))
-            subtitle_config = self._setup_api_config()
-            logger.info(f"使用 {subtitle_config.llm_model} 作为LLM模型")
-            os.environ["OPENAI_BASE_URL"] = subtitle_config.base_url
-            os.environ["OPENAI_API_KEY"] = subtitle_config.api_key
-
-            self.progress.emit(3, self.tr("开始优化字幕..."))
+            subtitle_config = self.task.subtitle_config
 
             asr_data = ASRData.from_subtitle_file(subtitle_path)
 
             # 1. 分割成字词级时间戳（对于非断句字幕且开启分割选项）
             if subtitle_config.need_split and not asr_data.is_word_timestamp():
                 asr_data.split_to_word_segments()
+
+            # 获取API配置，会先检查可用性（优先使用设置的API，其次使用自带的公益API）
+            if (
+                subtitle_config.need_optimize
+                or asr_data.is_word_timestamp()
+                or (
+                    (
+                        subtitle_config.need_translate
+                        and subtitle_config.translator_service
+                        not in [
+                            TranslatorService.DEEPLX,
+                            TranslatorService.BING,
+                            TranslatorService.GOOGLE,
+                        ]
+                    )
+                )
+            ):
+                self.progress.emit(2, self.tr("开始验证API配置..."))
+                subtitle_config = self._setup_api_config()
+                logger.info(f"使用 {subtitle_config.llm_model} 作为LLM模型")
+                os.environ["OPENAI_BASE_URL"] = subtitle_config.base_url
+                os.environ["OPENAI_API_KEY"] = subtitle_config.api_key
 
             # 2. 重新断句（对于字词级字幕）
             if asr_data.is_word_timestamp():
@@ -150,21 +169,33 @@ class SubtitleThread(QThread):
                     update_callback=self.callback,
                 )
                 asr_data = optimizer.optimize_subtitle(asr_data)
+                self.update_all.emit(asr_data.to_json())
 
             # 4. 翻译字幕
+            translator_map = {
+                TranslatorService.OPENAI: TranslatorType.OPENAI,
+                TranslatorService.DEEPLX: TranslatorType.DEEPLX,
+                TranslatorService.BING: TranslatorType.BING,
+                TranslatorService.GOOGLE: TranslatorType.GOOGLE,
+            }
             if subtitle_config.need_translate:
                 self.progress.emit(30, self.tr("翻译字幕..."))
                 logger.info("正在翻译字幕...")
+                os.environ["DEEPLX_ENDPOINT"] = subtitle_config.deeplx_endpoint
                 translator = TranslatorFactory.create_translator(
-                    translator_type=TranslatorType.OPENAI_REFLECT,
+                    translator_type=translator_map[subtitle_config.translator_service],
                     thread_num=subtitle_config.thread_num,
                     batch_num=subtitle_config.batch_size,
                     target_language=subtitle_config.target_language,
                     model=subtitle_config.llm_model,
                     summary_content=summarize_result,
+                    is_reflect=subtitle_config.need_reflect,
                     update_callback=self.callback,
                 )
                 asr_data = translator.translate_subtitle(asr_data)
+                if subtitle_config.need_remove_punctuation:
+                    asr_data.remove_punctuation()
+                self.update_all.emit(asr_data.to_json())
 
             # 5. 保存字幕
             asr_data.save(
