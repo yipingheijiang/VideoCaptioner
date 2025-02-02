@@ -2,14 +2,18 @@
 from enum import Enum
 from datetime import timedelta
 
+
 class TranslatorType(Enum):
     GOOGLE = "google"
     BING = "bing"
     LLM = "llm"
+    DEEPLX = "deeplx"
+
 
 class OperationType(Enum):
     TRANSLATION = "translation"
     LLM_CALL = "llm_call"
+
 
 # 缓存配置
 CACHE_CONFIG = {
