@@ -6,8 +6,11 @@ from typing import List, Tuple
 
 
 class ASRDataSeg:
-    def __init__(self, text: str, start_time: int, end_time: int):
+    def __init__(
+        self, text: str, start_time: int, end_time: int, translated_text: str = ""
+    ):
         self.text = text
+        self.translated_text = translated_text
         self.start_time = start_time
         self.end_time = end_time
 
@@ -88,7 +91,7 @@ class ASRData:
         for seg in self.segments:
             text = seg.text.strip()
             # 检查是否只包含一个英文单词或一个汉字
-            if (len(text.split()) == 1 and text.isascii()) or len(text.strip()) <= 4:
+            if (len(text.split()) == 1 and text.isascii()) or len(text.strip()) <= 2:
                 valid_segments += 1
         return (valid_segments / total_segments) >= 0.8
 
@@ -148,6 +151,9 @@ class ASRData:
         punctuation = r"[，。]"
         for seg in self.segments:
             seg.text = re.sub(f"{punctuation}+$", "", seg.text.strip())
+            seg.translated_text = re.sub(
+                f"{punctuation}+$", "", seg.translated_text.strip()
+            )
         return self
 
     def save(
@@ -172,10 +178,8 @@ class ASRData:
         result = []
         for seg in self.segments:
             # 检查是否有换行符
-            if "\n" in seg.transcript:
-                original, translated = seg.transcript.split("\n", 1)
-            else:
-                original, translated = seg.transcript, ""
+            original = seg.text
+            translated = seg.translated_text
 
             # 根据字幕类型组织文本
             if layout == "原文在上":
@@ -200,10 +204,8 @@ class ASRData:
         srt_lines = []
         for n, seg in enumerate(self.segments, 1):
             # 检查是否有换行符
-            if "\n" in seg.transcript:
-                original, translated = seg.transcript.split("\n", 1)
-            else:
-                original, translated = seg.transcript, ""
+            original = seg.text
+            translated = seg.translated_text
 
             # 根据字幕类型组织文本
             if layout == "原文在上":
@@ -227,28 +229,20 @@ class ASRData:
 
     def to_lrc(self, save_path=None) -> str:
         """Convert to LRC subtitle format"""
-        lrc_text = "\n".join(
-            f"{seg.to_lrc_ts()}{seg.transcript}" for seg in self.segments
-        )
-        if save_path:
-            with open(save_path, "w", encoding="utf-8") as f:
-                f.write(lrc_text)
-        return lrc_text
+        raise NotImplementedError("LRC format is not supported")
 
     def to_json(self) -> dict:
         result_json = {}
         for i, segment in enumerate(self.segments, 1):
             # 检查是否有换行符
-            if "\n" in segment.text:
-                original_subtitle, translated_subtitle = segment.text.split("\n", 1)
-            else:
-                original_subtitle, translated_subtitle = segment.text, ""
+            original = segment.text
+            translated = segment.translated_text
 
             result_json[str(i)] = {
                 "start_time": segment.start_time,
                 "end_time": segment.end_time,
-                "original_subtitle": original_subtitle,
-                "translated_subtitle": translated_subtitle,
+                "original_subtitle": original,
+                "translated_subtitle": translated,
             }
         return result_json
 
@@ -291,33 +285,29 @@ class ASRData:
         dialogue_template = "Dialogue: 0,{},{},{},,0,0,0,,{}\n"
         for seg in self.segments:
             start_time, end_time = seg.to_ass_ts()
-            if "\n" in seg.text:
-                original, translate = seg.text.split("\n", 1)
-                if layout == "译文在上" and translate:
-                    ass_content += dialogue_template.format(
-                        start_time, end_time, "Secondary", original
-                    )
-                    ass_content += dialogue_template.format(
-                        start_time, end_time, "Default", translate
-                    )
-                elif layout == "原文在上" and translate:
-                    ass_content += dialogue_template.format(
-                        start_time, end_time, "Secondary", translate
-                    )
-                    ass_content += dialogue_template.format(
-                        start_time, end_time, "Default", original
-                    )
-                elif layout == "仅原文":
-                    ass_content += dialogue_template.format(
-                        start_time, end_time, "Default", original
-                    )
-                elif layout == "仅译文" and translate:
-                    ass_content += dialogue_template.format(
-                        start_time, end_time, "Default", translate
-                    )
-            else:
+            original = seg.text
+            translated = seg.translated_text
+            if layout == "译文在上" and translated:
                 ass_content += dialogue_template.format(
-                    start_time, end_time, "Default", seg.text
+                    start_time, end_time, "Secondary", original
+                )
+                ass_content += dialogue_template.format(
+                    start_time, end_time, "Default", translated
+                )
+            elif layout == "原文在上" and translated:
+                ass_content += dialogue_template.format(
+                    start_time, end_time, "Secondary", translated
+                )
+                ass_content += dialogue_template.format(
+                    start_time, end_time, "Default", original
+                )
+            elif layout == "仅原文":
+                ass_content += dialogue_template.format(
+                    start_time, end_time, "Default", original
+                )
+            elif layout == "仅译文" and translated:
+                ass_content += dialogue_template.format(
+                    start_time, end_time, "Default", translated
                 )
 
         if save_path:
@@ -334,24 +324,25 @@ class ASRData:
         Returns:
             str: WebVTT格式的字幕内容
         """
-        # WebVTT头部
-        vtt_lines = ["WEBVTT\n"]
+        raise NotImplementedError("WebVTT format is not supported")
+        # # WebVTT头部
+        # vtt_lines = ["WEBVTT\n"]
 
-        for n, seg in enumerate(self.segments, 1):
-            # 转换时间戳格式从毫秒到 HH:MM:SS.mmm
-            start_time = seg._ms_to_srt_time(seg.start_time).replace(",", ".")
-            end_time = seg._ms_to_srt_time(seg.end_time).replace(",", ".")
+        # for n, seg in enumerate(self.segments, 1):
+        #     # 转换时间戳格式从毫秒到 HH:MM:SS.mmm
+        #     start_time = seg._ms_to_srt_time(seg.start_time).replace(",", ".")
+        #     end_time = seg._ms_to_srt_time(seg.end_time).replace(",", ".")
 
-            # 添加序号（可选）和时间戳
-            vtt_lines.append(f"{n}\n{start_time} --> {end_time}\n{seg.transcript}\n")
+        #     # 添加序号（可选）和时间戳
+        #     vtt_lines.append(f"{n}\n{start_time} --> {end_time}\n{seg.transcript}\n")
 
-        vtt_text = "\n".join(vtt_lines)
+        # vtt_text = "\n".join(vtt_lines)
 
-        if save_path:
-            with open(save_path, "w", encoding="utf-8") as f:
-                f.write(vtt_text)
+        # if save_path:
+        #     with open(save_path, "w", encoding="utf-8") as f:
+        #         f.write(vtt_text)
 
-        return vtt_text
+        # return vtt_text
 
     def merge_segments(self, start_index: int, end_index: int, merged_text: str = None):
         """合并从 start_index 到 end_index 的段（包含）。"""
@@ -429,11 +420,9 @@ class ASRData:
         segments = []
         for i in sorted(json_data.keys(), key=int):
             segment_data = json_data[i]
-            text = segment_data["original_subtitle"]
-            if segment_data["translated_subtitle"]:
-                text += "\n" + segment_data["translated_subtitle"]
             segment = ASRDataSeg(
-                text=text,
+                text=segment_data["original_subtitle"],
+                translated_text=segment_data["translated_subtitle"],
                 start_time=segment_data["start_time"],
                 end_time=segment_data["end_time"],
             )
@@ -494,11 +483,16 @@ class ASRData:
             )
 
             if has_translated_subtitle:
-                text = "\n".join(lines[2:]).strip()
+                text = lines[2]
+                translated_text = lines[3]
+                segments.append(
+                    ASRDataSeg(
+                        text, start_time, end_time, translated_text=translated_text
+                    )
+                )
             else:
-                text = " ".join(lines[2:])
-
-            segments.append(ASRDataSeg(text, start_time, end_time))
+                text = lines[2]
+                segments.append(ASRDataSeg(text, start_time, end_time))
 
         return ASRData(segments)
 
@@ -691,29 +685,28 @@ class ASRData:
                         if time_key in temp_segments:
                             # 如果已存在相同时间戳的字幕，合并原文和译文
                             if style == "Default":
-                                temp_segments[time_key] = (
-                                    f"{text}\n{temp_segments[time_key]}"
-                                )
+                                temp_segments[time_key].translated_text = text
                             else:
-                                temp_segments[time_key] = (
-                                    f"{temp_segments[time_key]}\n{text}"
-                                )
+                                temp_segments[time_key].text = text
                             # 创建新的字幕段并清除临时存储
-                            segments.append(
-                                ASRDataSeg(
-                                    temp_segments[time_key], start_time, end_time
-                                )
-                            )
+                            segments.append(temp_segments[time_key])
                             del temp_segments[time_key]
                         else:
-                            temp_segments[time_key] = text
+                            # 创建新的字幕段并存储
+                            segment = ASRDataSeg(
+                                text="", start_time=start_time, end_time=end_time
+                            )
+                            if style == "Default":
+                                segment.translated_text = text
+                            else:
+                                segment.text = text
+                            temp_segments[time_key] = segment
                     else:
                         segments.append(ASRDataSeg(text, start_time, end_time))
 
         # 处理剩余的未配对字幕
-        for time_key, text in temp_segments.items():
-            start_time, end_time = map(int, time_key.split("-"))
-            segments.append(ASRDataSeg(text, start_time, end_time))
+        for segment in temp_segments.values():
+            segments.append(segment)
 
         return ASRData(segments)
 
@@ -723,7 +716,7 @@ if __name__ == "__main__":
 
     # 示例：从SRT文件创建ASRData并转换为ASS格式
     srt_file_path = "示例路径/字幕文件.srt"
-    asr_data = from_srt(Path(srt_file_path).read_text(encoding="utf-8"))
+    asr_data = ASRData.from_srt(Path(srt_file_path).read_text(encoding="utf-8"))
     print(
         asr_data.to_ass(
             style_str="示例样式字符串", save_path=srt_file_path.replace(".srt", ".ass")
