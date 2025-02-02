@@ -125,7 +125,7 @@ class BaseTranslator(ABC):
                 logger.error(f"翻译块失败：{str(e)}")
                 # 对于失败的块，保留原文
                 for k, v in chunk.items():
-                    translated_dict[k] = f"{v}\\n"
+                    translated_dict[k] = f"{v}||ERROR"
 
         return translated_dict
 
@@ -147,14 +147,14 @@ class BaseTranslator(ABC):
         original_segments: List[ASRDataSeg], translated_dict: Dict[str, str]
     ) -> List[ASRDataSeg]:
         """创建新的字幕段"""
-        return [
-            ASRDataSeg(
-                text=translated_dict.get(str(i), seg.text),
-                start_time=seg.start_time,
-                end_time=seg.end_time,
-            )
-            for i, seg in enumerate(original_segments, 1)
-        ]
+        for i, seg in enumerate(original_segments, 1):
+            try:
+                print(translated_dict[str(i)])
+                seg.translated_text = translated_dict[str(i)]  # 设置翻译文本
+            except Exception as e:
+                logger.error(f"创建新的字幕段失败：{str(e)}")
+                seg.translated_text = seg.text
+        return original_segments
 
     @abstractmethod
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
@@ -251,32 +251,30 @@ class OpenAITranslator(BaseTranslator):
                 **cache_params,
             )
 
+            result = {}
             if cache_result:
                 logger.info("使用缓存的翻译结果")
-                return json.loads(cache_result)
+                result = json.loads(cache_result)
+            else:
+                # 调用API翻译
+                response = self._call_api(
+                    prompt, json.dumps(subtitle_chunk, ensure_ascii=False)
+                )
+                print("=========")
+                print(response.choices[0].message.content)
 
-            # 调用API翻译
-            response = self._call_api(
-                prompt, json.dumps(subtitle_chunk, ensure_ascii=False)
-            )
-            print("=========")
-            print(response.choices[0].message.content)
-
-            # 解析结果
-            result = json_repair.loads(response.choices[0].message.content)
-            print(result)
-            # 检查翻译结果数量是否匹配
-            if len(result) != len(subtitle_chunk):
-                logger.warning(f"翻译结果数量不匹配，将使用单条翻译模式重试")
-                return self._translate_chunk_single(subtitle_chunk)
+                # 解析结果
+                result = json_repair.loads(response.choices[0].message.content)
+                print(result)
+                # 检查翻译结果数量是否匹配
+                if len(result) != len(subtitle_chunk):
+                    logger.warning(f"翻译结果数量不匹配，将使用单条翻译模式重试")
+                    return self._translate_chunk_single(subtitle_chunk)
 
             if self.is_reflect:
-                result = {
-                    k: f"{subtitle_chunk[k]}\n{v['revised_translation']}"
-                    for k, v in result.items()
-                }
+                result = {k: f"{v['revised_translation']}" for k, v in result.items()}
             else:
-                result = {k: f"{subtitle_chunk[k]}\n{v}" for k, v in result.items()}
+                result = {k: f"{v}" for k, v in result.items()}
 
             # 保存到缓存
             self.cache_manager.set_llm_result(
@@ -329,10 +327,10 @@ class OpenAITranslator(BaseTranslator):
                     **cache_params,
                 )
 
-                result[idx] = f"{subtitle_chunk[idx]}\n{translated_text}"
+                result[idx] = translated_text
             except Exception as e:
                 logger.error(f"单条翻译失败 {idx}: {str(e)}")
-                result[idx] = text  # 如果翻译失败，保留原文
+                result[idx] = "ERROR"  # 如果翻译失败，返回错误标记
 
         return result
 
@@ -404,7 +402,7 @@ class GoogleTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        target_lang = self.lang_map.get(self.target_language, "zh-CN")
+        target_lang = self.lang_map.get(self.target_language, "zh-cn")
 
         for idx, text in subtitle_chunk.items():
             try:
@@ -444,13 +442,13 @@ class GoogleTranslator(BaseTranslator):
                         TranslatorType.GOOGLE.value,
                         **cache_params,
                     )
-                    result[idx] = f"{text}\n{translated_text}"
+                    result[idx] = translated_text
                 else:
-                    result[idx] = f"{text}\n{text}"
+                    result[idx] = "ERROR"
                     logger.warning(f"无法从Google翻译响应中提取翻译结果: {idx}")
             except Exception as e:
                 logger.error(f"Google翻译失败 {idx}: {str(e)}")
-                result[idx] = text
+                result[idx] = "ERROR"
         print(result)
         return result
 
@@ -522,13 +520,12 @@ class BingTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        print(self.target_language)
         target_lang = self.lang_map.get(self.target_language, "zh-Hans")
 
         for idx, text in subtitle_chunk.items():
             try:
                 # 检查缓存
-                cache_params = {"target_language": target_lang}
+                cache_params = {"target_language1": target_lang}
                 cache_result = self.cache_manager.get_translation(
                     text, TranslatorType.BING.value, **cache_params
                 )
@@ -559,10 +556,10 @@ class BingTranslator(BaseTranslator):
                     text, translated_text, TranslatorType.BING.value, **cache_params
                 )
 
-                result[idx] = f"{text}\n{translated_text}"
+                result[idx] = translated_text
             except Exception as e:
                 logger.error(f"必应翻译失败 {idx}: {str(e)}")
-                result[idx] = f"{text}\n{text}"
+                result[idx] = "ERROR"
                 # 如果是token过期，尝试重新初始化会话
                 if "token" in str(e).lower():
                     try:
@@ -656,10 +653,10 @@ class DeepLXTranslator(BaseTranslator):
                     text, translated_text, TranslatorType.DEEPLX.value, **cache_params
                 )
 
-                result[idx] = f"{text}\n{translated_text}"
+                result[idx] = translated_text
             except Exception as e:
                 logger.error(f"DeepLX翻译失败 {idx}: {str(e)}")
-                result[idx] = f"{text}\n{text}"
+                result[idx] = "ERROR"
         return result
 
 
