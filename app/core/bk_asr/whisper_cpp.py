@@ -64,6 +64,45 @@ class WhisperCppASR(BaseASR):
                 filtered_segments.append(seg)
         return filtered_segments
 
+    def _build_command(
+        self, wav_path, output_path, is_const_me_version: bool
+    ) -> list[str]:
+        """构建 whisper-cpp 命令行参数
+
+        Args:
+            wav_path: 输入的WAV文件路径
+            output_path: 输出文件路径
+            is_const_me_version: 是否为 const_me 版本
+
+        Returns:
+            list[str]: 命令行参数列表
+        """
+        # 构建基础命令参数列表
+        whisper_params = [
+            str(self.whisper_cpp_path),
+            "-m",
+            str(self.model_path),
+            "-f",
+            str(wav_path),
+            "-l",
+            self.language,
+            "--output-srt",
+        ]
+
+        # 根据版本添加额外参数
+        if not is_const_me_version:
+            whisper_params.extend(
+                ["--no-gpu", "--output-file", str(output_path.with_suffix(""))]
+            )
+
+        # 中文模式下添加提示语
+        if self.language == "zh":
+            whisper_params.extend(
+                ["--prompt", "你好，我们需要使用简体中文，以下是普通话的句子。"]
+            )
+
+        return whisper_params
+
     def _run(self, callback=None) -> str:
         if callback is None:
             callback = lambda x, y: None
@@ -82,30 +121,11 @@ class WhisperCppASR(BaseASR):
             try:
                 # 把self.audio_path 复制到 wav_path
                 shutil.copy2(self.audio_path, wav_path)
-                # 构建基础命令参数列表
-                whisper_params = [
-                    str(self.whisper_cpp_path),
-                    "-m",
-                    str(self.model_path),
-                    "-f",
-                    str(wav_path),
-                    "-l",
-                    self.language,
-                    "--output-srt",
-                ]
 
-                # 根据版本添加额外参数
-                if not is_const_me_version:
-                    whisper_params.extend(
-                        ["--no-gpu", "--output-file", str(output_path.with_suffix(""))]
-                    )
-
-                # 中文模式下添加提示语
-                if self.language == "zh":
-                    whisper_params.extend(
-                        ["--prompt", "你好，我们需要使用简体中文，以下是普通话的句子。"]
-                    )
-
+                # 使用新的 _build_command 方法构建命令
+                whisper_params = self._build_command(
+                    wav_path, output_path, is_const_me_version
+                )
                 logger.info("完整命令行参数: %s", " ".join(whisper_params))
 
                 # 启动进程
@@ -161,7 +181,7 @@ class WhisperCppASR(BaseASR):
                 raise RuntimeError(f"生成 SRT 文件失败: {str(e)}")
 
     def _get_key(self):
-        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}-{self.language}"
+        return f"{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}-{self.language}"
 
     def get_audio_duration(self, filepath: str) -> int:
         try:
