@@ -26,7 +26,7 @@ class SubtitleOptimizer:
         thread_num: int = 5,
         batch_num: int = 10,
         model: str = "gpt-4o-mini",
-        summary_content: str = "",
+        custom_prompt: str = "",
         temperature: float = 0.7,
         timeout: int = 60,
         retry_times: int = 1,
@@ -36,7 +36,7 @@ class SubtitleOptimizer:
         self.thread_num = thread_num
         self.batch_num = batch_num
         self.model = model
-        self.summary_content = summary_content
+        self.custom_prompt = custom_prompt
         self.temperature = temperature
         self.timeout = timeout
         self.retry_times = retry_times
@@ -141,9 +141,9 @@ class SubtitleOptimizer:
         #     f"[+]正在优化字幕：{next(iter(subtitle_chunk))} - {next(reversed(subtitle_chunk))}"
         # )
         user_prompt = f"Correct the following subtitles. Keep the original language, do not translate:\n<input_subtitle>{str(subtitle_chunk)}</input_subtitle>"
-        if self.summary_content:
+        if self.custom_prompt:
             user_prompt += (
-                f"\nReference content:\n<prompt>{self.summary_content}</prompt>"
+                f"\nReference content:\n<prompt>{self.custom_prompt}</prompt>"
             )
 
         # 检查缓存

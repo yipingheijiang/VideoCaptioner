@@ -143,10 +143,14 @@ TRANSLATE_PROMPT = """
 - 文化相关性：恰当运用成语、网络用语和文化适当的表达方式，使翻译内容更贴近目标受众的语言习惯和文化体验。
 - 严格保持字幕编号的一一对应，不要合并或拆分字幕！
 
+# 术语或要求:
+${custom_prompt}
+
 # Examples
 
 Input:
 ```json
+
 {
   "0": "Original Subtitle 1",
   "1": "Original Subtitle 2"
@@ -243,6 +247,8 @@ REFLECT_TRANSLATE_PROMPT = """
 
 ## Terms:
 - 在提供参考信息时，请注意翻译时参考相关术语词汇对应表
+
+${custom_prompt}
 
 Input format:
 A JSON structure where each subtitle is identified by a unique numeric key:

@@ -1,3 +1,4 @@
+import hashlib
 from string import Template
 from typing import Callable, Dict, Optional, List, Any, Union
 import logging
@@ -51,6 +52,7 @@ class BaseTranslator(ABC):
         retry_times: int = 1,
         timeout: int = 60,
         update_callback: Optional[Callable] = None,
+        custom_prompt: Optional[str] = None,
     ):
         self.thread_num = thread_num
         self.batch_num = batch_num
@@ -59,6 +61,7 @@ class BaseTranslator(ABC):
         self.timeout = timeout
         self.is_running = True
         self.update_callback = update_callback
+        self.custom_prompt = custom_prompt
         self._init_thread_pool()
         self.cache_manager = CacheManager(CACHE_PATH)
 
@@ -186,7 +189,7 @@ class OpenAITranslator(BaseTranslator):
         batch_num: int = 20,
         target_language: str = "Chinese",
         model: str = "gpt-4o-mini",
-        summary_content: str = "",
+        custom_prompt: str = "",
         is_reflect: bool = False,
         temperature: float = 0.7,
         timeout: int = 60,
@@ -204,7 +207,7 @@ class OpenAITranslator(BaseTranslator):
 
         self._init_client()
         self.model = model
-        self.summary_content = summary_content
+        self.custom_prompt = custom_prompt
         self.is_reflect = is_reflect
         self.temperature = temperature
 
@@ -228,11 +231,12 @@ class OpenAITranslator(BaseTranslator):
             prompt = REFLECT_TRANSLATE_PROMPT
         else:
             prompt = TRANSLATE_PROMPT
-        prompt = Template(prompt).safe_substitute(target_language=self.target_language)
+        prompt = Template(prompt).safe_substitute(
+            target_language=self.target_language, custom_prompt=self.custom_prompt
+        )
+        prompt_hash = hashlib.md5(prompt.encode()).hexdigest()
 
-        # 添加参考内容
-        # if self.summary_content:
-        #     prompt += f"\n参考内容：\n{self.summary_content}"
+        print(prompt)
 
         try:
             # 检查缓存
@@ -240,10 +244,9 @@ class OpenAITranslator(BaseTranslator):
                 "target_language": self.target_language,
                 "is_reflect": self.is_reflect,
                 "temperature": self.temperature,
+                "prompt_hash": prompt_hash,
             }
-            cache_key = (
-                f"{len(prompt)}_{json.dumps(subtitle_chunk, ensure_ascii=False)}"
-            )
+            cache_key = f"{json.dumps(subtitle_chunk, ensure_ascii=False)}"
             cache_result = self.cache_manager.get_llm_result(
                 cache_key,
                 self.model,
@@ -296,7 +299,7 @@ class OpenAITranslator(BaseTranslator):
         single_prompt = Template(SINGLE_TRANSLATE_PROMPT).safe_substitute(
             target_language=self.target_language
         )
-
+        prompt_hash = hashlib.md5(single_prompt.encode()).hexdigest()
         for idx, text in subtitle_chunk.items():
             try:
                 # 检查缓存
@@ -304,9 +307,10 @@ class OpenAITranslator(BaseTranslator):
                     "target_language": self.target_language,
                     "is_reflect": self.is_reflect,
                     "temperature": self.temperature,
+                    "prompt_hash": prompt_hash,
                 }
                 cache_result = self.cache_manager.get_llm_result(
-                    f"{len(single_prompt)}_{text}", self.model, **cache_params
+                    f"{text}", self.model, **cache_params
                 )
 
                 if cache_result:
@@ -325,7 +329,7 @@ class OpenAITranslator(BaseTranslator):
 
                 # 保存到缓存
                 self.cache_manager.set_llm_result(
-                    f"{len(single_prompt)}_{text}",
+                    f"{text}",
                     translated_text,
                     self.model,
                     **cache_params,
@@ -671,7 +675,7 @@ class TranslatorFactory:
         batch_num: int = 10,
         target_language: str = "Chinese",
         model: str = "gpt-4o-mini",
-        summary_content: str = "",
+        custom_prompt: str = "",
         temperature: float = 0.7,
         is_reflect: bool = False,
         update_callback: Optional[Callable] = None,
@@ -684,7 +688,7 @@ class TranslatorFactory:
                     batch_num=batch_num,
                     target_language=target_language,
                     model=model,
-                    summary_content=summary_content,
+                    custom_prompt=custom_prompt,
                     is_reflect=is_reflect,
                     temperature=temperature,
                     update_callback=update_callback,

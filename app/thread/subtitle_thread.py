@@ -91,7 +91,7 @@ class SubtitleThread(QThread):
 
     def run(self):
         try:
-            logger.info(f"\n===========字幕优化任务开始===========")
+            logger.info(f"\n===========字幕处理任务开始===========")
             logger.info(f"时间：{datetime.datetime.now()}")
 
             # 字幕文件路径检查、对断句字幕路径进行定义
@@ -155,7 +155,7 @@ class SubtitleThread(QThread):
                 self.update_all.emit(asr_data.to_json())
 
             # 3. 优化字幕
-            summarize_result = ""
+            custom_prompt = subtitle_config.custom_prompt_text
             self.subtitle_length = len(asr_data.segments)
 
             if subtitle_config.need_optimize:
@@ -163,7 +163,7 @@ class SubtitleThread(QThread):
                 logger.info("正在优化字幕...")
                 self.finished_subtitle_length = 0  # 重置计数器
                 optimizer = SubtitleOptimizer(
-                    summary_content=summarize_result,
+                    custom_prompt=custom_prompt,
                     model=subtitle_config.llm_model,
                     batch_num=subtitle_config.batch_size,
                     thread_num=subtitle_config.thread_num,
@@ -190,7 +190,7 @@ class SubtitleThread(QThread):
                     batch_num=subtitle_config.batch_size,
                     target_language=subtitle_config.target_language,
                     model=subtitle_config.llm_model,
-                    summary_content=summarize_result,
+                    custom_prompt=custom_prompt,
                     is_reflect=subtitle_config.need_reflect,
                     update_callback=self.callback,
                 )
