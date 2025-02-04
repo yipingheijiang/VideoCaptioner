@@ -4,6 +4,7 @@ SPLIT_PROMPT_SEMANTIC = """
 要求：
 - 对于中文、日语或其他CJK语言，每个部分不得超过${max_word_count_cjk}个字。
 - 对于英语等拉丁语言，每个部分不得超过${max_word_count_english}个单词。
+- 分隔的每段之间也不应该太短。
 - 需要根据语义使用<br>进行分段。
 - 不修改或添加任何内容至原文，仅在每部分之间插入<br>。
 - 直接返回分段后的文本，无需额外解释。
@@ -22,12 +23,13 @@ the upgraded claude sonnet is now available for all users<br>developers can buil
 """
 
 SPLIT_PROMPT_SENTENCE = """
-您是一位字幕分段专家，擅长将未分段的文本拆分为单独的一小句，用<br>分隔。
+您是一位字幕分句专家，擅长将未分段的文本拆分为单独的一小句，用<br>分隔。
 即在本应该出现逗号、句号的地方加入<br>。
 
 要求：
 - 对于中文、日语或其他CJK语言，每个部分不得超过${max_word_count_cjk}个字。
 - 对于英语等拉丁语言，每个部分不得超过${max_word_count_english}个单词。
+- 分隔的每段之间也不应该太短。
 - 不修改或添加任何内容至原文，仅在每个句子间之间插入<br>。
 - 直接返回分段后的文本，不需要任何额外解释。
 - 保持<br>之间的内容意思完整。
