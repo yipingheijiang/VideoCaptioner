@@ -44,27 +44,33 @@ class BaseASR:
     def run(self, callback=None, **kwargs) -> ASRData:
         if self.use_cache:
             cached_result = self.cache_manager.get_asr_result(
-                self.crc32_hex, self.__class__.__name__
+                self._get_key(), self.__class__.__name__
             )
             if cached_result:
                 segments = self._make_segments(cached_result)
+
                 return ASRData(segments)
 
         resp_data = self._run(callback, **kwargs)
 
         if self.use_cache:
             self.cache_manager.set_asr_result(
-                self.crc32_hex, self.__class__.__name__, resp_data
+                self._get_key(), self.__class__.__name__, resp_data
             )
 
         segments = self._make_segments(resp_data)
         return ASRData(segments)
 
+    def _get_key(self):
+        """获取缓存key"""
+        return self.crc32_hex
+
     def _make_segments(self, resp_data: dict) -> list[ASRDataSeg]:
+        """将响应数据转换为ASRDataSeg列表"""
         raise NotImplementedError(
             "_make_segments method must be implemented in subclass"
         )
 
     def _run(self, callback=None, **kwargs) -> dict:
-        """Run the ASR service and return the response data."""
+        """运行ASR服务并返回响应数据"""
         raise NotImplementedError("_run method must be implemented in subclass")
