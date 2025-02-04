@@ -7,7 +7,7 @@ from PyQt5.QtCore import QSettings, QThread, pyqtSignal
 
 from app.common.config import cfg
 from app.core.bk_asr.asr_data import ASRData
-from app.core.entities import SubtitleConfig, SubtitleTask, Task, TranslatorService
+from app.core.entities import SubtitleConfig, SubtitleTask, TranslatorServiceEnum
 from app.core.subtitle_processor.split import SubtitleSplitter
 from app.core.subtitle_processor.summarization import SubtitleSummarizer
 from app.core.subtitle_processor.optimize import SubtitleOptimizer
@@ -123,9 +123,9 @@ class SubtitleThread(QThread):
                         subtitle_config.need_translate
                         and subtitle_config.translator_service
                         not in [
-                            TranslatorService.DEEPLX,
-                            TranslatorService.BING,
-                            TranslatorService.GOOGLE,
+                            TranslatorServiceEnum.DEEPLX,
+                            TranslatorServiceEnum.BING,
+                            TranslatorServiceEnum.GOOGLE,
                         ]
                     )
                 )
@@ -174,10 +174,10 @@ class SubtitleThread(QThread):
 
             # 4. 翻译字幕
             translator_map = {
-                TranslatorService.OPENAI: TranslatorType.OPENAI,
-                TranslatorService.DEEPLX: TranslatorType.DEEPLX,
-                TranslatorService.BING: TranslatorType.BING,
-                TranslatorService.GOOGLE: TranslatorType.GOOGLE,
+                TranslatorServiceEnum.OPENAI: TranslatorType.OPENAI,
+                TranslatorServiceEnum.DEEPLX: TranslatorType.DEEPLX,
+                TranslatorServiceEnum.BING: TranslatorType.BING,
+                TranslatorServiceEnum.GOOGLE: TranslatorType.GOOGLE,
             }
             if subtitle_config.need_translate:
                 self.progress.emit(0, self.tr("翻译字幕..."))

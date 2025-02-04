@@ -27,11 +27,10 @@ from app.core.entities import (
     SupportedSubtitleFormats,
     SupportedVideoFormats,
     SynthesisTask,
-    Task,
 )
 from app.core.task_factory import TaskFactory
-from app.thread.create_task_thread import CreateTaskThread
 from app.thread.video_synthesis_thread import VideoSynthesisThread
+
 
 current_dir = Path(__file__).parent.parent
 SUBTITLE_STYLE_DIR = current_dir / "resource" / "subtitle_style"

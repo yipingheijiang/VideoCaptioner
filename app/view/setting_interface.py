@@ -25,7 +25,7 @@ from app.common.signal_bus import signalBus
 from app.components.EditComboBoxSettingCard import EditComboBoxSettingCard
 from app.components.LineEditSettingCard import LineEditSettingCard
 from app.config import AUTHOR, FEEDBACK_URL, HELP_URL, RELEASE_URL, VERSION, YEAR
-from app.core.entities import TranscribeModelEnum, TranslatorService
+from app.core.entities import TranscribeModelEnum, TranslatorServiceEnum
 from app.core.utils.test_opanai import get_openai_models, test_openai
 from app.thread.version_manager_thread import VersionManager
 from app.components.MySettingCard import ComboBoxSettingCard as MyComboBoxSettingCard
@@ -530,10 +530,10 @@ class SettingInterface(ScrollArea):
             card.setVisible(False)
 
         # 根据选择的服务显示相应的配置卡片
-        if service in [TranslatorService.DEEPLX.value]:
+        if service in [TranslatorServiceEnum.DEEPLX.value]:
             for card in deeplx_cards:
                 card.setVisible(True)
-        elif service in [TranslatorService.OPENAI.value]:
+        elif service in [TranslatorServiceEnum.OPENAI.value]:
             for card in openai_cards:
                 card.setVisible(True)
 

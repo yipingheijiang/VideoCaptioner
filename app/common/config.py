@@ -24,7 +24,7 @@ from ..core.entities import (
     TargetLanguageEnum,
     TranscribeModelEnum,
     TranscribeLanguageEnum,
-    TranslatorService,
+    TranslatorServiceEnum,
     WhisperModelEnum,
     FasterWhisperModelEnum,
     VadMethodEnum,
@@ -65,10 +65,10 @@ class Config(QConfig):
     # ------------------- 翻译配置 -------------------
     translator_service = OptionsConfigItem(
         "Translate",
-        "TranslatorService",
-        TranslatorService.OPENAI.value,
-        OptionsValidator(TranslatorService),
-        EnumSerializer(TranslatorService),
+        "TranslatorServiceEnum",
+        TranslatorServiceEnum.OPENAI.value,
+        OptionsValidator(TranslatorServiceEnum),
+        EnumSerializer(TranslatorServiceEnum),
     )
     api_key = ConfigItem("Translate", "API_Key", "")
     api_base = ConfigItem("Translate", "API_Base", "")
