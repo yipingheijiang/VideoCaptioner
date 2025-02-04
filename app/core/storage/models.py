@@ -13,11 +13,15 @@ class ASRCache(Base):
     __tablename__ = "asr_cache"
 
     id = Column(Integer, primary_key=True)
-    crc32_hex = Column(String(8), unique=True, nullable=False, index=True)
+    crc32_hex = Column(String(8), nullable=False, index=True)
     asr_type = Column(String(50), nullable=False)  # ASR服务类型
     result_data = Column(JSON, nullable=False)  # ASR结果数据
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index("idx_asr_cache_unique", "crc32_hex", "asr_type", unique=True),
+    )
 
 
 class TranslationCache(Base):
