@@ -71,9 +71,6 @@ class VideoSynthesisInterface(QWidget):
         self.synthesize_button = PrimaryPushButton(
             self.tr("开始合成"), self, icon=FIF.PLAY
         )
-        self.synthesize_button.clicked.connect(
-            lambda: self.start_video_synthesis(need_create_task=True)
-        )
         self.synthesize_button.setFixedHeight(34)
         top_layout.addWidget(self.synthesize_button)
 
@@ -211,7 +208,9 @@ class VideoSynthesisInterface(QWidget):
         self.video_button.clicked.connect(self.choose_video_file)
 
         # 合成和文件夹相关信号
-        self.synthesize_button.clicked.connect(self.start_video_synthesis)
+        self.synthesize_button.clicked.connect(
+            lambda: self.start_video_synthesis(need_create_task=True)
+        )
 
         # 全局 signalBus
         signalBus.soft_subtitle_changed.connect(self.on_soft_subtitle_changed)
@@ -282,7 +281,8 @@ class VideoSynthesisInterface(QWidget):
     def start_video_synthesis(self, need_create_task=True):
         self.synthesize_button.setEnabled(False)
         self.progress_bar.resume()
-
+        print("开始合成")
+        print(need_create_task)
         if need_create_task:
             self.task = self.create_task()
 
@@ -312,7 +312,6 @@ class VideoSynthesisInterface(QWidget):
             position=InfoBarPosition.TOP,
             parent=self,
         )
-        self.task.status = Task.Status.COMPLETED
 
     def on_video_synthesis_progress(self, progress, message):
         self.progress_bar.setValue(progress)
