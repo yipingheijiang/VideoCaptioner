@@ -83,7 +83,7 @@ class TranscribeModelEnum(Enum):
     WHISPER_API = "Whisper [API]"
 
 
-class TranslatorService(Enum):
+class TranslatorServiceEnum(Enum):
     """翻译器服务"""
 
     OPENAI = "OpenAI"
@@ -324,6 +324,25 @@ class TranscribeLanguageEnum(Enum):
     CANTONESE = "Cantonese"
 
 
+class WhisperModelEnum(Enum):
+    TINY = "tiny"
+    # BASE = "base"
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE_V1 = "large-v1"
+    LARGE_V2 = "large-v2"
+
+
+class FasterWhisperModelEnum(Enum):
+    TINY = "tiny"
+    BASE = "base"
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE_V1 = "large-v1"
+    LARGE_V2 = "large-v2"
+    LARGE_V3 = "large-v3"
+
+
 LANGUAGES = {
     "英语": "en",
     "中文": "zh",
@@ -456,112 +475,6 @@ class VideoInfo:
     thumbnail_path: str
 
 
-class WhisperModelEnum(Enum):
-    TINY = "tiny"
-    # BASE = "base"
-    SMALL = "small"
-    MEDIUM = "medium"
-    LARGE_V1 = "large-v1"
-    LARGE_V2 = "large-v2"
-
-
-class FasterWhisperModelEnum(Enum):
-    TINY = "tiny"
-    BASE = "base"
-    SMALL = "small"
-    MEDIUM = "medium"
-    LARGE_V1 = "large-v1"
-    LARGE_V2 = "large-v2"
-    LARGE_V3 = "large-v3"
-
-
-@dataclass
-class Task:
-    class Status(Enum):
-        """任务状态 (下载、转录、优化、翻译、生成)"""
-
-        PENDING = "待处理"
-        DOWNLOADING = "下载中"
-        TRANSCRIBING = "转录中"
-        OPTIMIZING = "优化中"
-        TRANSLATING = "翻译中"
-        GENERATING = "生成视频中"
-        COMPLETED = "已完成"
-        FAILED = "失败"
-        CANCELED = "已取消"
-
-    class Source(Enum):
-        FILE_IMPORT = "文件导入"
-        URL_IMPORT = "URL导入"
-
-    # 任务信息
-    id: int = field(default_factory=lambda: randint(0, 100_000_000))
-    queued_at: Optional[datetime.datetime] = None
-    started_at: Optional[datetime.datetime] = None
-    completed_at: Optional[datetime.datetime] = None
-    status: Status = Status.PENDING
-    fraction_downloaded: float = 0.0
-    work_dir: Optional[str] = None
-
-    # 初始输入
-    file_path: Optional[str] = None
-    url: Optional[str] = None
-    source: Source = Source.FILE_IMPORT
-    original_language: Optional[str] = None
-    target_language: Optional[str] = None
-    video_info: Optional[VideoInfo] = None
-
-    # 音频转换
-    audio_format: Optional[str] = "wav"
-    audio_save_path: Optional[str] = None
-
-    # 转录（转录模型）
-    transcribe_model: Optional[TranscribeModelEnum] = TranscribeModelEnum.JIANYING
-    transcribe_language: Optional[TranscribeLanguageEnum] = LANGUAGES[
-        TranscribeLanguageEnum.ENGLISH.value
-    ]
-    use_asr_cache: bool = True
-    need_word_time_stamp: bool = False
-    original_subtitle_save_path: Optional[str] = None
-    # Whisper Cpp 配置
-    whisper_model: Optional[WhisperModelEnum] = None
-    # Whisper API 配置
-    whisper_api_key: Optional[str] = None
-    whisper_api_base: Optional[str] = None
-    whisper_api_model: Optional[str] = None
-    whisper_api_prompt: Optional[str] = None
-    # Faster Whisper 配置
-    faster_whisper_model: Optional[FasterWhisperModelEnum] = None
-    faster_whisper_model_dir: Optional[str] = None
-    faster_whisper_device: str = "cuda"
-    faster_whisper_vad_filter: bool = True
-    faster_whisper_vad_threshold: float = 0.5
-    faster_whisper_vad_method: Optional[VadMethodEnum] = VadMethodEnum.SILERO_V3
-    faster_whisper_ff_mdx_kim2: bool = False
-    faster_whisper_one_word: bool = True
-    faster_whisper_prompt: Optional[str] = None
-
-    # 字幕 LLM（优化翻译模型）
-    base_url: Optional[str] = None
-    api_key: Optional[str] = None
-    llm_model: Optional[str] = None
-    need_translate: bool = False
-    need_optimize: bool = False
-    result_subtitle_save_path: Optional[str] = None
-    thread_num: int = 10
-    batch_size: int = 10
-    subtitle_layout: Optional[str] = None
-    max_word_count_cjk: int = 12
-    max_word_count_english: int = 18
-    need_split: bool = True
-
-    # 视频生成
-    need_video: bool = True
-    video_save_path: Optional[str] = None
-    soft_subtitle: bool = True
-    subtitle_style_srt: Optional[str] = None
-
-
 @dataclass
 class TranscribeConfig:
     """转录配置类"""
@@ -569,7 +482,7 @@ class TranscribeConfig:
     transcribe_model: Optional[TranscribeModelEnum] = None
     transcribe_language: str = ""
     use_asr_cache: bool = True
-    need_word_time_stamp: bool = False
+    need_word_time_stamp: bool = True
     # Whisper Cpp 配置
     whisper_model: Optional[WhisperModelEnum] = None
     # Whisper API 配置
@@ -600,7 +513,7 @@ class SubtitleConfig:
     llm_model: Optional[str] = None
     deeplx_endpoint: Optional[str] = None
     # 翻译服务
-    translator_service: Optional[TranslatorService] = None
+    translator_service: Optional[TranslatorServiceEnum] = None
     need_translate: bool = False
     need_optimize: bool = False
     need_reflect: bool = False
@@ -722,3 +635,27 @@ class FullProcessTask:
     transcribe_config: Optional[TranscribeConfig] = None
     subtitle_config: Optional[SubtitleConfig] = None
     synthesis_config: Optional[SynthesisConfig] = None
+
+
+class BatchTaskType(Enum):
+    """批量处理任务类型"""
+
+    TRANSCRIBE = "批量转录"
+    SUBTITLE = "批量字幕"
+    TRANS_SUB = "转录+字幕"
+    FULL_PROCESS = "全流程处理"
+
+    def __str__(self):
+        return self.value
+
+
+class BatchTaskStatus(Enum):
+    """批量处理任务状态"""
+
+    WAITING = "等待中"
+    RUNNING = "处理中"
+    COMPLETED = "已完成"
+    FAILED = "失败"
+
+    def __str__(self):
+        return self.value
