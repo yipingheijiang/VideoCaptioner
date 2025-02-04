@@ -317,6 +317,12 @@ class OpenAITranslator(BaseTranslator):
                 response = self._call_api(single_prompt, text)
                 translated_text = response.choices[0].message.content.strip()
 
+                # 删除 DeepSeek-R1 等推理模型的思考过程 #300
+                translated_text = re.sub(
+                    r"<think>.*?</think>", "", translated_text, flags=re.DOTALL
+                )
+                translated_text = translated_text.strip()
+
                 # 保存到缓存
                 self.cache_manager.set_llm_result(
                     f"{len(single_prompt)}_{text}",
