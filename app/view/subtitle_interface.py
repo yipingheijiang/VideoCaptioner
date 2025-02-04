@@ -76,7 +76,7 @@ class SubtitleTableModel(QAbstractTableModel):
         if not segment:
             return None
 
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             if col == 0:
                 return (
                     QTime(0, 0)
@@ -117,7 +117,7 @@ class SubtitleTableModel(QAbstractTableModel):
             else:
                 return False
 
-            self.dataChanged.emit(index, index)
+            self.dataChanged.emit(index, index, [Qt.DisplayRole, Qt.EditRole])
             return True
         return False
 
@@ -608,6 +608,7 @@ class SubtitleInterface(QWidget):
                     self.tr("导入成功"),
                     self.tr(f"成功导入") + os.path.basename(file_path),
                     duration=3000,
+                    position=InfoBarPosition.BOTTOM,
                     parent=self,
                 )
                 break
