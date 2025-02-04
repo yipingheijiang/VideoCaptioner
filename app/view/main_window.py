@@ -174,5 +174,4 @@ class MainWindow(FluentWindow):
         # 找到 FFmpeg 进程并关闭
         process = psutil.Process(os.getpid())
         for child in process.children(recursive=True):
-            print("child", child)
             child.kill()
