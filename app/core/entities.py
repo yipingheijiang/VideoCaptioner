@@ -528,6 +528,7 @@ class SubtitleConfig:
     target_language: Optional[TargetLanguageEnum] = None
     subtitle_style: Optional[str] = None
     need_remove_punctuation: bool = False
+    custom_prompt_text: Optional[str] = None
 
 
 @dataclass
