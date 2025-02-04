@@ -117,9 +117,8 @@ class BatchProcessThread(QThread):
             self.threads.remove(batch_task.current_thread)
 
     def _handle_transcribe_task(self, batch_task: BatchTask):
-        self.max_concurrent_tasks = 3
+        # self.max_concurrent_tasks = 3
         task = self.factory.create_transcribe_task(batch_task.file_path)
-        task.transcribe_config.need_word_time_stamp = False
         thread = TranscriptThread(task)
         batch_task.current_thread = thread
 
