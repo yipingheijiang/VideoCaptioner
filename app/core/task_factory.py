@@ -13,7 +13,6 @@ from app.core.entities import (
     SynthesisConfig,
     SynthesisTask,
     TranscribeConfig,
-    TranscribeModelEnum,
     TranscribeTask,
     TranscriptAndSubtitleTask,
 )
@@ -42,12 +41,30 @@ class TaskFactory:
         file_path: str, need_next_task: bool = False
     ) -> TranscribeTask:
         """创建转录任务"""
+
+        # 根据是否需要分段来决定是否需要词级时间戳
+        need_word_time_stamp = cfg.need_split.value if need_next_task else False
+
+        # 获取文件名
+        file_name = Path(file_path).stem
+
+        # 构建输出路径
+        if need_next_task:
+            output_path = str(
+                Path(cfg.work_dir.value)
+                / file_name
+                / "subtitle"
+                / f"【原始字幕】{file_name}-{cfg.transcribe_model.value}.srt"
+            )
+        else:
+            need_word_time_stamp = False
+            output_path = str(Path(file_path).parent / f"{file_name}.srt")
+
         config = TranscribeConfig(
             transcribe_model=cfg.transcribe_model.value,
             transcribe_language=LANGUAGES[cfg.transcribe_language.value.value],
             use_asr_cache=cfg.use_asr_cache.value,
-            need_word_time_stamp=cfg.transcribe_model.value
-            in [TranscribeModelEnum.JIANYING, TranscribeModelEnum.BIJIAN],
+            need_word_time_stamp=need_word_time_stamp,
             # Whisper Cpp 配置
             whisper_model=cfg.whisper_model.value,
             # Whisper API 配置
@@ -67,19 +84,6 @@ class TaskFactory:
             faster_whisper_one_word=cfg.faster_whisper_one_word.value,
             faster_whisper_prompt=cfg.faster_whisper_prompt.value,
         )
-        if need_next_task:
-            file_name = Path(file_path).stem
-            output_path = str(
-                Path(cfg.work_dir.value)
-                / file_name
-                / "subtitle"
-                / f"【原始字幕】{file_name}-{config.transcribe_model.value}.srt"
-            )
-        else:
-            output_path = str(
-                Path(file_path).parent
-                / f"【原始字幕】{Path(file_path).stem}-{config.transcribe_model.value}.srt"
-            )
 
         return TranscribeTask(
             queued_at=datetime.datetime.now(),
