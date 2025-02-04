@@ -374,6 +374,39 @@ class ASRData:
         # 删除下一个段
         del self.segments[index + 1]
 
+    def optimize_timing(self, threshold_ms: int = 1000) -> "ASRData":
+        """优化字幕显示时间，如果相邻字幕段之间的时间间隔小于阈值，
+        则将交界点设置为两段字幕的中间时间点
+
+        Args:
+            threshold_ms: 时间间隔阈值(毫秒)，默认800ms
+
+        Returns:
+            返回自身以支持链式调用
+        """
+        if self.is_word_timestamp():
+            return self
+
+        if not self.segments:
+            return self
+
+        for i in range(len(self.segments) - 1):
+            current_seg = self.segments[i]
+            next_seg = self.segments[i + 1]
+
+            # 计算时间间隔
+            time_gap = next_seg.start_time - current_seg.end_time
+
+            # 如果间隔小于阈值，将交界点设置为 3/4 时间点
+            if time_gap < threshold_ms:
+                mid_time = (
+                    current_seg.end_time + next_seg.start_time
+                ) // 2 + time_gap // 4
+                current_seg.end_time = mid_time
+                next_seg.start_time = mid_time
+
+        return self
+
     def __str__(self):
         return self.to_txt()
 

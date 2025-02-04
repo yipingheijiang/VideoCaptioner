@@ -82,7 +82,14 @@ def transcribe(audio_path: str, config: TranscribeConfig, callback=None) -> ASRD
 
     # 创建ASR实例并运行
     asr = asr_class(audio_path, **asr_args)
-    return asr.run(callback=callback)
+
+    asr_data = asr.run(callback=callback)
+
+    # 优化字幕显示时间 #161
+    if not config.need_word_time_stamp:
+        asr_data.optimize_timing()
+
+    return asr_data
 
 
 if __name__ == "__main__":
