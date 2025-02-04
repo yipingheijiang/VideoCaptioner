@@ -6,30 +6,53 @@ from urllib.parse import urlparse
 
 from PyQt5.QtCore import QStandardPaths, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
-                             QVBoxLayout, QWidget)
-from qfluentwidgets import (BodyLabel, FluentIcon, FluentStyleSheet,
-                            HyperlinkButton, InfoBar, InfoBarPosition,
-                            LineEdit, ProgressBar, PushButton, ToolButton)
+from PyQt5.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+from qfluentwidgets import (
+    BodyLabel,
+    FluentIcon,
+    FluentStyleSheet,
+    HyperlinkButton,
+    InfoBar,
+    InfoBarPosition,
+    LineEdit,
+    ProgressBar,
+    PushButton,
+    ToolButton,
+)
 
 from app.common.config import cfg
 from app.common.signal_bus import signalBus
 from app.components.LanguageSettingDialog import LanguageSettingDialog
-from app.components.SimpleSettingCard import (ComboBoxSimpleSettingCard,
-                                              SwitchButtonSimpleSettingCard)
+from app.components.SimpleSettingCard import (
+    ComboBoxSimpleSettingCard,
+    SwitchButtonSimpleSettingCard,
+)
 from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
-from app.core.entities import (SupportedAudioFormats, SupportedVideoFormats,
-                               TargetLanguageEnum, Task, TranscribeModelEnum)
-from app.thread.create_task_thread import CreateTaskThread
+from app.core.entities import (
+    SupportedAudioFormats,
+    SupportedVideoFormats,
+    TargetLanguageEnum,
+    TranscribeModelEnum,
+)
 from app.thread.video_download_thread import VideoDownloadThread
 from app.view.log_window import LogWindow
 
+
 LOGO_PATH = ASSETS_PATH / "logo.png"
+
 
 class TaskCreationInterface(QWidget):
     """
     任务创建界面类，用于创建和配置任务。
     """
+
     finished = pyqtSignal(str)  # 该信号用于在任务创建完成后通知主窗口
 
     def __init__(self, parent=None):
@@ -72,9 +95,9 @@ class TaskCreationInterface(QWidget):
             self.tr("转录模型"),
             self.tr("语音转换的模型"),
             [model.value for model in TranscribeModelEnum],
-            self
+            self,
         )
-        
+
         # 创建设置按钮
         self.whisper_setting_button = ToolButton(FluentIcon.SETTING)
         self.whisper_setting_button.setFixedSize(32, 32)
@@ -86,14 +109,14 @@ class TaskCreationInterface(QWidget):
         self.subtitle_optimization_card = SwitchButtonSimpleSettingCard(
             self.tr("字幕修正"),
             self.tr("使用AI大模型进行字幕修正（格式、错字、标点等）"),
-            self
+            self,
         )
 
         # 创建字幕修正+翻译卡片
         self.subtitle_translation_card = SwitchButtonSimpleSettingCard(
             self.tr("字幕修正+翻译"),
             self.tr("使用AI大模型进行字幕翻译（包含修正过程）"),
-            self
+            self,
         )
 
         # 创建目标语言卡片
@@ -101,9 +124,8 @@ class TaskCreationInterface(QWidget):
             self.tr("翻译目标语言"),
             self.tr("翻译的目标语言"),
             [model.value for model in TargetLanguageEnum],
-            self
+            self,
         )
-
 
         self.config_layout.addWidget(transcription_container)
         self.config_layout.addWidget(self.subtitle_optimization_card)
@@ -120,9 +142,7 @@ class TaskCreationInterface(QWidget):
         self.logo_label = QLabel(self)
         self.logo_pixmap = QPixmap(str(LOGO_PATH))
         self.logo_pixmap = self.logo_pixmap.scaled(
-            150, 150, 
-            Qt.KeepAspectRatio, 
-            Qt.SmoothTransformation
+            150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
 
         self.logo_label.setPixmap(self.logo_pixmap)
@@ -137,9 +157,15 @@ class TaskCreationInterface(QWidget):
         self.search_input.setPlaceholderText(self.tr("请拖拽文件或输入视频URL"))
         self.search_input.setFixedHeight(40)
         self.search_input.setClearButtonEnabled(True)
-        self.search_input.focusOutEvent = lambda e: super(LineEdit, self.search_input).focusOutEvent(e)
-        self.search_input.paintEvent = lambda e: super(LineEdit, self.search_input).paintEvent(e)
-        self.search_input.setStyleSheet(self.search_input.styleSheet() + """
+        self.search_input.focusOutEvent = lambda e: super(
+            LineEdit, self.search_input
+        ).focusOutEvent(e)
+        self.search_input.paintEvent = lambda e: super(
+            LineEdit, self.search_input
+        ).paintEvent(e)
+        self.search_input.setStyleSheet(
+            self.search_input.styleSheet()
+            + """
             QLineEdit {
                 border-radius: 18px;
                 padding: 0 20px;
@@ -150,10 +176,13 @@ class TaskCreationInterface(QWidget):
                 border: 1px solid rgba(47,141, 99, 0.48);
             }
             
-        """)
+        """
+        )
         self.start_button = ToolButton(FluentIcon.FOLDER, self)
         self.start_button.setFixedSize(40, 40)
-        self.start_button.setStyleSheet(self.start_button.styleSheet() + """
+        self.start_button.setStyleSheet(
+            self.start_button.styleSheet()
+            + """
             QToolButton {
                 border-radius: 20px;
                 background-color: #2F8D63;
@@ -164,7 +193,8 @@ class TaskCreationInterface(QWidget):
             QToolButton:pressed {
                 background-color: #2E905C;
             }
-        """)
+        """
+        )
         self.search_layout.addWidget(self.search_input)
         self.search_layout.addWidget(self.start_button)
         self.search_layout.setSpacing(10)
@@ -192,27 +222,32 @@ class TaskCreationInterface(QWidget):
         bottom_container = QWidget()
         bottom_layout = QHBoxLayout(bottom_container)
         bottom_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         # 创建日志按钮
         self.log_button = HyperlinkButton(url="", text=self.tr("查看日志"), parent=self)
-        self.log_button.setStyleSheet(self.log_button.styleSheet() + """
+        self.log_button.setStyleSheet(
+            self.log_button.styleSheet()
+            + """
             QPushButton {
                 font-size: 12px;
                 color: #2F8D63;
                 text-decoration: underline;
             }
-        """)
+        """
+        )
         # 添加版权信息标签
-        self.info_label = BodyLabel(self.tr(f"©VideoCaptioner {VERSION} • By Weifeng"), self)
+        self.info_label = BodyLabel(
+            self.tr(f"©VideoCaptioner {VERSION} • By Weifeng"), self
+        )
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("font-size: 12px; color: #888888;")
-        
+
         # 将组件添加到底部布局
         bottom_layout.addStretch()
         bottom_layout.addWidget(self.info_label)
         bottom_layout.addWidget(self.log_button)
         bottom_layout.addStretch()
-        
+
         self.main_layout.addStretch()
         self.main_layout.addWidget(bottom_container)
 
@@ -255,9 +290,12 @@ class TaskCreationInterface(QWidget):
         self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
         self.search_input.setText("")
         self.whisper_setting_button.setVisible(
-            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_CPP.value or
-            self.transcription_model_card.value() == TranscribeModelEnum.WHISPER_API.value or
-            self.transcription_model_card.value() == TranscribeModelEnum.FASTER_WHISPER.value
+            self.transcription_model_card.value()
+            == TranscribeModelEnum.WHISPER_CPP.value
+            or self.transcription_model_card.value()
+            == TranscribeModelEnum.WHISPER_API.value
+            or self.transcription_model_card.value()
+            == TranscribeModelEnum.FASTER_WHISPER.value
         )
         if cfg.api_base == "":
             InfoBar.warning(
@@ -265,18 +303,17 @@ class TaskCreationInterface(QWidget):
                 self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),
                 duration=6000,
                 parent=self,
-                position=InfoBarPosition.BOTTOM_RIGHT
-        )
+                position=InfoBarPosition.BOTTOM_RIGHT,
+            )
 
     def on_transcription_model_changed(self, value):
         """当转录模型改变时触发"""
         cfg.set(cfg.transcribe_model, TranscribeModelEnum(value))
         self.whisper_setting_button.setVisible(
-            value == TranscribeModelEnum.WHISPER_CPP.value or
-            value == TranscribeModelEnum.WHISPER_API.value or
-            value == TranscribeModelEnum.FASTER_WHISPER.value
+            value == TranscribeModelEnum.WHISPER_CPP.value
+            or value == TranscribeModelEnum.WHISPER_API.value
+            or value == TranscribeModelEnum.FASTER_WHISPER.value
         )
-
 
     def show_language_settings(self):
         dialog = LanguageSettingDialog(self.window())
@@ -286,7 +323,9 @@ class TaskCreationInterface(QWidget):
 
     def on_start_clicked(self):
         if self.start_button._icon == FluentIcon.FOLDER:
-            desktop_path = QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
+            desktop_path = QStandardPaths.writableLocation(
+                QStandardPaths.DesktopLocation
+            )
             file_dialog = QFileDialog()
 
             # 构建文件过滤器
@@ -294,15 +333,17 @@ class TaskCreationInterface(QWidget):
             audio_formats = " ".join(f"*.{fmt.value}" for fmt in SupportedAudioFormats)
             filter_str = f"{self.tr('媒体文件')} ({video_formats} {audio_formats});;{self.tr('视频文件')} ({video_formats});;{self.tr('音频文件')} ({audio_formats})"
 
-            file_path, _ = file_dialog.getOpenFileName(self, self.tr("选择媒体文件"), desktop_path, filter_str)
+            file_path, _ = file_dialog.getOpenFileName(
+                self, self.tr("选择媒体文件"), desktop_path, filter_str
+            )
             if file_path:
                 self.search_input.setText(file_path)
             return
-        
+
         need_language_settings = cfg.transcribe_model.value in [
-            TranscribeModelEnum.WHISPER_CPP, 
+            TranscribeModelEnum.WHISPER_CPP,
             TranscribeModelEnum.WHISPER_API,
-            TranscribeModelEnum.FASTER_WHISPER
+            TranscribeModelEnum.FASTER_WHISPER,
         ]
         if need_language_settings and not self.show_language_settings():
             return
@@ -327,8 +368,9 @@ class TaskCreationInterface(QWidget):
             file_ext = os.path.splitext(file_path)[1][1:].lower()
 
             # 检查文件格式是否支持
-            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {fmt.value for fmt in
-                                                                                SupportedAudioFormats}
+            supported_formats = {fmt.value for fmt in SupportedVideoFormats} | {
+                fmt.value for fmt in SupportedAudioFormats
+            }
             is_supported = file_ext in supported_formats
 
             if is_supported:
@@ -338,7 +380,7 @@ class TaskCreationInterface(QWidget):
                     self.tr("导入成功"),
                     self.tr("导入媒体文件成功"),
                     duration=1500,
-                    parent=self
+                    parent=self,
                 )
                 break
             else:
@@ -346,7 +388,7 @@ class TaskCreationInterface(QWidget):
                     self.tr(f"格式错误") + file_ext,
                     self.tr("不支持该文件格式"),
                     duration=3000,
-                    parent=self
+                    parent=self,
                 )
 
     def create_task(self):
@@ -360,19 +402,19 @@ class TaskCreationInterface(QWidget):
                 self.tr("错误"),
                 self.tr("请输入有效的文件路径或视频URL"),
                 duration=3000,
-                parent=self
+                parent=self,
             )
 
     def _is_valid_url(self, url):
         try:
             result = urlparse(url)
-            return result.scheme in ('http', 'https') and bool(result.netloc)
+            return result.scheme in ("http", "https") and bool(result.netloc)
         except ValueError:
             return False
 
     def _process_file(self, file_path):
         self.finished.emit(file_path)
-        
+
     def _process_url(self, url):
         # 检测 cookies.txt 文件
         cookiefile_path = APPDATA_PATH / "cookies.txt"
@@ -381,7 +423,7 @@ class TaskCreationInterface(QWidget):
                 self.tr("警告"),
                 self.tr("建议根据文档配置cookies.txt文件，以可以下载高清视频"),
                 duration=5000,
-                parent=self
+                parent=self,
             )
 
         # 创建视频下载线程
@@ -391,7 +433,9 @@ class TaskCreationInterface(QWidget):
         self.video_download_thread.error.connect(self.on_create_task_error)
         self.video_download_thread.start()
 
-        InfoBar.info(self.tr("开始下载"), self.tr("开始下载视频..."), duration=3000, parent=self)
+        InfoBar.info(
+            self.tr("开始下载"), self.tr("开始下载视频..."), duration=3000, parent=self
+        )
 
     def on_video_download_finished(self, video_file_path):
         """视频下载完成的回调函数"""
@@ -402,14 +446,11 @@ class TaskCreationInterface(QWidget):
                 self.tr("视频下载完成，开始自动处理..."),
                 duration=2000,
                 position=InfoBarPosition.BOTTOM,
-                parent=self.parent()
+                parent=self.parent(),
             )
         else:
             InfoBar.error(
-                self.tr("错误"),
-                self.tr("视频下载失败"),
-                duration=3000,
-                parent=self
+                self.tr("错误"), self.tr("视频下载失败"), duration=3000, parent=self
             )
 
     def on_create_task_progress(self, value, status):
@@ -419,12 +460,7 @@ class TaskCreationInterface(QWidget):
         self.status_label.setText(status)
 
     def on_create_task_error(self, error):
-        InfoBar.error(
-            self.tr("错误"),
-            self.tr(error),
-            duration=5000,
-            parent=self
-        )
+        InfoBar.error(self.tr("错误"), self.tr(error), duration=5000, parent=self)
 
     def set_task(self, task):
         self.task = task
@@ -446,7 +482,7 @@ class TaskCreationInterface(QWidget):
                 self.tr("错误"),
                 self.tr("请输入音视频文件路径或URL"),
                 duration=3000,
-                parent=self
+                parent=self,
             )
 
     def show_log_window(self):
@@ -458,8 +494,11 @@ class TaskCreationInterface(QWidget):
         else:
             self.log_window.activateWindow()
 
+
 if __name__ == "__main__":
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
