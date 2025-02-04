@@ -149,7 +149,6 @@ class BaseTranslator(ABC):
         """创建新的字幕段"""
         for i, seg in enumerate(original_segments, 1):
             try:
-                print(translated_dict[str(i)])
                 seg.translated_text = translated_dict[str(i)]  # 设置翻译文本
             except Exception as e:
                 logger.error(f"创建新的字幕段失败：{str(e)}")
@@ -265,7 +264,6 @@ class OpenAITranslator(BaseTranslator):
 
                 # 解析结果
                 result = json_repair.loads(response.choices[0].message.content)
-                print(result)
                 # 检查翻译结果数量是否匹配
                 if len(result) != len(subtitle_chunk):
                     logger.warning(f"翻译结果数量不匹配，将使用单条翻译模式重试")
@@ -449,7 +447,6 @@ class GoogleTranslator(BaseTranslator):
             except Exception as e:
                 logger.error(f"Google翻译失败 {idx}: {str(e)}")
                 result[idx] = "ERROR"
-        print(result)
         return result
 
 
@@ -591,7 +588,6 @@ class DeepLXTranslator(BaseTranslator):
         )
         self.session = requests.Session()
         self.endpoint = os.getenv("DEEPLX_ENDPOINT", "https://api.deeplx.org/translate")
-        print(self.endpoint)
         self.lang_map = {
             "简体中文": "zh",
             "繁体中文": "zh-TW",
@@ -644,7 +640,6 @@ class DeepLXTranslator(BaseTranslator):
                     },
                     timeout=self.timeout,
                 )
-                print(response.json())
                 response.raise_for_status()
                 translated_text = response.json()["data"]
 
