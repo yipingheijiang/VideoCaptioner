@@ -68,15 +68,19 @@ Mac 用户请自行使用下载源码和安装 python 依赖运行。（本地 W
 ```bash
 brew install ffmpeg
 brew install aria2
+brew install python@3.**
 ```
 
 2. 克隆项目
 ```bash
 git clone https://github.com/WEIFENG2333/VideoCaptioner.git
+cd VideoCaptioner
 ```
 
 3. 安装依赖
 ```bash
+python3.** -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
