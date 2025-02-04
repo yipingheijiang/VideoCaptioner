@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 import shutil
@@ -41,7 +42,7 @@ class FasterWhisperASR(BaseASR):
         max_comma_cent: int = 50,
         prompt: str = None,
     ):
-        super().__init__(audio_path, False)
+        super().__init__(audio_path, use_cache)
 
         # 基本参数
         self.model_path = whisper_model
@@ -71,6 +72,17 @@ class FasterWhisperASR(BaseASR):
         self.prompt = prompt
 
         self.process = None
+
+        if self.language in ["zh", "ja", "ko"]:
+            self.max_line_width = 30
+        else:
+            self.max_line_width = 90
+
+        if self.need_word_time_stamp:
+            self.one_word = 1
+        else:
+            self.one_word = 0
+            self.sentence = True
 
     def _build_command(self, audio_path: str) -> List[str]:
         """构建命令行参数"""
@@ -150,6 +162,9 @@ class FasterWhisperASR(BaseASR):
         # 提示词
         if self.prompt:
             cmd.extend(["--prompt", self.prompt])
+
+        # 完成的提示音
+        cmd.extend(["--beep_off"])
 
         return cmd
 
@@ -240,4 +255,7 @@ class FasterWhisperASR(BaseASR):
             return output_path.read_text(encoding="utf-8")
 
     def _get_key(self):
-        return f"{self.__class__.__name__}-{self.crc32_hex}-{self.need_word_time_stamp}-{self.model_path}-{self.language}"
+        """获取缓存key"""
+        cmd = self._build_command("")
+        cmd_hash = hashlib.md5(str(cmd).encode()).hexdigest()
+        return f"{self.crc32_hex}-{cmd_hash}"
