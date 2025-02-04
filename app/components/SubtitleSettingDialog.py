@@ -20,7 +20,7 @@ class SubtitleSettingDialog(MessageBoxBase):
         self.split_card = SwitchSettingCard(
             FIF.ALIGNMENT,
             self.tr("字幕分割"),
-            self.tr("是否对字幕智能分割（仅针对导入字幕有效）"),
+            self.tr("字幕是否使用大语言模型进行智能断句"),
             cfg.need_split,
             self,
         )
@@ -29,7 +29,7 @@ class SubtitleSettingDialog(MessageBoxBase):
             cfg.split_type,
             FIF.TILES,
             self.tr("字幕分割类型"),
-            self.tr("按句子幕或者按语义对字幕进行断句"),
+            self.tr("根据句子或者根据语义对字幕进行断句"),
             texts=[model.value for model in cfg.split_type.validator.options],
             parent=self,
         )
@@ -40,7 +40,7 @@ class SubtitleSettingDialog(MessageBoxBase):
             self.tr("中文最大字数"),
             self.tr("单条字幕的最大字数 (对于中日韩等字符)"),
             minimum=8,
-            maximum=40,
+            maximum=50,
             parent=self,
         )
 
@@ -50,7 +50,7 @@ class SubtitleSettingDialog(MessageBoxBase):
             self.tr("英文最大单词数"),
             self.tr("单条字幕的最大单词数 (英文)"),
             minimum=8,
-            maximum=40,
+            maximum=50,
             parent=self,
         )
 

@@ -173,10 +173,10 @@ class Config(QConfig):
         EnumSerializer(TargetLanguageEnum),
     )
     max_word_count_cjk = ConfigItem(
-        "Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 50)
+        "Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 100)
     )
     max_word_count_english = ConfigItem(
-        "Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 50)
+        "Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 100)
     )
     needs_remove_punctuation = ConfigItem(
         "Subtitle", "NeedsRemovePunctuation", False, BoolValidator()
