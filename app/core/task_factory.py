@@ -43,13 +43,13 @@ class TaskFactory:
         """创建转录任务"""
 
         # 根据是否需要分段来决定是否需要词级时间戳
-        need_word_time_stamp = cfg.need_split.value if need_next_task else False
 
         # 获取文件名
         file_name = Path(file_path).stem
 
         # 构建输出路径
         if need_next_task:
+            need_word_time_stamp = cfg.need_split.value
             output_path = str(
                 Path(cfg.work_dir.value)
                 / file_name
@@ -66,7 +66,7 @@ class TaskFactory:
             use_asr_cache=cfg.use_asr_cache.value,
             need_word_time_stamp=need_word_time_stamp,
             # Whisper Cpp 配置
-            whisper_model=cfg.whisper_model.value,
+            whisper_model=cfg.whisper_model.value.value,
             # Whisper API 配置
             whisper_api_key=cfg.whisper_api_key.value,
             whisper_api_base=cfg.whisper_api_base.value,
