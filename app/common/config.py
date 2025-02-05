@@ -109,7 +109,9 @@ class Config(QConfig):
 
     # 公益模型
     public_model = ConfigItem("LLM", "Public_Model", "gpt-4o-mini")
-    public_api_key = ConfigItem("LLM", "Public_API_Key", "ssb")
+    public_api_key = ConfigItem(
+        "LLM", "Public_API_Key", "please-do-not-use-for-personal-purposes"
+    )
     public_api_base = ConfigItem("LLM", "Public_API_Base", "https://ddg.bkfeng.top/v1")
 
     # ------------------- 翻译配置 -------------------
@@ -120,9 +122,6 @@ class Config(QConfig):
         OptionsValidator(TranslatorServiceEnum),
         EnumSerializer(TranslatorServiceEnum),
     )
-    # api_key = ConfigItem("Translate", "API_Key", "")
-    # api_base = ConfigItem("Translate", "API_Base", "")
-    # model = ConfigItem("Translate", "LLM_Model", "gpt-4o-mini")
     need_reflect_translate = ConfigItem(
         "Translate", "NeedReflectTranslate", False, BoolValidator()
     )
@@ -134,7 +133,7 @@ class Config(QConfig):
     transcribe_model = OptionsConfigItem(
         "Transcribe",
         "TranscribeModel",
-        TranscribeModelEnum.JIANYING.value,
+        TranscribeModelEnum.BIJIAN.value,
         OptionsValidator(TranscribeModelEnum),
         EnumSerializer(TranscribeModelEnum),
     )
@@ -223,18 +222,18 @@ class Config(QConfig):
         EnumSerializer(TargetLanguageEnum),
     )
     max_word_count_cjk = ConfigItem(
-        "Subtitle", "MaxWordCountCJK", 18, RangeValidator(8, 100)
+        "Subtitle", "MaxWordCountCJK", 25, RangeValidator(8, 100)
     )
     max_word_count_english = ConfigItem(
-        "Subtitle", "MaxWordCountEnglish", 12, RangeValidator(8, 100)
+        "Subtitle", "MaxWordCountEnglish", 20, RangeValidator(8, 100)
     )
     needs_remove_punctuation = ConfigItem(
-        "Subtitle", "NeedsRemovePunctuation", False, BoolValidator()
+        "Subtitle", "NeedsRemovePunctuation", True, BoolValidator()
     )
     custom_prompt_text = ConfigItem("Subtitle", "CustomPromptText", "")
 
     # ------------------- 字幕合成配置 -------------------
-    soft_subtitle = ConfigItem("Video", "SoftSubtitle", True, BoolValidator())
+    soft_subtitle = ConfigItem("Video", "SoftSubtitle", False, BoolValidator())
     need_video = ConfigItem("Video", "NeedVideo", True, BoolValidator())
 
     # ------------------- 字幕样式配置 -------------------
