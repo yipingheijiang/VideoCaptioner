@@ -54,7 +54,7 @@ DEFAULT_THUMBNAIL_PATH = RESOURCE_PATH / "assets" / "default_thumbnail.jpg"
 
 
 class VideoInfoCard(CardWidget):
-    finished = pyqtSignal()
+    finished = pyqtSignal(TranscribeTask)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -248,7 +248,7 @@ class VideoInfoCard(CardWidget):
         """转录完成处理"""
         self.start_button.setEnabled(True)
         self.start_button.setText(self.tr("转录完成"))
-        self.finished.emit()
+        self.finished.emit(task)
 
     def reset_ui(self):
         """重置UI状态"""
@@ -368,10 +368,11 @@ class TranscriptionInterface(QWidget):
                 cfg.set(cfg.transcribe_model, model)
                 break
 
-    def _on_transcript_finished(self):
+    def _on_transcript_finished(self, task: TranscribeTask):
         """转录完成处理"""
-        if self.task.need_next_task:
-            self.finished.emit(self.task.output_path, self.task.file_path)
+        if task.need_next_task:
+            self.finished.emit(task.output_path, task.file_path)
+
             InfoBar.success(
                 self.tr("转录完成"),
                 self.tr("开始字幕优化..."),
