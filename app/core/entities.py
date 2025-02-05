@@ -73,6 +73,18 @@ class OutputSubtitleFormatEnum(Enum):
     TXT = "txt"
 
 
+class LLMServiceEnum(Enum):
+    """LLM服务"""
+
+    OPENAI = "OpenAI"
+    SILICON_CLOUD = "SiliconCloud"
+    DEEPSEEK = "DeepSeek"
+    OLLAMA = "Ollama"
+    GEMINI = "Gemini"
+    CHATGLM = "ChatGLM"
+    PUBLIC = "Public"
+
+
 class TranscribeModelEnum(Enum):
     """转录模型"""
 

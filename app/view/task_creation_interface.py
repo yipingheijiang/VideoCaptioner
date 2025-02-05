@@ -26,6 +26,7 @@ from qfluentwidgets import (
     PushButton,
     ToolButton,
 )
+from websockets import serve
 
 from app.common.config import cfg
 from app.common.signal_bus import signalBus
@@ -36,6 +37,7 @@ from app.components.SimpleSettingCard import (
 )
 from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
 from app.core.entities import (
+    LLMServiceEnum,
     SupportedAudioFormats,
     SupportedVideoFormats,
     TargetLanguageEnum,
@@ -297,7 +299,11 @@ class TaskCreationInterface(QWidget):
             or self.transcription_model_card.value()
             == TranscribeModelEnum.FASTER_WHISPER.value
         )
-        if cfg.api_base == "":
+        # 根据当前选择的LLM服务获取对应的配置
+        current_service = cfg.llm_service.value
+        print(current_service)
+        print(LLMServiceEnum.PUBLIC)
+        if current_service == LLMServiceEnum.PUBLIC:
             InfoBar.warning(
                 self.tr("警告"),
                 self.tr("为确保字幕修正的准确性，建议到设置中配置自己的API"),

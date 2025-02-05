@@ -7,6 +7,7 @@ from app.config import MODEL_PATH, SUBTITLE_STYLE_PATH
 from app.core.entities import (
     LANGUAGES,
     FullProcessTask,
+    LLMServiceEnum,
     SplitTypeEnum,
     SubtitleConfig,
     SubtitleTask,
@@ -119,11 +120,42 @@ class TaskFactory:
         else:
             split_type = "semantic"
 
+        # 根据当前选择的LLM服务获取对应的配置
+        current_service = cfg.llm_service.value
+        if current_service == LLMServiceEnum.OPENAI:
+            base_url = cfg.openai_api_base.value
+            api_key = cfg.openai_api_key.value
+            llm_model = cfg.openai_model.value
+        elif current_service == LLMServiceEnum.SILICON_CLOUD:
+            base_url = cfg.silicon_cloud_api_base.value
+            api_key = cfg.silicon_cloud_api_key.value
+            llm_model = cfg.silicon_cloud_model.value
+        elif current_service == LLMServiceEnum.DEEPSEEK:
+            base_url = cfg.deepseek_api_base.value
+            api_key = cfg.deepseek_api_key.value
+            llm_model = cfg.deepseek_model.value
+        elif current_service == LLMServiceEnum.OLLAMA:
+            base_url = cfg.ollama_api_base.value
+            api_key = cfg.ollama_api_key.value
+            llm_model = cfg.ollama_model.value
+        elif current_service == LLMServiceEnum.GEMINI:
+            base_url = cfg.gemini_api_base.value
+            api_key = cfg.gemini_api_key.value
+            llm_model = cfg.gemini_model.value
+        elif current_service == LLMServiceEnum.CHATGLM:
+            base_url = cfg.chatglm_api_base.value
+            api_key = cfg.chatglm_api_key.value
+            llm_model = cfg.chatglm_model.value
+        else:
+            base_url = ""
+            api_key = ""
+            llm_model = ""
+
         config = SubtitleConfig(
             # 翻译配置
-            base_url=cfg.api_base.value,
-            api_key=cfg.api_key.value,
-            llm_model=cfg.model.value,
+            base_url=base_url,
+            api_key=api_key,
+            llm_model=llm_model,
             deeplx_endpoint=cfg.deeplx_endpoint.value,
             # 翻译服务
             translator_service=cfg.translator_service.value,

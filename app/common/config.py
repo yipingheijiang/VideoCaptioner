@@ -3,6 +3,7 @@ from enum import Enum
 
 from PyQt5.QtCore import QLocale
 from PyQt5.QtGui import QColor
+import openai
 from qfluentwidgets import (
     qconfig,
     QConfig,
@@ -20,6 +21,7 @@ from qfluentwidgets import (
 
 from app.config import WORK_PATH, SETTINGS_PATH
 from ..core.entities import (
+    LLMServiceEnum,
     SplitTypeEnum,
     TargetLanguageEnum,
     TranscribeModelEnum,
@@ -62,6 +64,54 @@ class LanguageSerializer(ConfigSerializer):
 class Config(QConfig):
     """应用配置"""
 
+    # LLM配置
+    llm_service = OptionsConfigItem(
+        "LLM",
+        "LLMService",
+        LLMServiceEnum.OPENAI.value,
+        OptionsValidator(LLMServiceEnum),
+        EnumSerializer(LLMServiceEnum),
+    )
+
+    openai_model = ConfigItem("LLM", "OpenAI_Model", "gpt-4o-mini")
+    openai_api_key = ConfigItem("LLM", "OpenAI_API_Key", "")
+    openai_api_base = ConfigItem("LLM", "OpenAI_API_Base", "https://api.openai.com/v1")
+
+    silicon_cloud_model = ConfigItem("LLM", "SiliconCloud_Model", "gpt-4o-mini")
+    silicon_cloud_api_key = ConfigItem("LLM", "SiliconCloud_API_Key", "")
+    silicon_cloud_api_base = ConfigItem(
+        "LLM", "SiliconCloud_API_Base", "https://api.siliconflow.cn/v1"
+    )
+
+    deepseek_model = ConfigItem("LLM", "DeepSeek_Model", "deepseek-chat")
+    deepseek_api_key = ConfigItem("LLM", "DeepSeek_API_Key", "")
+    deepseek_api_base = ConfigItem(
+        "LLM", "DeepSeek_API_Base", "https://api.deepseek.com/v1"
+    )
+
+    ollama_model = ConfigItem("LLM", "Ollama_Model", "llama2")
+    ollama_api_key = ConfigItem("LLM", "Ollama_API_Key", "")
+    ollama_api_base = ConfigItem("LLM", "Ollama_API_Base", "http://localhost:11434/v1")
+
+    gemini_model = ConfigItem("LLM", "Gemini_Model", "gemini-pro")
+    gemini_api_key = ConfigItem("LLM", "Gemini_API_Key", "")
+    gemini_api_base = ConfigItem(
+        "LLM",
+        "Gemini_API_Base",
+        "https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
+
+    chatglm_model = ConfigItem("LLM", "ChatGLM_Model", "glm-4")
+    chatglm_api_key = ConfigItem("LLM", "ChatGLM_API_Key", "")
+    chatglm_api_base = ConfigItem(
+        "LLM", "ChatGLM_API_Base", "https://open.bigmodel.cn/api/paas/v4"
+    )
+
+    # 公益模型
+    public_model = ConfigItem("LLM", "Public_Model", "gpt-4o-mini")
+    public_api_key = ConfigItem("LLM", "Public_API_Key", "ssb")
+    public_api_base = ConfigItem("LLM", "Public_API_Base", "https://ddg.bkfeng.top/v1")
+
     # ------------------- 翻译配置 -------------------
     translator_service = OptionsConfigItem(
         "Translate",
@@ -70,9 +120,9 @@ class Config(QConfig):
         OptionsValidator(TranslatorServiceEnum),
         EnumSerializer(TranslatorServiceEnum),
     )
-    api_key = ConfigItem("Translate", "API_Key", "")
-    api_base = ConfigItem("Translate", "API_Base", "")
-    model = ConfigItem("Translate", "LLM_Model", "gpt-4o-mini")
+    # api_key = ConfigItem("Translate", "API_Key", "")
+    # api_base = ConfigItem("Translate", "API_Base", "")
+    # model = ConfigItem("Translate", "LLM_Model", "gpt-4o-mini")
     need_reflect_translate = ConfigItem(
         "Translate", "NeedReflectTranslate", False, BoolValidator()
     )
