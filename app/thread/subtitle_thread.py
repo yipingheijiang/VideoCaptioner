@@ -185,6 +185,20 @@ class SubtitleThread(QThread):
                 if subtitle_config.need_remove_punctuation:
                     asr_data.remove_punctuation()
                 self.update_all.emit(asr_data.to_json())
+                # 保存翻译结果(单语、双语)
+                print(self.task.need_next_task)
+                if self.task.need_next_task and self.task.video_path:
+                    for subtitle_layout in ["原文在上", "译文在上", "仅原文", "仅译文"]:
+                        save_path = str(
+                            Path(self.task.subtitle_path).parent
+                            / f"{Path(self.task.video_path).stem}-{subtitle_layout}.srt"
+                        )
+                        asr_data.save(
+                            save_path=save_path,
+                            ass_style=subtitle_config.subtitle_style,
+                            layout=subtitle_layout,
+                        )
+                        print(f"字幕保存到 {save_path}")
 
             # 5. 保存字幕
             asr_data.save(
@@ -196,13 +210,22 @@ class SubtitleThread(QThread):
 
             # 6. 文件移动与清理
             if self.task.need_next_task and self.task.video_path:
-                # 保存srt文件到视频目录（对于全流程任务）
+                # 保存srt/ass文件到视频目录（对于全流程任务）
                 save_srt_path = (
                     Path(self.task.video_path).parent
                     / f"{Path(self.task.video_path).stem}.srt"
                 )
                 asr_data.to_srt(
                     save_path=str(save_srt_path), layout=subtitle_config.subtitle_layout
+                )
+                save_ass_path = (
+                    Path(self.task.video_path).parent
+                    / f"{Path(self.task.video_path).stem}.ass"
+                )
+                asr_data.to_ass(
+                    save_path=str(save_ass_path),
+                    layout=subtitle_config.subtitle_layout,
+                    style_str=subtitle_config.subtitle_style,
                 )
             else:
                 # 删除断句文件（对于仅字幕任务）
@@ -220,29 +243,6 @@ class SubtitleThread(QThread):
             logger.exception(f"优化失败: {str(e)}")
             self.error.emit(str(e))
             self.progress.emit(100, self.tr("优化失败"))
-
-    # def set_limit(self):
-    #     self.settings = QSettings(
-    #         QSettings.IniFormat, QSettings.UserScope, "VideoCaptioner", "VideoCaptioner"
-    #     )
-    #     current_date = time.strftime("%Y-%m-%d")
-    #     last_date = self.settings.value("llm/last_date", "")
-    #     if current_date != last_date:
-    #         self.settings.setValue("llm/last_date", current_date)
-    #         self.settings.setValue("llm/daily_calls", 0)
-    #         self.settings.sync()  # 强制写入
-
-    # def valid_limit(self):
-    #     self.settings = QSettings(
-    #         QSettings.IniFormat, QSettings.UserScope, "VideoCaptioner", "VideoCaptioner"
-    #     )
-    #     daily_calls = int(self.settings.value("llm/daily_calls", 0))
-    #     if daily_calls >= self.MAX_DAILY_LLM_CALLS:
-    #         return False
-    #     self.settings.setValue("llm/daily_calls", daily_calls + 1)
-    #     self.settings.sync()  # 强制写入
-    #     print(self.settings.value("llm/daily_calls", 0))
-    #     return True
 
     def callback(self, result: Dict):
         self.finished_subtitle_length += len(result)
