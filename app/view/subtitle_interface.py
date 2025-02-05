@@ -773,7 +773,7 @@ class SubtitleInterface(QWidget):
         InfoBar.success(
             self.tr("合并成功"),
             self.tr("已成功合并选中的字幕行"),
-            duration=3000,
+            duration=1000,
             parent=self,
         )
 
@@ -842,12 +842,22 @@ class PromptDialog(MessageBoxBase):
         # 添加文本编辑框
         self.text_edit = TextEdit(self)
         self.text_edit.setPlaceholderText(
-            self.tr("请输入文稿提示（优化字幕或者翻译字幕的提示参考）")
+            self.tr(
+                "请输入文稿提示（辅助校正字幕和翻译）\n\n"
+                "支持以下内容:\n"
+                "1. 术语表 - 专业术语、人名、特定词语的修正对照表\n"
+                "示例:\n机器学习->Machine Learning\n马斯克->Elon Musk\n打call->应援\n\n"
+                "2. 原字幕文稿 - 视频的原有文稿或相关内容\n"
+                "示例: 完整的演讲稿、课程讲义等\n\n"
+                "3. 修正要求 - 内容相关的具体修正要求\n"
+                "示例: 统一人称代词、规范专业术语等\n\n"
+                "注意: 使用小型LLM模型时建议控制文稿在1千字内。对于不同字幕文件,请使用与该字幕相关的文稿提示。"
+            )
         )
         self.text_edit.setText(cfg.custom_prompt_text.value)
 
-        self.text_edit.setMinimumWidth(400)
-        self.text_edit.setMinimumHeight(200)
+        self.text_edit.setMinimumWidth(420)
+        self.text_edit.setMinimumHeight(380)
 
         # 添加到布局
         self.viewLayout.addWidget(self.titleLabel)
