@@ -62,6 +62,7 @@ class VideoInfoCard(CardWidget):
         self.setup_signals()
         self.task = None
         self.video_info = None
+        self.transcription_interface = parent
 
     def setup_ui(self):
         self.setFixedHeight(150)
@@ -152,7 +153,10 @@ class VideoInfoCard(CardWidget):
         self.file_size_info.setText(self.tr("大小: ") + f"{file_size_mb:.1f} MB")
         duration = datetime.timedelta(seconds=int(video_info.duration_seconds))
         self.duration_info.setText(self.tr("时长: ") + f"{duration}")
-        self.start_button.setDisabled(False)
+        if self.transcription_interface and self.transcription_interface.is_processing:
+            self.start_button.setEnabled(False)
+        else:
+            self.start_button.setEnabled(True)
         self.update_thumbnail(video_info.thumbnail_path)
 
     def update_thumbnail(self, thumbnail_path):
@@ -216,6 +220,7 @@ class VideoInfoCard(CardWidget):
 
     def start_transcription(self, need_create_task=True):
         """开始转录过程"""
+        self.transcription_interface.is_processing = True
         self.start_button.setEnabled(False)
 
         if need_create_task:
@@ -276,6 +281,7 @@ class TranscriptionInterface(QWidget):
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setAcceptDrops(True)
         self.task = None
+        self.is_processing = False
 
         self._init_ui()
         self._setup_signals()
@@ -370,6 +376,7 @@ class TranscriptionInterface(QWidget):
 
     def _on_transcript_finished(self, task: TranscribeTask):
         """转录完成处理"""
+        self.is_processing = False
         if task.need_next_task:
             self.finished.emit(task.output_path, task.file_path)
 
@@ -405,6 +412,7 @@ class TranscriptionInterface(QWidget):
 
     def _on_video_info_error(self, error_msg):
         """处理视频信息提取错误"""
+        self.is_processing = False
         InfoBar.error(self.tr("错误"), self.tr(error_msg), duration=3000, parent=self)
 
     def set_task(self, task: TranscribeTask):
@@ -415,6 +423,7 @@ class TranscriptionInterface(QWidget):
 
     def process(self):
         """主处理函数"""
+        self.is_processing = True
         self.video_info_card.start_transcription(need_create_task=False)
 
     def dragEnterEvent(self, event):
@@ -423,6 +432,16 @@ class TranscriptionInterface(QWidget):
 
     def dropEvent(self, event):
         """拖拽放下事件处理"""
+        if self.is_processing:
+
+            InfoBar.warning(
+                self.tr("警告"),
+                self.tr("正在处理中，请等待当前任务完成"),
+                duration=3000,
+                parent=self,
+            )
+            return
+
         files = [u.toLocalFile() for u in event.mimeData().urls()]
         for file_path in files:
             if not os.path.isfile(file_path):
