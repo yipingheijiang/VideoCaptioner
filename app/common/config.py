@@ -182,7 +182,7 @@ class Config(QConfig):
     faster_whisper_vad_method = OptionsConfigItem(
         "FasterWhisper",
         "VadMethod",
-        VadMethodEnum.SILERO_V3.value,
+        VadMethodEnum.SILERO_V4_FW.value,
         OptionsValidator(VadMethodEnum),
         EnumSerializer(VadMethodEnum),
     )
