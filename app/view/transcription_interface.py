@@ -321,7 +321,7 @@ class TranscriptionInterface(QWidget):
             self.tr("转录模型"), self, FluentIcon.SETTING
         )
         self.model_button.setFixedHeight(34)
-        self.model_button.setMinimumWidth(160)
+        self.model_button.setMinimumWidth(180)
 
         self.model_menu = RoundMenu(parent=self)
         for model in TranscribeModelEnum:
