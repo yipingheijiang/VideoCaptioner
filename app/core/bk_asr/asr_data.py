@@ -159,9 +159,17 @@ class ASRData:
     def save(
         self, save_path: str, ass_style: str = None, layout: str = "原文在上"
     ) -> None:
-        """Save the ASRData to a file"""
+        """
+        Save the ASRData to a file
+
+        Args:
+            save_path: 保存路径
+            ass_style: ASS样式字符串,为空则使用默认样式
+            layout: 字幕布局,可选值["原文在上", "译文在上", "仅原文", "仅译文"]
+        """
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         if save_path.endswith(".srt"):
+
             self.to_srt(save_path=save_path, layout=layout)
         elif save_path.endswith(".txt"):
             self.to_txt(save_path=save_path, layout=layout)
