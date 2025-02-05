@@ -127,6 +127,13 @@ FASTER_WHISPER_MODELS = [
         "downloadLink": "https://huggingface.co/Systran/faster-whisper-large-v3",
         "modelScopeLink": "pengzhendong/faster-whisper-large-v3",
     },
+    {
+        "label": "Large-v3-turbo",
+        "value": "faster-whisper-large-v3-turbo",
+        "size": "1720320",
+        "downloadLink": "https://huggingface.co/Systran/faster-whisper-large-v3-turbo",
+        "modelScopeLink": "pengzhendong/faster-whisper-large-v3-turbo",
+    },
 ]
 
 
