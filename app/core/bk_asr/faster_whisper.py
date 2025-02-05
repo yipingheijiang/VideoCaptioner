@@ -129,6 +129,8 @@ class FasterWhisperASR(BaseASR):
             )
             if self.vad_method:
                 cmd.extend(["--vad_method", self.vad_method])
+        else:
+            cmd.extend(["--vad_filter", "false"])
 
         # 人声分离
         if self.ff_mdx_kim2 and self.faster_whisper_program.startswith(
