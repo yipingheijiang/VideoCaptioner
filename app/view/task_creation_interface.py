@@ -301,8 +301,6 @@ class TaskCreationInterface(QWidget):
         )
         # 根据当前选择的LLM服务获取对应的配置
         current_service = cfg.llm_service.value
-        print(current_service)
-        print(LLMServiceEnum.PUBLIC)
         if current_service == LLMServiceEnum.PUBLIC:
             InfoBar.warning(
                 self.tr("警告"),

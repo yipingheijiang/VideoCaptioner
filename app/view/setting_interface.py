@@ -736,7 +736,6 @@ class LLMConnectionThread(QThread):
         try:
             is_success, message = test_openai(self.api_base, self.api_key, self.model)
             models = get_openai_models(self.api_base, self.api_key)
-            print(models)
             self.finished.emit(is_success, message, models)
         except Exception as e:
             self.error.emit(str(e))
