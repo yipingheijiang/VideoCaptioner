@@ -330,6 +330,29 @@ def split_asr_data(asr_data: ASRData, num_segments: int) -> List[ASRData]:
     return segments
 
 
+def needs_space(char: str) -> bool:
+    """
+    判断字符是否属于需要空格的语言系统
+    """
+    # 拉丁字母（包括扩展）
+    if re.match(r"[a-zA-Z0-9\u0080-\u024F]", char):
+        return True
+    # 西里尔字母
+    if re.match(r"[\u0400-\u04FF]", char):
+        return True
+    # 希腊字母
+    if re.match(r"[\u0370-\u03FF]", char):
+        return True
+    # 亚美尼亚字母
+    if re.match(r"[\u0530-\u058F]", char):
+        return True
+    # 阿拉伯语和希伯来语
+    if re.match(r"[\u0600-\u06FF\u0590-\u05FF]", char):
+        return True
+
+    return False
+
+
 def merge_short_segment(segments: List[ASRDataSeg]) -> None:
     """
     经过LLM断句后，继续优化字幕，合并词数少于等于5且时间相邻的段落。
@@ -369,8 +392,20 @@ def merge_short_segment(segments: List[ASRDataSeg]) -> None:
                 f"优化：合并相邻分段: {current_seg.text} --- {next_seg.text} -> {time_gap}"
             )
 
-            # 更新当前段落的文本和结束时间
-            current_seg.text = current_seg.text + next_seg.text
+            # 判断两个分段的连接处是否需要添加空格
+            last_char = current_seg.text[-1] if current_seg.text else ""
+            first_char = next_seg.text[0] if next_seg.text else ""
+
+            # 检查是否都是英文字符
+            is_last_english = bool(re.match(r"[a-zA-Z0-9]", last_char))
+            is_first_english = bool(re.match(r"[a-zA-Z0-9]", first_char))
+
+            # 如果两边都是英文字符，用空格连接
+            if needs_space(last_char) and needs_space(first_char):
+                current_seg.text = current_seg.text + " " + next_seg.text
+            else:
+                current_seg.text = current_seg.text + next_seg.text
+
             current_seg.end_time = next_seg.end_time
 
             # 从列表中移除下一个段落
