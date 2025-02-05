@@ -36,11 +36,11 @@ class TranscriptThread(QThread):
             logger.info(f"时间：{datetime.datetime.now()}")
 
             # 检查是否已经存在字幕文件
-            if Path(self.task.output_path).exists():
-                logger.info("字幕文件已存在，跳过转录")
-                self.progress.emit(100, self.tr("字幕已存在"))
-                self.finished.emit(self.task)
-                return
+            # if Path(self.task.output_path).exists():
+            #     logger.info("字幕文件已存在，跳过转录")
+            #     self.progress.emit(100, self.tr("字幕已存在"))
+            #     self.finished.emit(self.task)
+            #     return
 
             # 检查视频文件是否存在
             video_path = Path(self.task.file_path)

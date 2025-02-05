@@ -55,7 +55,7 @@ class TaskFactory:
                 Path(cfg.work_dir.value)
                 / file_name
                 / "subtitle"
-                / f"【原始字幕】{file_name}-{cfg.transcribe_model.value}.srt"
+                / f"【原始字幕】{file_name}-{cfg.transcribe_model.value.value}-{cfg.transcribe_language.value.value}.srt"
             )
         else:
             need_word_time_stamp = False
