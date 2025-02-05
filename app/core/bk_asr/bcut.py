@@ -30,7 +30,6 @@ class BcutASR(BaseASR):
         "User-Agent": "Bilibili/1.0.0 (https://www.bilibili.com)",
         "Content-Type": "application/json",
     }
-    MAX_DAILY_CALLS = 23
 
     def __init__(
         self,
