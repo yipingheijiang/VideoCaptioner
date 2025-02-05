@@ -1,7 +1,7 @@
 # app/core/storage/models.py
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Index, Date
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from datetime import datetime, date
 from .constants import TranslatorType, OperationType
 
 Base = declarative_base()
@@ -80,3 +80,33 @@ class UsageStatistics(Base):
 
     def __repr__(self):
         return f"<UsageStatistics({self.operation_type}:{self.service_name})>"
+
+
+class DailyServiceUsage(Base):
+    """每日服务使用次数表"""
+
+    __tablename__ = "daily_service_usage"
+
+    id = Column(Integer, primary_key=True)
+    service_name = Column(String(50), nullable=False)  # 服务名称
+    usage_date = Column(Date, nullable=False)  # 使用日期，改用 Date 类型
+    usage_count = Column(Integer, default=0)  # 使用次数
+    daily_limit = Column(Integer, nullable=False)  # 每日限制次数
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index("idx_daily_usage_lookup", service_name, usage_date, unique=True),
+    )
+
+    def __repr__(self):
+        return f"<DailyServiceUsage(service={self.service_name}, date={self.usage_date}, count={self.usage_count})>"
+
+    def __init__(self, **kwargs):
+        """初始化时去除时分秒，只保留日期"""
+        if "usage_date" in kwargs:
+            if isinstance(kwargs["usage_date"], datetime):
+                kwargs["usage_date"] = kwargs["usage_date"].date()
+            elif isinstance(kwargs["usage_date"], date):
+                pass
+        super().__init__(**kwargs)
