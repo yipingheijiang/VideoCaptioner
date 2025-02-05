@@ -143,9 +143,13 @@ class WhisperCppASR(BaseASR):
                 # 处理输出和进度
                 full_output = []
                 while True:
-                    line = self.process.stdout.readline()
-                    if not line:
+                    try:
+                        line = self.process.stdout.readline()
+                    except Exception as e:
                         break
+                    if not line:
+                        continue
+
                     full_output.append(line)
 
                     # 简化的进度处理
