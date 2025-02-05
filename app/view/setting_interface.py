@@ -82,7 +82,7 @@ class SettingInterface(ScrollArea):
             cfg.transcribe_model,
             FIF.MICROPHONE,
             self.tr("转录模型"),
-            self.tr("语音转换文字要使用的转录模型"),
+            self.tr("语音转换文字要使用的语音识别模型"),
             texts=[model.value for model in cfg.transcribe_model.validator.options],
             parent=self.transcribeGroup,
         )
@@ -97,14 +97,14 @@ class SettingInterface(ScrollArea):
         self.subtitleCorrectCard = SwitchSettingCard(
             FIF.EDIT,
             self.tr("字幕校正"),
-            self.tr("是否对生成的字幕进行校正"),
+            self.tr("字幕处理过程是否对生成的字幕进行校正"),
             cfg.need_optimize,
             self.translateGroup,
         )
         self.subtitleTranslateCard = SwitchSettingCard(
             FIF.LANGUAGE,
             self.tr("字幕翻译"),
-            self.tr("是否对生成的字幕进行翻译（包含校正过程）"),
+            self.tr("字幕处理过程是否对生成的字幕进行翻译"),
             cfg.need_translate,
             self.translateGroup,
         )
@@ -137,14 +137,14 @@ class SettingInterface(ScrollArea):
         self.needVideoCard = SwitchSettingCard(
             FIF.VIDEO,
             self.tr("需要合成视频"),
-            self.tr("是否需要合成视频"),
+            self.tr("开启时触发合成视频，关闭时跳过"),
             cfg.need_video,
             self.subtitleGroup,
         )
         self.softSubtitleCard = SwitchSettingCard(
             FIF.FONT,
             self.tr("软字幕"),
-            self.tr("合成视频时是否使用软字幕"),
+            self.tr("开启时字幕可在播放器中关闭或调整，关闭时字幕烧录到视频画面上"),
             cfg.soft_subtitle,
             self.subtitleGroup,
         )
@@ -416,8 +416,8 @@ class SettingInterface(ScrollArea):
         self.deeplxEndpointCard = LineEditSettingCard(
             cfg.deeplx_endpoint,
             FIF.LINK,
-            self.tr("DeepLx 端点"),
-            self.tr("输入 DeepLx 的端点(开启deeplx翻译时必填)"),
+            self.tr("DeepLx 后端"),
+            self.tr("输入 DeepLx 的后端地址(开启deeplx翻译时必填)"),
             "https://api.deeplx.org/translate",
             self.translate_serviceGroup,
         )
@@ -437,7 +437,7 @@ class SettingInterface(ScrollArea):
             FIF.SPEED_HIGH,
             self.tr("线程数"),
             self.tr(
-                "模型进行LLM请求和翻译请求并行处理的数量，模型服务商允许的情况下建议尽可能大"
+                "请求并行处理的数量，模型服务商允许的情况下建议尽可能大，数值越大速度越快"
             ),
             parent=self.translate_serviceGroup,
         )
