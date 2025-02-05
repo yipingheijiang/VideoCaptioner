@@ -6,9 +6,12 @@ from pathlib import Path
 from PyQt5.QtCore import QThread, pyqtSignal
 
 from app.core.bk_asr import transcribe
-from app.core.entities import TranscribeTask
+from app.core.entities import TranscribeTask, TranscribeModelEnum
 from app.core.utils.logger import setup_logger
 from app.core.utils.video_utils import video2audio
+from app.core.storage.cache_manager import ServiceUsageManager
+from app.core.storage.database import DatabaseManager
+from app.config import CACHE_PATH
 
 logger = setup_logger("transcript_thread")
 
@@ -17,10 +20,14 @@ class TranscriptThread(QThread):
     finished = pyqtSignal(TranscribeTask)
     progress = pyqtSignal(int, str)
     error = pyqtSignal(str)
+    MAX_DAILY_ASR_CALLS = 20
 
     def __init__(self, task: TranscribeTask):
         super().__init__()
         self.task = task
+        # 初始化服务管理器
+        db_manager = DatabaseManager(CACHE_PATH)
+        self.service_manager = ServiceUsageManager(db_manager)
 
     def run(self):
         temp_file = None
@@ -41,11 +48,21 @@ class TranscriptThread(QThread):
                 logger.error(f"视频文件不存在：{video_path}")
                 raise ValueError(self.tr("视频文件不存在"))
 
+            # 对于BIJIAN和JIANYING模型，检查服务使用限制
+            if self.task.transcribe_config.transcribe_model in [
+                TranscribeModelEnum.BIJIAN,
+                TranscribeModelEnum.JIANYING,
+            ]:
+                if not self.service_manager.check_service_available(
+                    "asr", self.MAX_DAILY_ASR_CALLS
+                ):
+                    raise Exception(
+                        self.tr("公益ASR服务已达到每日使用限制，建议使用本地转录")
+                    )
+
             # 检查是否存在下载的字幕文件（对于视频url的任务，前面可能已下载字幕文件）
-            print(self.task.need_next_task)
             if self.task.need_next_task:
                 subtitle_dir = Path(self.task.file_path).parent / "subtitle"
-                print(subtitle_dir)
                 downloaded_subtitles = (
                     list(subtitle_dir.glob("【下载字幕】*"))
                     if subtitle_dir.exists()
@@ -86,6 +103,13 @@ class TranscriptThread(QThread):
                 self.task.transcribe_config,
                 callback=self.progress_callback,
             )
+
+            # 如果是BIJIAN或JIANYING模型，增加使用次数
+            if self.task.transcribe_config.transcribe_model in [
+                TranscribeModelEnum.BIJIAN,
+                TranscribeModelEnum.JIANYING,
+            ]:
+                self.service_manager.increment_usage("asr", self.MAX_DAILY_ASR_CALLS)
 
             # 保存字幕文件
             output_path = Path(self.task.output_path)

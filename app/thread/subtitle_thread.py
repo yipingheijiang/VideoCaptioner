@@ -14,26 +14,12 @@ from app.core.subtitle_processor.optimize import SubtitleOptimizer
 from app.core.subtitle_processor.translate import TranslatorFactory, TranslatorType
 from app.core.utils.logger import setup_logger
 from app.core.utils.test_opanai import test_openai
+from app.core.storage.cache_manager import ServiceUsageManager
+from app.core.storage.database import DatabaseManager
+from app.config import CACHE_PATH
 
 # 配置日志
 logger = setup_logger("subtitle_optimization_thread")
-
-FREE_API_CONFIGS = {
-    "ddg": {
-        "base_url": "http://ddg.bkfeng.top/v1",
-        "api_key": "Hey-man-This-free-server-is-convenient-for-software-beginners-Please-do-not-use-for-personal-use-Server",
-        "llm_model": "gpt-4o-mini",
-        "thread_num": 5,
-        "batch_size": 10,
-    },
-    "zhipu": {
-        "base_url": "https://open.bigmodel.cn/api/paas/v4",
-        "api_key": "c96c2f6ce767136cdddc3fef1692c1de.H27sLU4GwuUVqPn5",
-        "llm_model": "glm-4-flash",
-        "thread_num": 10,
-        "batch_size": 10,
-    },
-}
 
 
 class SubtitleThread(QThread):
@@ -42,7 +28,7 @@ class SubtitleThread(QThread):
     update = pyqtSignal(dict)
     update_all = pyqtSignal(dict)
     error = pyqtSignal(str)
-    MAX_DAILY_LLM_CALLS = 50
+    MAX_DAILY_LLM_CALLS = 30
 
     def __init__(self, task: SubtitleTask):
         super().__init__()
@@ -50,12 +36,30 @@ class SubtitleThread(QThread):
         self.subtitle_length = 0
         self.finished_subtitle_length = 0
         self.custom_prompt_text = ""
+        # 初始化数据库和服务使用管理器
+        self.db_manager = DatabaseManager(CACHE_PATH)
+        self.service_manager = ServiceUsageManager(self.db_manager)
 
     def set_custom_prompt_text(self, text: str):
         self.custom_prompt_text = text
 
     def _setup_api_config(self) -> SubtitleConfig:
         """设置API配置，返回SubtitleConfig"""
+        # 检查是否可以使用服务
+        if not self.service_manager.check_service_available(
+            "llm", self.MAX_DAILY_LLM_CALLS
+        ):
+            raise Exception(
+                self.tr(
+                    f"公益LLM服务已达到每日使用限制 {self.MAX_DAILY_LLM_CALLS} 次，建议使用自己的API"
+                )
+            )
+
+        if self.task.subtitle_config.base_url == "https://ddg.bkfeng.top/v1":
+            self.task.subtitle_config.thread_num = 5
+            self.task.subtitle_config.batch_size = 10
+            return self.task.subtitle_config
+
         if self.task.subtitle_config.base_url and self.task.subtitle_config.api_key:
             if not test_openai(
                 self.task.subtitle_config.base_url,
@@ -67,27 +71,9 @@ class SubtitleThread(QThread):
                         "（字幕断句或字幕修正需要大模型）\nOpenAI API 测试失败, 请检查LLM配置"
                     )
                 )
+            # 增加服务使用次数
+            self.service_manager.increment_usage("llm", self.MAX_DAILY_LLM_CALLS)
             return self.task.subtitle_config
-
-        logger.info("尝试使用自带的API配置")
-        # 遍历配置字典找到第一个可用的API
-        for config in FREE_API_CONFIGS.values():
-            if not self.valid_limit():
-                raise Exception(self.tr("公益服务有限！请配置自己的API!"))
-            if test_openai(config["base_url"], config["api_key"], config["llm_model"])[
-                0
-            ]:
-                self.set_limit()
-                # 更新配置
-                self.task.subtitle_config.base_url = config["base_url"]
-                self.task.subtitle_config.api_key = config["api_key"]
-                self.task.subtitle_config.llm_model = config["llm_model"]
-                self.task.subtitle_config.thread_num = config["thread_num"]
-                self.task.subtitle_config.batch_size = config["batch_size"]
-                return self.task.subtitle_config
-
-        logger.error("自带的API配置暂时不可用，请配置自己的API")
-        raise Exception(self.tr("自带的API配置暂时不可用，请配置自己的大模型API"))
 
     def run(self):
         try:
