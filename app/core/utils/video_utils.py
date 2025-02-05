@@ -12,32 +12,41 @@ logger = setup_logger("video_utils")
 
 
 def video2audio(input_file: str, output: str = "") -> bool:
-    """使用ffmpeg将视频转换为音频"""    
+    """使用ffmpeg将视频转换为音频"""
     # 创建output目录
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output = str(output)
     cmd = [
-        'ffmpeg',
-        '-i', input_file,
-        '-map', '0:a',
-        '-ac', '1',
-        '-ar', '16000',
-        '-af', 'aresample=async=1',  # 处理音频同步问题
-        '-y',
-        output
+        "ffmpeg",
+        "-i",
+        input_file,
+        "-map",
+        "0:a",
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-af",
+        "aresample=async=1",  # 处理音频同步问题
+        "-y",
+        output,
     ]
     logger.info(f"转换为音频执行命令: {' '.join(cmd)}")
-    
+
     try:
         result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            check=True, 
-            encoding='utf-8', 
-            errors='replace', 
-            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
-            )
+            cmd,
+            capture_output=True,
+            check=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW
+                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            ),
+        )
         if result.returncode == 0 and Path(output).is_file():
             return True
         else:
@@ -54,46 +63,61 @@ def check_cuda_available() -> bool:
     try:
         # 首先检查ffmpeg是否支持cuda
         result = subprocess.run(
-            ['ffmpeg', '-hwaccels'], 
-            capture_output=True, 
+            ["ffmpeg", "-hwaccels"],
+            capture_output=True,
             text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
-
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW
+                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            ),
         )
-        if 'cuda' not in result.stdout.lower():
+        if "cuda" not in result.stdout.lower():
             logger.info("CUDA不在支持的硬件加速器列表中")
             return False
-            
+
         # 进一步检查CUDA设备信息
         result = subprocess.run(
-            ['ffmpeg', '-hide_banner', '-init_hw_device', 'cuda'], 
-            capture_output=True, 
+            ["ffmpeg", "-hide_banner", "-init_hw_device", "cuda"],
+            capture_output=True,
             text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
         )
-        
+
         # 如果stderr中包含"Cannot load cuda" 或 "Failed to load"等错误信息，说明CUDA不可用
-        if any(error in result.stderr.lower() for error in ['cannot load cuda', 'failed to load', 'error']):
+        if any(
+            error in result.stderr.lower()
+            for error in ["cannot load cuda", "failed to load", "error"]
+        ):
             logger.info("CUDA设备初始化失败")
             return False
-            
+
         logger.info("CUDA可用")
         return True
-        
+
     except Exception as e:
         logger.exception(f"检查CUDA出错: {str(e)}")
         return False
 
 
 def add_subtitles(
-        input_file: str,
-        subtitle_file: str,
-        output: str,
-        quality: Literal[
-            'ultrafast', 'superfast', 'veryfast', 'faster', 'fast', 'medium', 'slow', 'slower', 'veryslow'] = 'medium',
-        vcodec: str = 'libx264',
-        soft_subtitle: bool = False,
-        progress_callback: callable = None
+    input_file: str,
+    subtitle_file: str,
+    output: str,
+    quality: Literal[
+        "ultrafast",
+        "superfast",
+        "veryfast",
+        "faster",
+        "fast",
+        "medium",
+        "slow",
+        "slower",
+        "veryslow",
+    ] = "medium",
+    vcodec: str = "libx264",
+    soft_subtitle: bool = False,
+    progress_callback: callable = None,
 ) -> None:
     assert Path(input_file).is_file(), "输入文件不存在"
     assert Path(subtitle_file).is_file(), "字幕文件不存在"
@@ -106,67 +130,93 @@ def add_subtitles(
     subtitle_file = str(temp_subtitle)
 
     # 如果是WebM格式，强制使用硬字幕
-    if Path(output).suffix.lower() == '.webm':
+    if Path(output).suffix.lower() == ".webm":
         soft_subtitle = False
         logger.info("WebM格式视频，强制使用硬字幕")
 
     if soft_subtitle:
         # 添加软字幕
         cmd = [
-            'ffmpeg',
-            '-i', input_file,
-            '-i', subtitle_file,
-            '-c:v', 'copy',
-            '-c:a', 'copy',
-            '-c:s', 'mov_text',
+            "ffmpeg",
+            "-i",
+            input_file,
+            "-i",
+            subtitle_file,
+            "-c:v",
+            "copy",
+            "-c:a",
+            "copy",
+            "-c:s",
+            "mov_text",
             output,
-            '-y'
+            "-y",
         ]
         logger.info(f"添加软字幕执行命令: {' '.join(cmd)}")
         result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
-            encoding='utf-8', 
-            errors='replace',
-            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
-            )
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=(
+                subprocess.CREATE_NO_WINDOW
+                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                else 0
+            ),
+        )
     else:
         logger.info("使用硬字幕")
-        subtitle_file = Path(subtitle_file).as_posix().replace(':', r'\:')
-        vf = f"subtitles='{subtitle_file}'"
-        if Path(output).suffix.lower() == '.webm':
-            vcodec = 'libvpx-vp9'
+        subtitle_file = Path(subtitle_file).as_posix().replace(":", r"\:")
+        # 根据输出文件后缀决定vf参数
+        if Path(output).suffix.lower() == ".ass":
+            vf = f"ass='{subtitle_file}'"
+        else:
+            # 其他格式使用默认的vf参数
+            vf = f"subtitles='{subtitle_file}'"
+
+        if Path(output).suffix.lower() == ".webm":
+            vcodec = "libvpx-vp9"
             logger.info("WebM格式视频，使用libvpx-vp9编码器")
 
         # 检查CUDA是否可用
         use_cuda = check_cuda_available()
-        cmd = ['ffmpeg']
+        cmd = ["ffmpeg"]
         if use_cuda:
             logger.info("使用CUDA加速")
-            cmd.extend(['-hwaccel', 'cuda'])
-        cmd.extend([
-            '-i', input_file,
-            '-acodec', 'copy',
-            '-vcodec', vcodec,
-            '-preset', quality,
-            '-vf', vf,
-            '-y',  # 覆盖输出文件
-            output
-        ])
+            cmd.extend(["-hwaccel", "cuda"])
+        cmd.extend(
+            [
+                "-i",
+                input_file,
+                "-acodec",
+                "copy",
+                "-vcodec",
+                vcodec,
+                "-preset",
+                quality,
+                "-vf",
+                vf,
+                "-y",  # 覆盖输出文件
+                output,
+            ]
+        )
 
         cmd_str = subprocess.list2cmdline(cmd)
         logger.info(f"添加硬字幕执行命令: {cmd_str}")
 
         try:
             process = subprocess.Popen(
-                cmd, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE, 
-                text=True, 
-                encoding='utf-8',
-                errors='replace',
-                creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0,
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                creationflags=(
+                    subprocess.CREATE_NO_WINDOW
+                    if hasattr(subprocess, "CREATE_NO_WINDOW")
+                    else 0
+                ),
             )
 
             # 实时读取输出并调用回调函数
@@ -181,14 +231,18 @@ def add_subtitles(
                     continue
 
                 if total_duration is None:
-                    duration_match = re.search(r'Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
+                    duration_match = re.search(
+                        r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})", output_line
+                    )
                     if duration_match:
                         h, m, s = map(float, duration_match.groups())
                         total_duration = h * 3600 + m * 60 + s
                         logger.info(f"视频总时长: {total_duration}秒")
 
                 # 解析当前处理时间
-                time_match = re.search(r'time=(\d{2}):(\d{2}):(\d{2}\.\d{2})', output_line)
+                time_match = re.search(
+                    r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})", output_line
+                )
                 if time_match:
                     h, m, s = map(float, time_match.groups())
                     current_time = h * 3600 + m * 60 + s
@@ -217,4 +271,3 @@ def add_subtitles(
             # 删除临时文件
             if temp_subtitle.exists():
                 temp_subtitle.unlink()
-
