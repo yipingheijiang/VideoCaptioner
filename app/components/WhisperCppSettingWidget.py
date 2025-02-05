@@ -527,7 +527,9 @@ class WhisperCppSettingWidget(QWidget):
         self.container.setStyleSheet("QWidget{background: transparent}")
         self.containerLayout = QVBoxLayout(self.container)
 
-        self.setting_group = SettingCardGroup(self.tr("Whisper CPP 设置"), self)
+        self.setting_group = SettingCardGroup(
+            self.tr("Whisper CPP 设置（不稳定 🤔）"), self
+        )
 
         # 模型选择
         self.model_card = ComboBoxSettingCard(

@@ -652,7 +652,9 @@ class FasterWhisperSettingWidget(QWidget):
         self.container.setStyleSheet("QWidget{background: transparent}")
         self.containerLayout = QVBoxLayout(self.container)
 
-        self.setting_group = SettingCardGroup(self.tr("Faster Whisper 设置"), self)
+        self.setting_group = SettingCardGroup(
+            self.tr("Faster Whisper 设置（✨推荐✨））"), self
+        )
 
         # 模型选择
         self.model_card = ComboBoxSettingCard(
