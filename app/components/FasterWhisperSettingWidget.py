@@ -66,7 +66,7 @@ FASTER_WHISPER_PROGRAMS = [
         "value": "faster-whisper-gpu.7z",
         "type": "GPU",
         "size": "1.35 GB",
-        "downloadLink": "https://modelscope.cn/models/bkfengg/whisper-cpp/resolve/master/Faster-Whisper-XXL_r194.5_windows.7z",
+        "downloadLink": "https://modelscope.cn/models/bkfengg/whisper-cpp/resolve/master/Faster-Whisper-XXL_r245.2_windows.7z",
     },
     {
         "label": "CPU版本",
