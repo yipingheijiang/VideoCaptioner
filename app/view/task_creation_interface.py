@@ -31,20 +31,15 @@ from websockets import serve
 from app.common.config import cfg
 from app.common.signal_bus import signalBus
 from app.components.LanguageSettingDialog import LanguageSettingDialog
-from app.components.SimpleSettingCard import (
-    ComboBoxSimpleSettingCard,
-    SwitchButtonSimpleSettingCard,
-)
 from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
 from app.core.entities import (
     LLMServiceEnum,
     SupportedAudioFormats,
     SupportedVideoFormats,
-    TargetLanguageEnum,
-    TranscribeModelEnum,
 )
 from app.thread.video_download_thread import VideoDownloadThread
 from app.view.log_window import LogWindow
+from app.components.DonateDialog import DonateDialog
 
 
 LOGO_PATH = ASSETS_PATH / "logo.png"
@@ -73,72 +68,12 @@ class TaskCreationInterface(QWidget):
     def setup_ui(self):
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setObjectName("main_layout")
-        self.main_layout.setSpacing(20)
-
-        self.setup_config_layout()
+        self.main_layout.setSpacing(50)
+        self.main_layout.addSpacing(120)
         self.setup_logo()
         self.setup_search_layout()
         self.setup_status_layout()
         self.setup_info_label()
-
-    def setup_config_layout(self):
-        self.config_layout = QHBoxLayout()
-        self.config_layout.setObjectName("config_layout")
-        self.config_layout.setSpacing(20)
-
-        # 创建转录模型卡片和设置按钮的容器
-        transcription_container = QWidget()
-        transcription_layout = QHBoxLayout(transcription_container)
-        transcription_layout.setContentsMargins(0, 0, 0, 0)
-        transcription_layout.setSpacing(5)
-
-        # 创建转录模型卡片
-        self.transcription_model_card = ComboBoxSimpleSettingCard(
-            self.tr("转录模型"),
-            self.tr("语音转换的模型"),
-            [model.value for model in TranscribeModelEnum],
-            self,
-        )
-
-        # 创建设置按钮
-        self.whisper_setting_button = ToolButton(FluentIcon.SETTING)
-        self.whisper_setting_button.setFixedSize(32, 32)
-        self.whisper_setting_button.clicked.connect(self.show_language_settings)
-        transcription_layout.addWidget(self.transcription_model_card)
-        transcription_layout.addWidget(self.whisper_setting_button)
-
-        # 创建字幕修正卡片
-        self.subtitle_optimization_card = SwitchButtonSimpleSettingCard(
-            self.tr("字幕修正"),
-            self.tr("使用AI大模型进行字幕修正（格式、错字、标点等）"),
-            self,
-        )
-
-        # 创建字幕修正+翻译卡片
-        self.subtitle_translation_card = SwitchButtonSimpleSettingCard(
-            self.tr("字幕修正+翻译"),
-            self.tr("使用AI大模型进行字幕翻译（包含修正过程）"),
-            self,
-        )
-
-        # 创建目标语言卡片
-        self.target_language_card = ComboBoxSimpleSettingCard(
-            self.tr("翻译目标语言"),
-            self.tr("翻译的目标语言"),
-            [model.value for model in TargetLanguageEnum],
-            self,
-        )
-
-        self.config_layout.addWidget(transcription_container)
-        self.config_layout.addWidget(self.subtitle_optimization_card)
-        self.config_layout.addWidget(self.subtitle_translation_card)
-        self.config_layout.addWidget(self.target_language_card)
-
-        config_container = QWidget()
-        config_container.setLayout(self.config_layout)
-        config_container.setFixedHeight(70)
-        self.main_layout.addWidget(config_container)
-        self.main_layout.addSpacing(20)
 
     def setup_logo(self):
         self.logo_label = QLabel(self)
@@ -237,6 +172,20 @@ class TaskCreationInterface(QWidget):
             }
         """
         )
+
+        # 创建捐助按钮
+        self.donate_button = HyperlinkButton(url="", text=self.tr("捐助"), parent=self)
+        self.donate_button.setStyleSheet(
+            self.donate_button.styleSheet()
+            + """
+            QPushButton {
+                font-size: 12px;
+                color: #2F8D63;
+                text-decoration: underline;
+            }
+        """
+        )
+
         # 添加版权信息标签
         self.info_label = BodyLabel(
             self.tr(f"©VideoCaptioner {VERSION} • By Weifeng"), self
@@ -248,6 +197,7 @@ class TaskCreationInterface(QWidget):
         bottom_layout.addStretch()
         bottom_layout.addWidget(self.info_label)
         bottom_layout.addWidget(self.log_button)
+        bottom_layout.addWidget(self.donate_button)
         bottom_layout.addStretch()
 
         self.main_layout.addStretch()
@@ -257,48 +207,10 @@ class TaskCreationInterface(QWidget):
         self.start_button.clicked.connect(self.on_start_clicked)
         self.search_input.textChanged.connect(self.on_search_input_changed)
         self.log_button.clicked.connect(self.show_log_window)
-        self.transcription_model_card.valueChanged.connect(
-            self.on_transcription_model_changed
-        )
-
-        # self.subtitle_optimization_card.checkedChanged.connect(signalBus.on_subtitle_optimization_changed)
-        # self.subtitle_translation_card.checkedChanged.connect(signalBus.on_subtitle_translation_changed)
-        # self.target_language_card.valueChanged.connect(signalBus.on_target_language_changed)
-        # signalBus.subtitle_optimization_changed.connect(self.on_subtitle_optimization_changed)
-        # signalBus.subtitle_translation_changed.connect(self.on_subtitle_translation_changed)
-        # signalBus.target_language_changed.connect(self.on_target_language_changed)
-
-    def on_subtitle_optimization_changed(self, optimization: bool):
-        """当字幕优化状态改变时触发"""
-        if self.subtitle_optimization_card.isChecked() != optimization:
-            self.subtitle_optimization_card.setChecked(optimization)
-
-    def on_subtitle_translation_changed(self, translation: bool):
-        if self.subtitle_translation_card.isChecked() != translation:
-            self.subtitle_translation_card.setChecked(translation)
-        if translation:
-            self.target_language_card.setEnabled(True)
-        else:
-            self.target_language_card.setEnabled(False)
-
-    def on_target_language_changed(self, language: str):
-        self.target_language_card.comboBox.setCurrentText(language)
+        self.donate_button.clicked.connect(self.show_donate_dialog)
 
     def setup_values(self):
-        self.transcription_model_card.setValue(cfg.transcribe_model.value.value)
-        self.target_language_card.setValue(cfg.target_language.value.value)
-        self.subtitle_optimization_card.setChecked(cfg.need_optimize.value)
-        self.subtitle_translation_card.setChecked(cfg.need_translate.value)
-        self.target_language_card.setEnabled(self.subtitle_translation_card.isChecked())
         self.search_input.setText("")
-        self.whisper_setting_button.setVisible(
-            self.transcription_model_card.value()
-            == TranscribeModelEnum.WHISPER_CPP.value
-            or self.transcription_model_card.value()
-            == TranscribeModelEnum.WHISPER_API.value
-            or self.transcription_model_card.value()
-            == TranscribeModelEnum.FASTER_WHISPER.value
-        )
         # 根据当前选择的LLM服务获取对应的配置
         current_service = cfg.llm_service.value
         if current_service == LLMServiceEnum.PUBLIC:
@@ -309,21 +221,6 @@ class TaskCreationInterface(QWidget):
                 parent=self,
                 position=InfoBarPosition.BOTTOM_RIGHT,
             )
-
-    def on_transcription_model_changed(self, value):
-        """当转录模型改变时触发"""
-        cfg.set(cfg.transcribe_model, TranscribeModelEnum(value))
-        self.whisper_setting_button.setVisible(
-            value == TranscribeModelEnum.WHISPER_CPP.value
-            or value == TranscribeModelEnum.WHISPER_API.value
-            or value == TranscribeModelEnum.FASTER_WHISPER.value
-        )
-
-    def show_language_settings(self):
-        dialog = LanguageSettingDialog(self.window())
-        if dialog.exec_():
-            return True
-        return False
 
     def on_start_clicked(self):
         if self.start_button._icon == FluentIcon.FOLDER:
@@ -342,14 +239,6 @@ class TaskCreationInterface(QWidget):
             )
             if file_path:
                 self.search_input.setText(file_path)
-            return
-
-        need_language_settings = cfg.transcribe_model.value in [
-            TranscribeModelEnum.WHISPER_CPP,
-            TranscribeModelEnum.WHISPER_API,
-            TranscribeModelEnum.FASTER_WHISPER,
-        ]
-        if need_language_settings and not self.show_language_settings():
             return
 
         self.process()
@@ -497,6 +386,11 @@ class TaskCreationInterface(QWidget):
             self.log_window.show()
         else:
             self.log_window.activateWindow()
+
+    def show_donate_dialog(self):
+        """显示捐助窗口"""
+        donate_dialog = DonateDialog(self)
+        donate_dialog.exec_()
 
 
 if __name__ == "__main__":
