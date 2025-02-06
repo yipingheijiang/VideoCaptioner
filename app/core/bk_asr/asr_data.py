@@ -110,8 +110,26 @@ class ASRData:
             text = seg.text
             duration = seg.end_time - seg.start_time
 
-            # 匹配所有有效字符（包括数字）
-            pattern = r"[a-zA-Z\']+|\d+|[\u4e00-\u9fff]|[\u3040-\u309f]|[\u30a0-\u30ff]|[\uac00-\ud7af]|[\u0e00-\u0e7f]|[\u0600-\u06ff]|[\u0400-\u04ff]|[\u0590-\u05ff]|[\u1e00-\u1eff]|[\u3130-\u318f]"
+            # 匹配所有有效字符（包括数字和各种语言）
+            pattern = (
+                # 以单词形式出现的语言(连续提取)
+                r"[a-zA-Z\u00c0-\u00ff\u0100-\u017f']+"  # 拉丁字母及其变体(英语、德语、法语等)
+                r"|[\u0400-\u04ff]+"  # 西里尔字母(俄语等)
+                r"|[\u0370-\u03ff]+"  # 希腊语
+                r"|[\u0600-\u06ff]+"  # 阿拉伯语
+                r"|[\u0590-\u05ff]+"  # 希伯来语
+                r"|\d+"  # 数字
+                # 以单字形式出现的语言(单字提取)
+                r"|[\u4e00-\u9fff]"  # 中文
+                r"|[\u3040-\u309f]"  # 日文平假名
+                r"|[\u30a0-\u30ff]"  # 日文片假名
+                r"|[\uac00-\ud7af]"  # 韩文
+                r"|[\u0e00-\u0e7f]"  # 泰文
+                r"|[\u0900-\u097f]"  # 天城文(印地语等)
+                r"|[\u0980-\u09ff]"  # 孟加拉语
+                r"|[\u0e80-\u0eff]"  # 老挝文
+                r"|[\u1000-\u109f]"  # 缅甸文
+            )
             words = re.finditer(pattern, text)
             words_list = list(words)
 
@@ -146,10 +164,11 @@ class ASRData:
 
     def remove_punctuation(self) -> "ASRData":
         """
-        移除字幕中的标点符号
+        移除字幕中的标点符号(中文逗号、句号)
         """
         punctuation = r"[，。]"
         for seg in self.segments:
+
             seg.text = re.sub(f"{punctuation}+$", "", seg.text.strip())
             seg.translated_text = re.sub(
                 f"{punctuation}+$", "", seg.translated_text.strip()
