@@ -45,17 +45,16 @@ class SubtitleThread(QThread):
 
     def _setup_api_config(self) -> SubtitleConfig:
         """设置API配置，返回SubtitleConfig"""
-        # 检查是否可以使用服务
-        if not self.service_manager.check_service_available(
-            "llm", self.MAX_DAILY_LLM_CALLS
-        ):
-            raise Exception(
-                self.tr(
-                    f"公益LLM服务已达到每日使用限制 {self.MAX_DAILY_LLM_CALLS} 次，建议使用自己的API"
-                )
-            )
-
         if self.task.subtitle_config.base_url == "https://ddg.bkfeng.top/v1":
+            # 检查是否可以使用服务
+            if not self.service_manager.check_service_available(
+                "llm", self.MAX_DAILY_LLM_CALLS
+            ):
+                raise Exception(
+                    self.tr(
+                        f"公益LLM服务已达到每日使用限制 {self.MAX_DAILY_LLM_CALLS} 次，建议使用自己的API"
+                    )
+                )
             self.task.subtitle_config.thread_num = 5
             self.task.subtitle_config.batch_size = 10
             return self.task.subtitle_config
@@ -72,7 +71,8 @@ class SubtitleThread(QThread):
                     )
                 )
             # 增加服务使用次数
-            self.service_manager.increment_usage("llm", self.MAX_DAILY_LLM_CALLS)
+            if self.task.subtitle_config.base_url == "https://api.openai.com/v1":
+                self.service_manager.increment_usage("llm", self.MAX_DAILY_LLM_CALLS)
             return self.task.subtitle_config
 
     def run(self):
