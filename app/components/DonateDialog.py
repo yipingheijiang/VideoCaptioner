@@ -22,6 +22,15 @@ class DonateDialog(MessageBoxBase):
         # 创建标题标签
         self.titleLabel = BodyLabel(self.tr("感谢支持"), self)
 
+        # 创建说明文本
+        self.descLabel = BodyLabel(
+            self.tr(
+                "目前本人精力有限，您的支持让我有动力继续折腾这个项目！\n感谢您对开源事业的热爱与支持！"
+            ),
+            self,
+        )
+        self.descLabel.setAlignment(Qt.AlignCenter)
+
         # 创建水平布局放置两个二维码
         self.qrLayout = QHBoxLayout()
 
@@ -55,8 +64,11 @@ class DonateDialog(MessageBoxBase):
         self.qrLayout.addLayout(self.alipayContainer)
         self.qrLayout.addLayout(self.wechatContainer)
 
+        self.viewLayout.setSpacing(30)
         # 添加到主布局
         self.viewLayout.addWidget(self.titleLabel)
+        self.viewLayout.addWidget(self.descLabel)
+        # 添加垂直间距
         self.viewLayout.addLayout(self.qrLayout)
 
         # 设置对话框最小宽度
