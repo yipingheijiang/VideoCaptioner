@@ -8,7 +8,6 @@ from typing import List, Optional, Union
 import json
 from concurrent.futures import as_completed
 
-from altair import param
 from openai import OpenAI
 
 from app.config import CACHE_PATH
