@@ -199,7 +199,7 @@ class TaskFactory:
         """创建视频合成任务"""
         if need_next_task:
             output_path = str(
-                Path(subtitle_path).parent.parent
+                Path(video_path).parent
                 / f"【卡卡】{Path(video_path).stem}.mp4"
             )
         else:
