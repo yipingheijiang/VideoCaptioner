@@ -45,8 +45,10 @@ class SubtitleThread(QThread):
 
     def _setup_api_config(self) -> SubtitleConfig:
         """设置API配置，返回SubtitleConfig"""
-        if self.task.subtitle_config.base_url == "https://ddg.bkfeng.top/v1":
+        public_base_url = "https://ddg.bkfeng.top/v1"
+        if self.task.subtitle_config.base_url == public_base_url:
             # 检查是否可以使用服务
+
             if not self.service_manager.check_service_available(
                 "llm", self.MAX_DAILY_LLM_CALLS
             ):
@@ -71,9 +73,15 @@ class SubtitleThread(QThread):
                     )
                 )
             # 增加服务使用次数
-            if self.task.subtitle_config.base_url == "https://api.openai.com/v1":
+            if self.task.subtitle_config.base_url == public_base_url:
                 self.service_manager.increment_usage("llm", self.MAX_DAILY_LLM_CALLS)
             return self.task.subtitle_config
+        else:
+            raise Exception(
+                self.tr(
+                    "（字幕断句或字幕修正需要大模型）\nOpenAI API 未配置, 请检查LLM配置"
+                )
+            )
 
     def run(self):
         try:
@@ -118,7 +126,6 @@ class SubtitleThread(QThread):
             ):
                 self.progress.emit(2, self.tr("开始验证API配置..."))
                 subtitle_config = self._setup_api_config()
-                logger.info(f"使用 {subtitle_config.llm_model} 作为LLM模型")
                 os.environ["OPENAI_BASE_URL"] = subtitle_config.base_url
                 os.environ["OPENAI_API_KEY"] = subtitle_config.api_key
 
