@@ -236,8 +236,6 @@ class OpenAITranslator(BaseTranslator):
         )
         prompt_hash = hashlib.md5(prompt.encode()).hexdigest()
 
-        print(prompt)
-
         try:
             # 检查缓存
             cache_params = {
@@ -262,28 +260,24 @@ class OpenAITranslator(BaseTranslator):
                 response = self._call_api(
                     prompt, json.dumps(subtitle_chunk, ensure_ascii=False)
                 )
-                print("=========")
-                print(response.choices[0].message.content)
-
                 # 解析结果
                 result = json_repair.loads(response.choices[0].message.content)
                 # 检查翻译结果数量是否匹配
                 if len(result) != len(subtitle_chunk):
                     logger.warning(f"翻译结果数量不匹配，将使用单条翻译模式重试")
                     return self._translate_chunk_single(subtitle_chunk)
+                # 保存到缓存
+                self.cache_manager.set_llm_result(
+                    cache_key,
+                    json.dumps(result, ensure_ascii=False),
+                    self.model,
+                    **cache_params,
+                )
 
             if self.is_reflect:
                 result = {k: f"{v['revised_translation']}" for k, v in result.items()}
             else:
                 result = {k: f"{v}" for k, v in result.items()}
-
-            # 保存到缓存
-            self.cache_manager.set_llm_result(
-                cache_key,
-                json.dumps(result, ensure_ascii=False),
-                self.model,
-                **cache_params,
-            )
 
             return result
         except Exception as e:
