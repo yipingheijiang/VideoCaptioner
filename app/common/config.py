@@ -118,7 +118,7 @@ class Config(QConfig):
     translator_service = OptionsConfigItem(
         "Translate",
         "TranslatorServiceEnum",
-        TranslatorServiceEnum.OPENAI.value,
+        TranslatorServiceEnum.BING.value,
         OptionsValidator(TranslatorServiceEnum),
         EnumSerializer(TranslatorServiceEnum),
     )
@@ -204,9 +204,9 @@ class Config(QConfig):
     whisper_api_prompt = ConfigItem("WhisperAPI", "WhisperApiPrompt", "")
 
     # ------------------- 字幕配置 -------------------
-    need_optimize = ConfigItem("Subtitle", "NeedOptimize", True, BoolValidator())
+    need_optimize = ConfigItem("Subtitle", "NeedOptimize", False, BoolValidator())
     need_translate = ConfigItem("Subtitle", "NeedTranslate", False, BoolValidator())
-    need_split = ConfigItem("Subtitle", "NeedSplit", True, BoolValidator())
+    need_split = ConfigItem("Subtitle", "NeedSplit", False, BoolValidator())
     split_type = OptionsConfigItem(
         "Subtitle",
         "SplitType",
