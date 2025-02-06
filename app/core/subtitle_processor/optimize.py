@@ -196,13 +196,6 @@ class SubtitleOptimizer:
         if self.update_callback:
             self.update_callback(aligned_result)
 
-        print("原始字幕 vs 优化后字幕:")
-        for k in subtitle_chunk.keys():
-            print(f"{k}:")
-            print(f"  原始: {subtitle_chunk[k]}")
-            print(f"  优化: {aligned_result[k]}")
-            print()
-
         return aligned_result
 
     @staticmethod
