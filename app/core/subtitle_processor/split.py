@@ -52,12 +52,31 @@ def is_mainly_cjk(text: str) -> bool:
     Returns:
         bool: 如果CJK字符占比超过50%则返回True
     """
-    # 定义CJK字符的Unicode范围
+    # 定义以单字形式出现的语言字符范围
     cjk_patterns = [
+        # 东亚语言
         r"[\u4e00-\u9fff]",  # 中日韩统一表意文字
-        r"[\u3040-\u309f]",  # 平假名
-        r"[\u30a0-\u30ff]",  # 片假名
+        r"[\u3040-\u309f]",  # 日文平假名
+        r"[\u30a0-\u30ff]",  # 日文片假名
         r"[\uac00-\ud7af]",  # 韩文音节
+        r"[\u3130-\u318f]",  # 韩文兼容字母
+        # 东南亚语言
+        r"[\u0e00-\u0e7f]",  # 泰文
+        r"[\u0e80-\u0eff]",  # 老挝文
+        r"[\u1000-\u109f]",  # 缅甸文
+        r"[\u1780-\u17ff]",  # 高棉文(柬埔寨)
+        # 南亚语言
+        r"[\u0900-\u097f]",  # 天城文(印地语等)
+        r"[\u0980-\u09ff]",  # 孟加拉语
+        r"[\u0a00-\u0a7f]",  # 古木基文(旁遮普语)
+        r"[\u0b00-\u0b7f]",  # 奥里亚文
+        r"[\u0c00-\u0c7f]",  # 泰卢固文
+        r"[\u0c80-\u0cff]",  # 卡纳达文
+        r"[\u0d00-\u0d7f]",  # 马拉雅拉姆文
+        r"[\u0d80-\u0dff]",  # 僧伽罗文(斯里兰卡)
+        # 其他
+        r"[\u1100-\u11ff]",  # 谚文字母
+        r"[\u3100-\u312f]",  # 注音符号
     ]
 
     # 计算CJK字符数
@@ -849,7 +868,10 @@ class SubtitleSplitter:
                 )
 
                 # 更新当前段落的文本和结束时间
-                current_seg.text = current_seg.text + next_seg.text
+                if is_mainly_cjk(current_seg.text):
+                    current_seg.text += next_seg.text  # 直接连接
+                else:
+                    current_seg.text += " " + next_seg.text  # 加空格连接
                 current_seg.end_time = next_seg.end_time
 
                 # 从列表中移除下一个段落
