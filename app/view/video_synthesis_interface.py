@@ -281,8 +281,6 @@ class VideoSynthesisInterface(QWidget):
     def start_video_synthesis(self, need_create_task=True):
         self.synthesize_button.setEnabled(False)
         self.progress_bar.resume()
-        print("开始合成")
-        print(need_create_task)
         if need_create_task:
             self.task = self.create_task()
 

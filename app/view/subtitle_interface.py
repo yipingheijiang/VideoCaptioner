@@ -875,7 +875,6 @@ class PromptDialog(MessageBoxBase):
         # 在点击确定按钮时保存提示文本到配置
         prompt_text = self.text_edit.toPlainText()
         cfg.set(cfg.custom_prompt_text, prompt_text)
-        print(cfg.custom_prompt_text.value)
 
 
 if __name__ == "__main__":

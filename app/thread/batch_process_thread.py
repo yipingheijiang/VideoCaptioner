@@ -49,10 +49,8 @@ class BatchProcessThread(QThread):
         self.threads = []  # 保存所有创建的线程
 
     def add_task(self, task: BatchTask):
-        print("add_task")
         self.task_queue.put(task)
         self.current_tasks[task.file_path] = task
-        print("add_task_end")
         if not self.isRunning():
             self.is_running = True
             self.start()

@@ -186,7 +186,6 @@ class SubtitleThread(QThread):
                     asr_data.remove_punctuation()
                 self.update_all.emit(asr_data.to_json())
                 # 保存翻译结果(单语、双语)
-                print(self.task.need_next_task)
                 if self.task.need_next_task and self.task.video_path:
                     for subtitle_layout in ["原文在上", "译文在上", "仅原文", "仅译文"]:
                         save_path = str(
@@ -198,7 +197,7 @@ class SubtitleThread(QThread):
                             ass_style=subtitle_config.subtitle_style,
                             layout=subtitle_layout,
                         )
-                        print(f"字幕保存到 {save_path}")
+                        logger.info(f"字幕保存到 {save_path}")
 
             # 5. 保存字幕
             asr_data.save(

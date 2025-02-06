@@ -127,10 +127,6 @@ def auto_wrap_text(text: str, max_width: int, font_size: int) -> str:
     if current_line:
         result.append(current_line)
 
-    print(estimate_text_width(text, font_size))
-    print(max_width)
-    print("-" * 50)
-
     return "\\N".join(result)
 
 
