@@ -17,20 +17,15 @@ from PyQt5.QtWidgets import (
 from qfluentwidgets import (
     BodyLabel,
     FluentIcon,
-    FluentStyleSheet,
     HyperlinkButton,
     InfoBar,
     InfoBarPosition,
     LineEdit,
     ProgressBar,
-    PushButton,
     ToolButton,
 )
-from websockets import serve
 
 from app.common.config import cfg
-from app.common.signal_bus import signalBus
-from app.components.LanguageSettingDialog import LanguageSettingDialog
 from app.config import APPDATA_PATH, ASSETS_PATH, VERSION
 from app.core.entities import (
     LLMServiceEnum,
