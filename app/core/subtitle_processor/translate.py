@@ -387,8 +387,8 @@ class GoogleTranslator(BaseTranslator):
             "User-Agent": "Mozilla/4.0 (compatible;MSIE 6.0;Windows NT 5.1;SV1;.NET CLR 1.1.4322;.NET CLR 2.0.50727;.NET CLR 3.0.04506.30)"
         }
         self.lang_map = {
-            "简体中文": "zh-cn",
-            "繁体中文": "zh-tw",
+            "简体中文": "zh-CN",
+            "繁体中文": "zh-TW",
             "英语": "en",
             "日本語": "ja",
             "韩语": "ko",
@@ -404,7 +404,7 @@ class GoogleTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        target_lang = self.lang_map.get(self.target_language, "zh-cn")
+        target_lang = self.lang_map.get(self.target_language, "zh-CN")
 
         for idx, text in subtitle_chunk.items():
             try:
