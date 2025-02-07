@@ -126,14 +126,14 @@ class Config(QConfig):
         "Translate", "NeedReflectTranslate", False, BoolValidator()
     )
     deeplx_endpoint = ConfigItem("Translate", "DeeplxEndpoint", "")
-    batch_size = RangeConfigItem("Translate", "BatchSize", 10, RangeValidator(10, 30))
-    thread_num = RangeConfigItem("Translate", "ThreadNum", 10, RangeValidator(1, 30))
+    batch_size = RangeConfigItem("Translate", "BatchSize", 10, RangeValidator(5, 30))
+    thread_num = RangeConfigItem("Translate", "ThreadNum", 10, RangeValidator(1, 50))
 
     # ------------------- 转录配置 -------------------
     transcribe_model = OptionsConfigItem(
         "Transcribe",
         "TranscribeModel",
-        TranscribeModelEnum.BIJIAN.value,
+        TranscribeModelEnum.BIJIAN,
         OptionsValidator(TranscribeModelEnum),
         EnumSerializer(TranscribeModelEnum),
     )
@@ -141,7 +141,7 @@ class Config(QConfig):
     transcribe_language = OptionsConfigItem(
         "Transcribe",
         "TranscribeLanguage",
-        TranscribeLanguageEnum.ENGLISH.value,
+        TranscribeLanguageEnum.ENGLISH,
         OptionsValidator(TranscribeLanguageEnum),
         EnumSerializer(TranscribeLanguageEnum),
     )
@@ -182,7 +182,7 @@ class Config(QConfig):
     faster_whisper_vad_method = OptionsConfigItem(
         "FasterWhisper",
         "VadMethod",
-        VadMethodEnum.SILERO_V4_FW.value,
+        VadMethodEnum.SILERO_V4_FW,
         OptionsValidator(VadMethodEnum),
         EnumSerializer(VadMethodEnum),
     )
