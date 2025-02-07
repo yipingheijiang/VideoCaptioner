@@ -82,7 +82,7 @@ class LLMServiceEnum(Enum):
     OLLAMA = "Ollama"
     GEMINI = "Gemini"
     CHATGLM = "ChatGLM"
-    PUBLIC = "Public"
+    PUBLIC = "软件公益模型"
 
 
 class TranscribeModelEnum(Enum):
