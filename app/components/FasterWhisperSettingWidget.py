@@ -221,9 +221,21 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
 
     def _setup_program_section(self, layout):
         """设置程序下载部分UI"""
+        # 标题和按钮的水平布局
+        title_layout = QHBoxLayout()
+
         # 标题
         faster_whisper_title = SubtitleLabel(self.tr("Faster Whisper 下载"), self)
-        layout.addWidget(faster_whisper_title)
+        title_layout.addWidget(faster_whisper_title)
+
+        # 添加打开文件夹按钮
+        open_folder_btn = HyperlinkButton("", self.tr("打开程序文件夹"), parent=self)
+        open_folder_btn.setIcon(FIF.FOLDER)
+        open_folder_btn.clicked.connect(self._open_program_folder)
+        title_layout.addStretch()
+        title_layout.addWidget(open_folder_btn)
+
+        layout.addLayout(title_layout)
         layout.addSpacing(8)
 
         # 检查已安装的版本
@@ -356,13 +368,15 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
         size_item.setTextAlignment(Qt.AlignCenter)
         self.model_table.setItem(row, 1, size_item)
 
-        # 状态
+        # 状态 - 检查model.bin文件是否存在
         model_path = os.path.join(MODEL_PATH, model["value"])
         model_bin_path = os.path.join(model_path, "model.bin")
+        is_downloaded = os.path.exists(model_bin_path)
+
         status_item = QTableWidgetItem(
-            self.tr("已下载") if os.path.exists(model_bin_path) else self.tr("未下载")
+            self.tr("已下载") if is_downloaded else self.tr("未下载")
         )
-        if os.path.exists(model_bin_path):
+        if is_downloaded:
             status_item.setForeground(Qt.green)
         status_item.setTextAlignment(Qt.AlignCenter)
         self.model_table.setItem(row, 2, status_item)
@@ -374,7 +388,7 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
 
         download_btn = HyperlinkButton(
             "",
-            self.tr("重新下载") if os.path.exists(model_bin_path) else self.tr("下载"),
+            self.tr("重新下载") if is_downloaded else self.tr("下载"),
             parent=self,
         )
         download_btn.setIcon(FIF.DOWNLOAD)
@@ -607,6 +621,17 @@ class FasterWhisperDownloadDialog(MessageBoxBase):
             else:  # Linux
                 subprocess.run(["xdg-open", MODEL_PATH])
 
+    def _open_program_folder(self):
+        """打开程序文件夹"""
+        if os.path.exists(BIN_PATH):
+            # 根据操作系统打开文件夹
+            if sys.platform == "win32":
+                os.startfile(BIN_PATH)
+            elif sys.platform == "darwin":  # macOS
+                subprocess.run(["open", BIN_PATH])
+            else:  # Linux
+                subprocess.run(["xdg-open", BIN_PATH])
+
     def _finish_program_installation(self):
         """完成程序安装"""
         InfoBar.success(
@@ -684,9 +709,11 @@ class FasterWhisperSettingWidget(QWidget):
                 ),
                 None,
             )
-            model_path = MODEL_PATH / model_config["value"] if model_config else None
-            if model_config and model_path.exists():
-                continue
+            if model_config:
+                model_path = Path(MODEL_PATH) / model_config["value"]
+                model_bin_path = model_path / "model.bin"
+                if model_bin_path.exists():
+                    continue
             self.model_card.comboBox.removeItem(i)
 
         # 创建管理模型卡片
