@@ -68,7 +68,7 @@ class Config(QConfig):
     llm_service = OptionsConfigItem(
         "LLM",
         "LLMService",
-        LLMServiceEnum.OPENAI.value,
+        LLMServiceEnum.PUBLIC,
         OptionsValidator(LLMServiceEnum),
         EnumSerializer(LLMServiceEnum),
     )
@@ -118,7 +118,7 @@ class Config(QConfig):
     translator_service = OptionsConfigItem(
         "Translate",
         "TranslatorServiceEnum",
-        TranslatorServiceEnum.BING.value,
+        TranslatorServiceEnum.BING,
         OptionsValidator(TranslatorServiceEnum),
         EnumSerializer(TranslatorServiceEnum),
     )
@@ -150,7 +150,7 @@ class Config(QConfig):
     whisper_model = OptionsConfigItem(
         "Whisper",
         "WhisperModel",
-        WhisperModelEnum.TINY.value,
+        WhisperModelEnum.TINY,
         OptionsValidator(WhisperModelEnum),
         EnumSerializer(WhisperModelEnum),
     )
@@ -164,7 +164,7 @@ class Config(QConfig):
     faster_whisper_model = OptionsConfigItem(
         "FasterWhisper",
         "Model",
-        FasterWhisperModelEnum.TINY.value,
+        FasterWhisperModelEnum.TINY,
         OptionsValidator(FasterWhisperModelEnum),
         EnumSerializer(FasterWhisperModelEnum),
     )
@@ -210,14 +210,14 @@ class Config(QConfig):
     split_type = OptionsConfigItem(
         "Subtitle",
         "SplitType",
-        SplitTypeEnum.SENTENCE.value,
+        SplitTypeEnum.SENTENCE,
         OptionsValidator(SplitTypeEnum),
         EnumSerializer(SplitTypeEnum),
     )
     target_language = OptionsConfigItem(
         "Subtitle",
         "TargetLanguage",
-        TargetLanguageEnum.CHINESE_SIMPLIFIED.value,
+        TargetLanguageEnum.CHINESE_SIMPLIFIED,
         OptionsValidator(TargetLanguageEnum),
         EnumSerializer(TargetLanguageEnum),
     )
