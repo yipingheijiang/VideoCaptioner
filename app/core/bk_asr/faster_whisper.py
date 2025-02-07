@@ -73,19 +73,29 @@ class FasterWhisperASR(BaseASR):
 
         self.process = None
 
+        # 断句宽度
         if self.language in ["zh", "ja", "ko"]:
             self.max_line_width = 30
         else:
             self.max_line_width = 90
 
+        # 断句选项
         if self.need_word_time_stamp:
             self.one_word = 1
         else:
             self.one_word = 0
             self.sentence = True
 
+        # 根据设备选择程序
+        if self.device == "cpu":
+            self.faster_whisper_program = "faster-whisper"
+            self.vad_method = None
+        else:
+            self.faster_whisper_program = "faster-whisper-xxl"
+
     def _build_command(self, audio_path: str) -> List[str]:
         """构建命令行参数"""
+
         cmd = [
             str(self.faster_whisper_program),
             "-m",
