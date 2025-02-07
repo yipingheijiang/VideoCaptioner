@@ -187,7 +187,7 @@ def auto_wrap_ass_file(
             )
 
     # 计算最大文本宽度（考虑边距）
-    max_text_width = int(video_width * 0.99)  # 留出5%的边距
+    max_text_width = int(video_width * 0.99)  # 留出1%的边距
 
     # 处理对话行
     def process_dialogue_line(match):
