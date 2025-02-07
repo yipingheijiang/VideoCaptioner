@@ -80,7 +80,7 @@ class TaskCreationInterface(QWidget):
         self.logo_label.setPixmap(self.logo_pixmap)
         self.logo_label.setAlignment(Qt.AlignCenter)
         self.main_layout.addWidget(self.logo_label)
-        self.main_layout.addSpacing(30)
+        self.main_layout.addSpacing(10)
 
     def setup_search_layout(self):
         self.search_layout = QHBoxLayout()
