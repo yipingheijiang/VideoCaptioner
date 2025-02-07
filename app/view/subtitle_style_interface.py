@@ -45,7 +45,7 @@ PERVIEW_TEXTS = {
 
 DEFAULT_BG_LANDSCAPE = {
     "path": ASSETS_PATH / "default_bg_landscape.png",
-    "width": 960,
+    "width": 1280,
     "height": 720,
 }
 DEFAULT_BG_PORTRAIT = {
