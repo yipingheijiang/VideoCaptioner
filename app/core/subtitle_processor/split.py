@@ -24,7 +24,7 @@ logger = logging.getLogger("subtitle_splitter")
 # 字幕分段的配置常量
 MAX_WORD_COUNT_CJK = 20  # 中日韩文本最大字数
 MAX_WORD_COUNT_ENGLISH = 12  # 英文文本最大单词数
-SEGMENT_THRESHOLD = 500  # 每个分段的最大字数
+SEGMENT_THRESHOLD = 300  # 每个分段的最大字数
 MAX_GAP = 1000  # 允许每个词语之间的最大时间间隔（毫秒）
 
 
