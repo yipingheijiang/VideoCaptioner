@@ -262,7 +262,7 @@ class SubtitleInterface(QWidget):
         # 添加字幕优化按钮
         self.optimize_button = Action(
             FIF.EDIT,
-            self.tr("字幕优化"),
+            self.tr("字幕校正"),
             triggered=self.on_subtitle_optimization_changed,
             checkable=True,
         )
@@ -791,15 +791,15 @@ class SubtitleInterface(QWidget):
             super().keyPressEvent(event)
 
     def cancel_optimization(self):
-        """取消字幕优化"""
+        """取消字幕校正"""
         if hasattr(self, "subtitle_optimization_thread"):
             self.subtitle_optimization_thread.stop()
             self.start_button.setEnabled(True)
             self.cancel_button.hide()
             self.progress_bar.setValue(0)
-            self.status_label.setText(self.tr("已取消优化"))
+            self.status_label.setText(self.tr("已取消校正"))
             InfoBar.warning(
-                self.tr("已取消"), self.tr("字幕优化已取消"), duration=3000, parent=self
+                self.tr("已取消"), self.tr("字幕校正已取消"), duration=3000, parent=self
             )
 
     def on_target_language_changed(self, language: str):
