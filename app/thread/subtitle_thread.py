@@ -224,15 +224,15 @@ class SubtitleThread(QThread):
                 asr_data.to_srt(
                     save_path=str(save_srt_path), layout=subtitle_config.subtitle_layout
                 )
-                save_ass_path = (
-                    Path(self.task.video_path).parent
-                    / f"{Path(self.task.video_path).stem}.ass"
-                )
-                asr_data.to_ass(
-                    save_path=str(save_ass_path),
-                    layout=subtitle_config.subtitle_layout,
-                    style_str=subtitle_config.subtitle_style,
-                )
+                # save_ass_path = (
+                #     Path(self.task.video_path).parent
+                #     / f"{Path(self.task.video_path).stem}.ass"
+                # )
+                # asr_data.to_ass(
+                #     save_path=str(save_ass_path),
+                #     layout=subtitle_config.subtitle_layout,
+                #     style_str=subtitle_config.subtitle_style,
+                # )
             else:
                 # 删除断句文件（对于仅字幕任务）
                 split_path = str(
