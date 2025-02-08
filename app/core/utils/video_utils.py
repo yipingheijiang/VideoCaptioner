@@ -134,7 +134,9 @@ def add_subtitles(
     video_info = get_video_info(input_file)
     if suffix == ".ass" and video_info:
         subtitle_file = auto_wrap_ass_file(
-            subtitle_file, width=video_info["width"], height=video_info["height"]
+            subtitle_file,
+            video_width=video_info["width"],
+            video_height=video_info["height"],
         )
 
     # 如果是WebM格式，强制使用硬字幕
