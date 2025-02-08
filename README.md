@@ -4,7 +4,7 @@
   <h1>VideoCaptioner</h1>
   <p>一款基于大语言模型(LLM)的视频字幕处理助手，支持语音识别、字幕断句、优化、翻译全流程处理</p>
 
-  简体中文 / [正體中文](./docs/README_TW.md) / [English](./docs/README_EN.md)
+  简体中文 / [正體中文](./docs/README_TW.md) / [English](./docs/README_EN.md)  
   
 </div>
 
@@ -46,7 +46,7 @@
 
 软件较为轻量，打包大小不足 60M,已集成所有必要环境，下载后可直接运行。
 
-1. 从 [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) 页面下载最新版本的可执行程序。或者：[蓝奏盘下载](https://wwwm.lanzoue.com/ixsFn2n14bzc)
+1. 从 [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) 页面下载最新版本的可执行程序。或者：[蓝奏盘下载](https://wwwm.lanzoue.com/iXtI72n59ysh)
 
 2. 打开安装包进行安装
 
@@ -258,7 +258,18 @@ VideoCaptioner/
 ## 更新日志
 
 <details>
-<summary>2024.1.22</summary>
+<summary>2025.02.07</summary>
+### Bug 修复与其他改进
+- 修复谷歌翻译语言不正确的问题。
+- 修部微软翻译不准确的问题。
+- 修复运行设备不选择cuda时显示报 winError的错误
+- 修复合成失败的问题
+- 修复ass单语字幕没有内容的问题
+</details>
+
+
+<details>
+<summary>2024.2.06</summary>
 
 ### 核心功能增强
 - 完整重构代码架构，优化整体性能
