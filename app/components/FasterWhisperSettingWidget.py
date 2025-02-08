@@ -62,7 +62,7 @@ from .LineEditSettingCard import LineEditSettingCard
 # 在文件开头添加常量定义
 FASTER_WHISPER_PROGRAMS = [
     {
-        "label": "GPU + CPU 版本",
+        "label": "GPU（cuda） + CPU 版本",
         "value": "faster-whisper-gpu.7z",
         "type": "GPU",
         "size": "1.35 GB",
@@ -746,9 +746,9 @@ class FasterWhisperSettingWidget(QWidget):
             ["cuda", "cpu"],
             self.setting_group,
         )
-        _, available_devices = check_faster_whisper_exists()
-        if "GPU" not in available_devices:
-            self.device_card.comboBox.removeItem(0)
+        # _, available_devices = check_faster_whisper_exists()
+        # if "GPU" not in available_devices:
+        #     self.device_card.comboBox.removeItem(0)
 
         # VAD设置组
         self.vad_group = SettingCardGroup(self.tr("VAD设置"), self)
