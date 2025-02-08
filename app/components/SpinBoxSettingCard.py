@@ -2,16 +2,27 @@ from typing import Union
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from qfluentwidgets import SettingCard, CompactSpinBox, CompactDoubleSpinBox
+from qfluentwidgets import CompactDoubleSpinBox, CompactSpinBox, SettingCard
 from qfluentwidgets.common.config import ConfigItem, qconfig
 
+
 class DoubleSpinBoxSettingCard(SettingCard):
-    """ 小数输入设置卡片 """
+    """小数输入设置卡片"""
 
     valueChanged = pyqtSignal(float)
 
-    def __init__(self, configItem: ConfigItem, icon: Union[str, QIcon], title: str, content: str = None,
-                 minimum: float = 0.0, maximum: float = 100.0, decimals: int = 1, step: float = 0.1, parent=None):
+    def __init__(
+        self,
+        configItem: ConfigItem,
+        icon: Union[str, QIcon],
+        title: str,
+        content: str = None,
+        minimum: float = 0.0,
+        maximum: float = 100.0,
+        decimals: int = 1,
+        step: float = 0.1,
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         self.configItem = configItem
@@ -33,23 +44,31 @@ class DoubleSpinBoxSettingCard(SettingCard):
         configItem.valueChanged.connect(self.setValue)
 
     def __onValueChanged(self, value: float):
-        """ 数值改变时的槽函数 """
+        """数值改变时的槽函数"""
         self.setValue(value)
         self.valueChanged.emit(value)
 
     def setValue(self, value: float):
-        """ 设置数值 """
+        """设置数值"""
         qconfig.set(self.configItem, value)
         self.spinBox.setValue(value)
 
 
 class SpinBoxSettingCard(SettingCard):
-    """ 数值输入设置卡片 """
+    """数值输入设置卡片"""
 
     valueChanged = pyqtSignal(int)
 
-    def __init__(self, configItem: ConfigItem, icon: Union[str, QIcon], title: str, content: str = None,
-                 minimum: int = 0, maximum: int = 100, parent=None):
+    def __init__(
+        self,
+        configItem: ConfigItem,
+        icon: Union[str, QIcon],
+        title: str,
+        content: str = None,
+        minimum: int = 0,
+        maximum: int = 100,
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         self.configItem = configItem
@@ -69,11 +88,11 @@ class SpinBoxSettingCard(SettingCard):
         configItem.valueChanged.connect(self.setValue)
 
     def __onValueChanged(self, value: int):
-        """ 数值改变时的槽函数 """
+        """数值改变时的槽函数"""
         self.setValue(value)
         self.valueChanged.emit(value)
 
     def setValue(self, value: int):
-        """ 设置数值 """
+        """设置数值"""
         qconfig.set(self.configItem, value)
         self.spinBox.setValue(value)

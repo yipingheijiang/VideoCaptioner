@@ -4,12 +4,19 @@ from qfluentwidgets.common.config import ConfigItem, qconfig
 
 
 class LineEditSettingCard(SettingCard):
-    """ 行输入卡片 """
+    """行输入卡片"""
 
     textChanged = pyqtSignal(str)
 
-    def __init__(self, configItem: ConfigItem, icon, title: str, content: str = None, placeholder: str = "",
-                 parent=None):
+    def __init__(
+        self,
+        configItem: ConfigItem,
+        icon,
+        title: str,
+        content: str = None,
+        placeholder: str = "",
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         self.configItem = configItem

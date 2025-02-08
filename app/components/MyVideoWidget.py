@@ -1,21 +1,24 @@
 # coding:utf-8
 import sys
-import vlc
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
 
-from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer, QObject
+import vlc
+from PyQt5.QtCore import QObject, Qt, QTimer, QUrl, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QApplication, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QVBoxLayout, QWidget
 
-from qfluentwidgets.common.style_sheet import FluentStyleSheet
-from qfluentwidgets.multimedia.media_play_bar import MediaPlayBarBase, MediaPlayBarButton
 # from qfluentwidgets.multimedia.media_player import MediaPlayer, MediaPlayerBase
 from qfluentwidgets.common.icon import FluentIcon
+from qfluentwidgets.common.style_sheet import FluentStyleSheet
 from qfluentwidgets.components.widgets.label import CaptionLabel
+from qfluentwidgets.multimedia.media_play_bar import (
+    MediaPlayBarBase,
+    MediaPlayBarButton,
+)
 
-from ..common.signal_bus import signalBus
-from ..config import RESOURCE_PATH
+from app.common.signal_bus import signalBus
+from app.config import RESOURCE_PATH
 
 
 class MediaStatus(Enum):
@@ -28,13 +31,15 @@ class MediaStatus(Enum):
     InvalidMedia = 6
     UnknownMediaStatus = 7
 
+
 class PlaybackState(Enum):
     StoppedState = 0
     PlayingState = 1
     PausedState = 2
 
+
 class MediaPlayerBase(QObject):
-    """ Media player base class """
+    """Media player base class"""
 
     mediaStatusChanged = pyqtSignal(MediaStatus)
     playbackRateChanged = pyqtSignal(float)
@@ -48,74 +53,74 @@ class MediaPlayerBase(QObject):
         super().__init__(parent=parent)
 
     def isPlaying(self):
-        """ Whether the media is playing """
+        """Whether the media is playing"""
         raise NotImplementedError
 
     def mediaStatus(self) -> MediaStatus:
-        """ Return the status of the current media stream """
+        """Return the status of the current media stream"""
         raise NotImplementedError
 
     def playbackState(self) -> PlaybackState:
-        """ Return the playback status of the current media stream """
+        """Return the playback status of the current media stream"""
         raise NotImplementedError
 
     def duration(self):
-        """ Returns the duration of the current media in ms """
+        """Returns the duration of the current media in ms"""
         raise NotImplementedError
 
     def position(self):
-        """ Returns the current position inside the media being played back in ms """
+        """Returns the current position inside the media being played back in ms"""
         raise NotImplementedError
 
     def volume(self):
-        """ Return the volume of player """
+        """Return the volume of player"""
         raise NotImplementedError
 
     def source(self) -> QUrl:
-        """ Return the active media source being used """
+        """Return the active media source being used"""
         raise NotImplementedError
 
     def pause(self):
-        """ Pause playing the current source """
+        """Pause playing the current source"""
         raise NotImplementedError
 
     def play(self):
-        """ Start or resume playing the current source """
+        """Start or resume playing the current source"""
         raise NotImplementedError
 
     def stop(self):
-        """ Stop playing, and reset the play position to the beginning """
+        """Stop playing, and reset the play position to the beginning"""
         raise NotImplementedError
 
     def playbackRate(self) -> float:
-        """ Return the playback rate of the current media """
+        """Return the playback rate of the current media"""
         raise NotImplementedError
 
     def setPosition(self, position: int):
-        """ Sets the position of media in ms """
+        """Sets the position of media in ms"""
         raise NotImplementedError
 
     def setSource(self, media: QUrl):
-        """ Sets the current source """
+        """Sets the current source"""
         raise NotImplementedError
 
     def setPlaybackRate(self, rate: float):
-        """ Sets the playback rate of player """
+        """Sets the playback rate of player"""
         raise NotImplementedError
 
     def setVolume(self, volume: int):
-        """ Sets the volume of player """
+        """Sets the volume of player"""
         raise NotImplementedError
 
     def setMuted(self, isMuted: bool):
         raise NotImplementedError
 
     def videoOutput(self) -> QObject:
-        """ Return the video output to be used by the media player """
+        """Return the video output to be used by the media player"""
         raise NotImplementedError
 
     def setVideoOutput(self, output: QObject) -> None:
-        """ Sets the video output to be used by the media player """
+        """Sets the video output to be used by the media player"""
         raise NotImplementedError
 
 
@@ -126,13 +131,13 @@ class MediaPlayer(MediaPlayerBase):
             super().__init__(parent)
         else:
             super().__init__()
-        
+
         # 修改 VLC 参数以减少警告
         vlc_args = [
-            '--no-xlib',  
-            '--quiet',
+            "--no-xlib",
+            "--quiet",
         ]
-        
+
         # 在主线程中创建 VLC 实例
         self.moveToThread(QApplication.instance().thread())
         self.instance = vlc.Instance(vlc_args)
@@ -140,18 +145,18 @@ class MediaPlayer(MediaPlayerBase):
         self._media = None
         self._source = None
         self._playback_rate = 1.0
-        
+
         # 创建定时器用于更新状态
         self._update_timer = QTimer(self)
         self._update_timer.setInterval(100)  # 100ms更新一次
         self._update_timer.timeout.connect(self._on_timer_update)
         self._update_timer.start()
-        
+
         # 保存上一次的状态，用于检测变化
         self._last_position = 0
         self._last_duration = 0
         self._last_volume = 100
-        
+
     def _on_timer_update(self):
         """定时更新状态并发送信号"""
         if self._player:
@@ -160,13 +165,13 @@ class MediaPlayer(MediaPlayerBase):
             if position != self._last_position:
                 self._last_position = position
                 self.positionChanged.emit(position)
-            
+
             # 更新时长
             duration = self._player.get_length()
             if duration != self._last_duration:
                 self._last_duration = duration
                 self.durationChanged.emit(duration)
-            
+
             # 更新音量
             volume = self._player.audio_get_volume()
             if volume != self._last_volume:
@@ -179,7 +184,7 @@ class MediaPlayer(MediaPlayerBase):
     def mediaStatus(self) -> MediaStatus:
         if not self._player:
             return MediaStatus.NoMedia
-        
+
         state = self._player.get_state()
         if state == vlc.State.NothingSpecial:
             return MediaStatus.NoMedia
@@ -200,7 +205,7 @@ class MediaPlayer(MediaPlayerBase):
     def playbackState(self) -> PlaybackState:
         if not self._player:
             return PlaybackState.StoppedState
-        
+
         if self._player.is_playing():
             return PlaybackState.PlayingState
         elif self._player.get_state() == vlc.State.Paused:
@@ -221,30 +226,30 @@ class MediaPlayer(MediaPlayerBase):
 
     def get_subtitle(self):
         """获取当前使用的字幕文件路径
-        
+
         Returns:
             str: 当前字幕文件路径，如果没有字幕则返回 None
         """
         if not self._player:
             return None
-        
+
         try:
             # 获取当前字幕轨道ID
             current_spu = self._player.video_get_spu()
             if current_spu <= 0:  # 0 表示禁用字幕，-1 表示错误
                 return None
-            
+
             # 获取字幕轨道描述信息
             spu_description = self._player.video_get_spu_description()
             if not spu_description:
                 return None
-            
+
             # 遍历查找当前使用的字幕轨道
             for spu in spu_description:
                 if spu[0] == current_spu:
                     # 返回字幕文件路径
-                    return spu[1].decode('utf-8')
-                
+                    return spu[1].decode("utf-8")
+
             return None
         except Exception as e:
             return None
@@ -295,7 +300,7 @@ class MediaPlayer(MediaPlayerBase):
         return None  # VLC不需要这个
 
     def setVideoOutput(self, output: QObject) -> None:
-        if isinstance(output, QObject) and hasattr(output, 'winId'):
+        if isinstance(output, QObject) and hasattr(output, "winId"):
             self._player.set_hwnd(output.winId())
 
     def hasMedia(self):
@@ -304,77 +309,81 @@ class MediaPlayer(MediaPlayerBase):
 
     def playSegment(self, start_time: int, end_time: int):
         """播放指定时间段的视频片段
-        
+
         Args:
             start_time: 开始时间（毫秒）
             end_time: 结束时间（毫秒）
         """
         if not self._player or not self.hasMedia():
             return
-        
+
         # 确保时间范围有效
         if start_time < 0 or end_time > self.duration() or start_time >= end_time:
             return
-        
+
         # 创建事件管理器
         event_manager = self._player.event_manager()
-        
+
         def on_time_changed(event):
             # 当播放位置到达结束时间时停止播放
             if self.position() >= end_time:
                 self.pause()
                 # 移除事件监听器
                 event_manager.event_detach(vlc.EventType.MediaPlayerTimeChanged)
-        
+
         # 注册时间变化事件
-        event_manager.event_attach(vlc.EventType.MediaPlayerTimeChanged, on_time_changed)
-        
+        event_manager.event_attach(
+            vlc.EventType.MediaPlayerTimeChanged, on_time_changed
+        )
+
         # 设置开始位置并播放
         self.setPosition(start_time)
         self.play()
 
     def add_subtitle(self, subtitle_file: str) -> bool:
         """添加字幕文件
-        
+
         Args:
             subtitle_file: 字幕文件的路径
-            
+
         Returns:
             bool: 是否成功添加字幕
         """
         if not self._player or not self.hasMedia():
             return False
-            
+
         try:
             # 将路径转换为 URI 格式
 
             subtitle_uri = Path(subtitle_file).as_uri()
-            
+
             # 添加字幕轨道
-            result = self._player.add_slave(vlc.MediaSlaveType.subtitle, subtitle_uri, True)
-            
+            result = self._player.add_slave(
+                vlc.MediaSlaveType.subtitle, subtitle_uri, True
+            )
+
             # 获取字幕轨道信息
             spu_description = self._player.video_get_spu_description()
 
             return result == 0
         except Exception as e:
             return False
-    
+
     def get_subtitle_tracks(self) -> list:
         """获取所有可用的字幕轨道"""
         if not self._player:
             return []
-            
+
         tracks = []
         spu_count = self._player.video_get_spu_count()
         for i in range(spu_count):
             track_info = self._player.video_get_spu_description()[i]
             tracks.append(track_info)
         return tracks
-    
+
     def set_subtitle_track(self, track_id: int):
         """设置当前使用的字幕轨道
-        
+
         Args:
             track_id: 字幕轨道ID，-1 表示禁用字幕
         """
@@ -383,7 +392,7 @@ class MediaPlayer(MediaPlayerBase):
 
 
 class StandardMediaPlayBar(MediaPlayBarBase):
-    """ Standard media play bar """
+    """Standard media play bar"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -400,8 +409,8 @@ class StandardMediaPlayBar(MediaPlayBarBase):
         self.skipBackButton = MediaPlayBarButton(FluentIcon.SKIP_BACK, self)
         self.skipForwardButton = MediaPlayBarButton(FluentIcon.SKIP_FORWARD, self)
 
-        self.currentTimeLabel = CaptionLabel('0:00:00', self)
-        self.remainTimeLabel = CaptionLabel('0:00:00', self)
+        self.currentTimeLabel = CaptionLabel("0:00:00", self)
+        self.remainTimeLabel = CaptionLabel("0:00:00", self)
 
         self.__initWidgets()
 
@@ -436,95 +445,99 @@ class StandardMediaPlayBar(MediaPlayBarBase):
         self.skipForwardButton.clicked.connect(lambda: self.skipForward(5000))
 
     def skipBack(self, ms: int):
-        """ Back up for specified milliseconds """
-        self.player.setPosition(self.player.position()-ms)
+        """Back up for specified milliseconds"""
+        self.player.setPosition(self.player.position() - ms)
 
     def skipForward(self, ms: int):
-        """ Fast forward specified milliseconds """
-        self.player.setPosition(self.player.position()+ms)
+        """Fast forward specified milliseconds"""
+        self.player.setPosition(self.player.position() + ms)
 
     def _onPositionChanged(self, position: int):
         super()._onPositionChanged(position)
         self.currentTimeLabel.setText(self._formatTime(position))
-        self.remainTimeLabel.setText(self._formatTime(self.player.duration() - position))
+        self.remainTimeLabel.setText(
+            self._formatTime(self.player.duration() - position)
+        )
 
     def _formatTime(self, time: int):
         time = int(time / 1000)
         s = time % 60
         m = int(time / 60)
         h = int(time / 3600)
-        return f'{h}:{m:02}:{s:02}'
-    
+        return f"{h}:{m:02}:{s:02}"
+
     def closeEvent(self, event):
         self.release()
         super().closeEvent(event)
 
 
 class MyVideoWidget(QWidget):
-    """ Video widget """
+    """Video widget"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        
+
         # 设置初始窗口大小
         self.resize(800, 600)
         self.setWindowTitle("VideoCaptioner")
         self.setWindowIcon(QIcon(str(RESOURCE_PATH / "assets" / "logo.png")))
-        
+
         # 创建一个专门用于视频输出的 widget
         self.videoWidget = QWidget(self)
         self.videoWidget.setStyleSheet("background-color: rgb(24, 24, 24);")
-        
+
         # 添加提示标签
         self.tipLabel = CaptionLabel("请拖入视频文件", self.videoWidget)
-        self.tipLabel.setStyleSheet("""
+        self.tipLabel.setStyleSheet(
+            """
             color: rgba(255, 255, 255, 0.5);
             font-size: 20px;
             font-weight: bold;
             letter-spacing: 2px;
-        """)
-        
+        """
+        )
+
         # 创建布局使标签居中
         tipLayout = QVBoxLayout(self.videoWidget)
         tipLayout.addWidget(self.tipLabel, 0, Qt.AlignCenter)
-        
+
         # 创建播放控制栏
         self.playBar = StandardMediaPlayBar(self)
         self.playBar.setAttribute(Qt.WA_TranslucentBackground)
 
         # 设置字幕文件
         self.subtitle_file = None
-        
+
         # 创建垂直布局
         self.vBoxLayout = QVBoxLayout(self)
         self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
         self.vBoxLayout.setSpacing(0)
         self.vBoxLayout.addWidget(self.videoWidget, 1)
         self.vBoxLayout.addWidget(self.playBar, 0)
-        
+
         # 创建播放器并传入优化参数
         self.vlc_player = MediaPlayer(self)
-        
+
         # 设置新的播放器
         self.playBar.setMediaPlayer(self.vlc_player)
         self.playBar.setVolume(80)
         self.vlc_player.setVideoOutput(self.videoWidget)
         FluentStyleSheet.MEDIA_PLAYER.apply(self)
-        
+
         # 设置焦点和事件过滤
         self.setFocusPolicy(Qt.StrongFocus)
         self.videoWidget.setFocusPolicy(Qt.StrongFocus)
-        
+
         # 安装事件过滤器
         self.videoWidget.installEventFilter(self)
         self.playBar.installEventFilter(self)
-                
+
         FluentStyleSheet.MEDIA_PLAYER.apply(self)
         self.setAcceptDrops(True)
-        
+
         # 连接 SignalBus 信号
         self._connectSignals()
-    
+
     def _connectSignals(self):
         """连接 SignalBus 的信号"""
         # 视频控制信号
@@ -534,15 +547,15 @@ class MyVideoWidget(QWidget):
         signalBus.video_source_changed.connect(self.setVideo)
         signalBus.video_segment_play.connect(self.playSegment)
         signalBus.video_subtitle_added.connect(self.addSubtitle)
-    
+
     def addSubtitle(self, subtitle_file: str):
         """添加字幕文件的内部方法"""
         self.subtitle_file = subtitle_file
         self.vlc_player.add_subtitle(subtitle_file)
-    
+
     def setVideo(self, url: QUrl):
         """设置视频源
-        
+
         Args:
             url: 视频文件的 QUrl
         """
@@ -552,28 +565,28 @@ class MyVideoWidget(QWidget):
             self.vlc_player.add_subtitle(self.subtitle_file)
         # 隐藏提示标签
         self.tipLabel.hide()
-    
+
     def play(self):
         """播放视频"""
         self.playBar.play()
-    
+
     def pause(self):
         """暂停视频"""
         self.playBar.pause()
-    
+
     def stop(self):
         """停止视频"""
         self.playBar.stop()
-    
+
     def playSegment(self, start_time: int, end_time: int):
         """播放指定时间段的视频
-        
+
         Args:
             start_time: 开始时间(毫秒)
             end_time: 结束时间(毫秒)
         """
         self.vlc_player.playSegment(start_time, end_time)
-    
+
     def hideEvent(self, e):
         self.stop()
         e.accept()
@@ -582,7 +595,7 @@ class MyVideoWidget(QWidget):
         return
 
     def togglePlayState(self):
-        """ toggle play state """
+        """toggle play state"""
         if self.vlc_player.isPlaying():
             self.pause()
         else:
@@ -591,7 +604,7 @@ class MyVideoWidget(QWidget):
     @property
     def player(self):
         return self.playBar.player
-    
+
     def keyPressEvent(self, event):
         """处理键盘事件"""
         if event.key() == Qt.Key_Space:
@@ -602,26 +615,31 @@ class MyVideoWidget(QWidget):
             self.playBar.skipForward(3000)
         else:
             super().keyPressEvent(event)
-    
+
     def dragEnterEvent(self, event):
         """处理拖入事件"""
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
             # 检查是否为视频文件或字幕文件
-            if any(url.toLocalFile().lower().endswith(
-                ('.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.srt', '.ass')
-            ) for url in urls):
+            if any(
+                url.toLocalFile()
+                .lower()
+                .endswith(
+                    (".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv", ".srt", ".ass")
+                )
+                for url in urls
+            ):
                 event.acceptProposedAction()
-    
+
     def dropEvent(self, event):
         """处理放下事件"""
         urls = event.mimeData().urls()
         for url in urls:
             file_path = url.toLocalFile().lower()
-            if file_path.endswith(('.srt', '.ass')):
+            if file_path.endswith((".srt", ".ass")):
                 # 处理字幕文件
                 self.vlc_player.add_subtitle(url.toLocalFile())
-            elif file_path.endswith(('.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv')):
+            elif file_path.endswith((".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv")):
                 # 处理视频文件
                 self.setVideo(url)
                 self.play()
@@ -647,12 +665,12 @@ if __name__ == "__main__":
     # 设置视频源
     video_path = r"C:\Users\weifeng\Videos\【卡卡】N进制演示器.mp4"
     window.setVideo(QUrl.fromLocalFile(video_path))
-    
+
     # 确保窗口显示在屏幕中央
     window.show()
     window.activateWindow()
     window.raise_()
-    
+
     # 开始播放视频
     # window.play()
     sys.exit(app.exec_())

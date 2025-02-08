@@ -1,18 +1,25 @@
-from typing import Union, List
+from typing import List, Union
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from qfluentwidgets import SettingCard, EditableComboBox
+from qfluentwidgets import EditableComboBox, SettingCard
 from qfluentwidgets.common.config import ConfigItem, qconfig
 
 
 class EditComboBoxSettingCard(SettingCard):
-    """ 可编辑的下拉框设置卡片 """
+    """可编辑的下拉框设置卡片"""
 
     currentTextChanged = pyqtSignal(str)
 
-    def __init__(self, configItem: ConfigItem, icon: Union[str, QIcon], title: str,
-                 content: str = None, items: List[str] = None, parent=None):
+    def __init__(
+        self,
+        configItem: ConfigItem,
+        icon: Union[str, QIcon],
+        title: str,
+        content: str = None,
+        items: List[str] = None,
+        parent=None,
+    ):
         super().__init__(icon, title, content, parent)
 
         self.configItem = configItem
@@ -38,22 +45,22 @@ class EditComboBoxSettingCard(SettingCard):
         configItem.valueChanged.connect(self.setValue)
 
     def __onTextChanged(self, text: str):
-        """ 当文本改变时触发 """
+        """当文本改变时触发"""
         self.setValue(text)
         self.currentTextChanged.emit(text)
 
     def setValue(self, value: str):
-        """ 设置值 """
+        """设置值"""
         qconfig.set(self.configItem, value)
         self.comboBox.setText(value)
 
     def addItems(self, items: List[str]):
-        """ 添加选项 """
+        """添加选项"""
         for item in items:
             self.comboBox.addItem(item)
 
     def setItems(self, items: List[str]):
-        """ 重新设置选项列表 """
+        """重新设置选项列表"""
         self.comboBox.clear()
         self.items = items
         for item in items:

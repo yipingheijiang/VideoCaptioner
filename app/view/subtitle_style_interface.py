@@ -1,37 +1,71 @@
 import os
-from pathlib import Path
-import sys
 import subprocess
+import sys
+from pathlib import Path
 from typing import Optional, Tuple
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QColor, QFontDatabase
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFileDialog
-from qfluentwidgets import (ScrollArea, SettingCardGroup, LineEdit, MessageBoxBase,
-                            PushSettingCard, FluentIcon as FIF, CardWidget, BodyLabel, ImageLabel,
-                            InfoBar, InfoBarPosition)
+from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QVBoxLayout, QWidget
+from qfluentwidgets import BodyLabel, CardWidget
+from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import (
+    ImageLabel,
+    InfoBar,
+    InfoBarPosition,
+    LineEdit,
+    MessageBoxBase,
+    PushSettingCard,
+    ScrollArea,
+    SettingCardGroup,
+)
 
-from ..common.config import cfg
-from ..components.MySettingCard import SpinBoxSettingCard, ComboBoxSettingCard, ColorSettingCard, \
-    DoubleSpinBoxSettingCard
-from ..core.utils.subtitle_preview import generate_preview
-from ..config import SUBTITLE_STYLE_PATH
-from ..common.signal_bus import signalBus
+from app.common.config import cfg
+from app.common.signal_bus import signalBus
+from app.components.MySettingCard import (
+    ColorSettingCard,
+    ComboBoxSettingCard,
+    DoubleSpinBoxSettingCard,
+    SpinBoxSettingCard,
+)
+from app.config import SUBTITLE_STYLE_PATH, ASSETS_PATH
+from app.core.utils.subtitle_preview import generate_preview
 
 PERVIEW_TEXTS = {
-    "长文本": ("This is a long text used for testing subtitle preview.",
-               "这是一段用于测试字幕预览的长文本"),
-    "中文本": ("Welcome to apply for South China Normal University!",
-               "欢迎报考华南师范大学"),
-    "短文本": ("Elementary school students know this",
-              "小学二年级的都知道")
+    "长文本": (
+        "This is a long text used for testing subtitle preview and style settings.",
+        "这是一段用于测试字幕预览和样式设置的长文本内容",
+    ),
+    "中文本": (
+        "Welcome to apply for the prestigious South China Normal University!",
+        "欢迎报考百年名校华南师范大学",
+    ),
+    "短文本": ("Elementary school students know this", "小学二年级的都知道"),
+}
+
+DEFAULT_BG_LANDSCAPE = {
+    "path": ASSETS_PATH / "default_bg_landscape.png",
+    "width": 1280,
+    "height": 720,
+}
+DEFAULT_BG_PORTRAIT = {
+    "path": ASSETS_PATH / "default_bg_portrait.png",
+    "width": 480,
+    "height": 852,
 }
 
 
 class PreviewThread(QThread):
     previewReady = pyqtSignal(str)
 
-    def __init__(self, style_str: str, preview_text: Tuple[str, Optional[str]]):
+    def __init__(
+        self,
+        style_str: str,
+        preview_text: Tuple[str, Optional[str]],
+        bg_path: str,
+        width: int,
+        height: int,
+    ):
         """
         Args:
             style_str: ASS 样式字符串
@@ -40,10 +74,18 @@ class PreviewThread(QThread):
         super().__init__()
         self.style_str = style_str
         self.preview_text = preview_text
+        self.bg_path = bg_path
+        self.width = width
+        self.height = height
 
     def run(self):
-        preview_path = cfg.get(cfg.subtitle_preview_image)
-        preview_path = generate_preview(self.style_str, self.preview_text, preview_path)
+        preview_path = generate_preview(
+            style_str=self.style_str,
+            preview_text=self.preview_text,
+            bg_path=self.bg_path,
+            width=self.width,
+            height=self.height,
+        )
         self.previewReady.emit(preview_path)
 
 
@@ -109,24 +151,21 @@ class SubtitleStyleInterface(QWidget):
         self.previewBottomLayout = QVBoxLayout(self.previewBottomWidget)
 
         self.styleNameComboBox = ComboBoxSettingCard(
-            FIF.VIEW,
-            self.tr("选择样式"),
-            self.tr("选择已保存的字幕样式"),
-            texts=[]
+            FIF.VIEW, self.tr("选择样式"), self.tr("选择已保存的字幕样式"), texts=[]
         )
 
         self.newStyleButton = PushSettingCard(
             self.tr("新建样式"),
             FIF.ADD,
             self.tr("新建样式"),
-            self.tr("基于当前样式新建预设")
+            self.tr("基于当前样式新建预设"),
         )
 
         self.openStyleFolderButton = PushSettingCard(
             self.tr("打开样式文件夹"),
             FIF.FOLDER,
             self.tr("打开样式文件夹"),
-            self.tr("在文件管理器中打开样式文件夹")
+            self.tr("在文件管理器中打开样式文件夹"),
         )
 
         self.previewBottomLayout.addWidget(self.styleNameComboBox)
@@ -144,7 +183,7 @@ class SubtitleStyleInterface(QWidget):
             FIF.ALIGNMENT,
             self.tr("字幕排布"),
             self.tr("设置主字幕和副字幕的显示方式"),
-            texts=["译文在上", "原文在上", "仅译文", "仅原文"]
+            texts=["译文在上", "原文在上", "仅译文", "仅原文"],
         )
 
         # 垂直间距
@@ -153,7 +192,7 @@ class SubtitleStyleInterface(QWidget):
             self.tr("垂直间距"),
             self.tr("设置字幕的垂直间距"),
             minimum=8,
-            maximum=666,
+            maximum=10000,
         )
 
         # 主字幕样式设置
@@ -161,7 +200,7 @@ class SubtitleStyleInterface(QWidget):
             FIF.FONT,
             self.tr("主字幕字体"),
             self.tr("设置主字幕的字体"),
-            texts=["Arial"]
+            texts=["Arial"],
         )
 
         self.mainSizeCard = SpinBoxSettingCard(
@@ -169,7 +208,7 @@ class SubtitleStyleInterface(QWidget):
             self.tr("主字幕字号"),
             self.tr("设置主字幕的大小"),
             minimum=8,
-            maximum=300,
+            maximum=1000,
         )
 
         self.mainSpacingCard = DoubleSpinBoxSettingCard(
@@ -185,14 +224,14 @@ class SubtitleStyleInterface(QWidget):
             QColor(255, 255, 255),
             FIF.PALETTE,
             self.tr("主字幕颜色"),
-            self.tr("设置主字幕的颜色")
+            self.tr("设置主字幕的颜色"),
         )
 
         self.mainOutlineColorCard = ColorSettingCard(
             QColor(0, 0, 0),
             FIF.PALETTE,
             self.tr("主字幕边框颜色"),
-            self.tr("设置主字幕的边框颜色")
+            self.tr("设置主字幕的边框颜色"),
         )
 
         self.mainOutlineSizeCard = DoubleSpinBoxSettingCard(
@@ -209,7 +248,7 @@ class SubtitleStyleInterface(QWidget):
             FIF.FONT,
             self.tr("副字幕字体"),
             self.tr("设置副字幕的字体"),
-            texts=["Arial"]
+            texts=["Arial"],
         )
 
         self.subSizeCard = SpinBoxSettingCard(
@@ -217,7 +256,7 @@ class SubtitleStyleInterface(QWidget):
             self.tr("副字幕字号"),
             self.tr("设置副字幕的大小"),
             minimum=8,
-            maximum=300,
+            maximum=1000,
         )
 
         self.subSpacingCard = DoubleSpinBoxSettingCard(
@@ -225,7 +264,7 @@ class SubtitleStyleInterface(QWidget):
             self.tr("副字幕间距"),
             self.tr("设置副字幕的字符间距"),
             minimum=0.0,
-            maximum=10.0,
+            maximum=50.0,
             decimals=1,
         )
 
@@ -233,14 +272,14 @@ class SubtitleStyleInterface(QWidget):
             QColor(255, 255, 255),
             FIF.PALETTE,
             self.tr("副字幕颜色"),
-            self.tr("设置副字幕的颜色")
+            self.tr("设置副字幕的颜色"),
         )
 
         self.subOutlineColorCard = ColorSettingCard(
             QColor(0, 0, 0),
             FIF.PALETTE,
             self.tr("副字幕边框颜色"),
-            self.tr("设置副字幕的边框颜色")
+            self.tr("设置副字幕的边框颜色"),
         )
 
         self.subOutlineSizeCard = DoubleSpinBoxSettingCard(
@@ -248,7 +287,7 @@ class SubtitleStyleInterface(QWidget):
             self.tr("副字幕边框大小"),
             self.tr("设置副字幕的边框粗细"),
             minimum=0.0,
-            maximum=10.0,
+            maximum=50.0,
             decimals=1,
         )
 
@@ -258,7 +297,15 @@ class SubtitleStyleInterface(QWidget):
             self.tr("预览文字"),
             self.tr("设置预览显示的文字内容"),
             texts=PERVIEW_TEXTS.keys(),
-            parent=self.previewGroup
+            parent=self.previewGroup,
+        )
+
+        self.orientationCard = ComboBoxSettingCard(
+            FIF.LAYOUT,
+            self.tr("预览方向"),
+            self.tr("设置预览图片的显示方向"),
+            texts=["横屏", "竖屏"],
+            parent=self.previewGroup,
         )
 
         self.previewImageCard = PushSettingCard(
@@ -266,7 +313,7 @@ class SubtitleStyleInterface(QWidget):
             FIF.PHOTO,
             self.tr("预览背景"),
             self.tr("选择预览使用的背景图片"),
-            parent=self.previewGroup
+            parent=self.previewGroup,
         )
 
     def _initLayout(self):
@@ -289,6 +336,7 @@ class SubtitleStyleInterface(QWidget):
         self.subGroup.addSettingCard(self.subOutlineSizeCard)
 
         self.previewGroup.addSettingCard(self.previewTextCard)
+        self.previewGroup.addSettingCard(self.orientationCard)
         self.previewGroup.addSettingCard(self.previewImageCard)
 
         # 添加组到布局
@@ -305,7 +353,8 @@ class SubtitleStyleInterface(QWidget):
     def _initStyle(self):
         """初始化样式"""
         self.settingsWidget.setObjectName("settingsWidget")
-        self.setStyleSheet("""        
+        self.setStyleSheet(
+            """        
             SubtitleStyleInterface, #settingsWidget {
                 background-color: transparent;
             }
@@ -313,7 +362,8 @@ class SubtitleStyleInterface(QWidget):
                 border: none;
                 background-color: transparent;
             }
-        """)
+        """
+        )
 
     def __setValues(self):
         """设置初始值"""
@@ -327,6 +377,10 @@ class SubtitleStyleInterface(QWidget):
         fontFamilies = fontDatabase.families()
         self.mainFontCard.addItems(fontFamilies)
         self.subFontCard.addItems(fontFamilies)
+
+        # 设置字体选项框最大显示数量
+        self.mainFontCard.comboBox.setMaxVisibleItems(12)
+        self.subFontCard.comboBox.setMaxVisibleItems(12)
 
         # 获取样式目录下的所有txt文件名
         style_files = [f.stem for f in SUBTITLE_STYLE_PATH.glob("*.txt")]
@@ -351,7 +405,8 @@ class SubtitleStyleInterface(QWidget):
         # 字幕排布
         self.layoutCard.currentTextChanged.connect(self.onSettingChanged)
         self.layoutCard.currentTextChanged.connect(
-            lambda: cfg.set(cfg.subtitle_layout, self.layoutCard.comboBox.currentText()))
+            lambda: cfg.set(cfg.subtitle_layout, self.layoutCard.comboBox.currentText())
+        )
         # 垂直间距
         self.verticalSpacingCard.spinBox.valueChanged.connect(self.onSettingChanged)
 
@@ -373,6 +428,7 @@ class SubtitleStyleInterface(QWidget):
 
         # 预览设置
         self.previewTextCard.currentTextChanged.connect(self.onSettingChanged)
+        self.orientationCard.currentTextChanged.connect(self.onOrientationChanged)
         self.previewImageCard.clicked.connect(self.selectPreviewImage)
 
         # 连接样式切换信号
@@ -381,7 +437,9 @@ class SubtitleStyleInterface(QWidget):
         self.openStyleFolderButton.clicked.connect(self.on_open_style_folder_clicked)
 
         # 连接字幕排布信号
-        self.layoutCard.currentTextChanged.connect(signalBus.on_subtitle_layout_changed)
+        self.layoutCard.comboBox.currentTextChanged.connect(
+            signalBus.subtitle_layout_changed
+        )
         signalBus.subtitle_layout_changed.connect(self.on_subtitle_layout_changed)
 
     def on_open_style_folder_clicked(self):
@@ -397,11 +455,21 @@ class SubtitleStyleInterface(QWidget):
         cfg.subtitle_layout.value = layout
         self.layoutCard.setCurrentText(layout)
 
+    def onOrientationChanged(self):
+        """当预览方向改变时调用"""
+        orientation = self.orientationCard.comboBox.currentText()
+        preview_image = (
+            DEFAULT_BG_LANDSCAPE if orientation == "横屏" else DEFAULT_BG_PORTRAIT
+        )
+        cfg.set(cfg.subtitle_preview_image, str(Path(preview_image["path"])))
+        self.updatePreview()
+
     def onSettingChanged(self):
         """当任何设置改变时调用"""
         # 如果正在加载样式，不触发更新
         if self._loading_style:
             return
+
         self.updatePreview()
         # 获取当前选择的样式名称
         current_style = self.styleNameComboBox.comboBox.currentText()
@@ -416,7 +484,7 @@ class SubtitleStyleInterface(QWidget):
             self,
             self.tr("选择背景图片"),
             "",
-            self.tr("图片文件") + " (*.png *.jpg *.jpeg)"
+            self.tr("图片文件") + " (*.png *.jpg *.jpeg)",
         )
         if file_path:
             cfg.set(cfg.subtitle_preview_image, file_path)
@@ -426,11 +494,11 @@ class SubtitleStyleInterface(QWidget):
         """生成 ASS 样式字符串"""
         style_format = "Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding"
 
-
         # 从控件获取当前设置
-
         # 获取垂直间距
-        vertical_spacing = int(self.verticalSpacingCard.spinBox.value())  # 转换为ASS单位
+        vertical_spacing = int(
+            self.verticalSpacingCard.spinBox.value()
+        )  # 转换为ASS单位
 
         # 提取主字幕样式元素
         main_font = self.mainFontCard.comboBox.currentText()
@@ -439,8 +507,12 @@ class SubtitleStyleInterface(QWidget):
         # 获取颜色值并转换为 ASS 格式 (AABBGGRR)
         main_color_hex = self.mainColorCard.colorPicker.color.name()
         main_outline_hex = self.mainOutlineColorCard.colorPicker.color.name()
-        main_color = f"&H00{main_color_hex[5:7]}{main_color_hex[3:5]}{main_color_hex[1:3]}"
-        main_outline_color = f"&H00{main_outline_hex[5:7]}{main_outline_hex[3:5]}{main_outline_hex[1:3]}"
+        main_color = (
+            f"&H00{main_color_hex[5:7]}{main_color_hex[3:5]}{main_color_hex[1:3]}"
+        )
+        main_outline_color = (
+            f"&H00{main_outline_hex[5:7]}{main_outline_hex[3:5]}{main_outline_hex[1:3]}"
+        )
         main_spacing = self.mainSpacingCard.spinBox.value()
         main_outline_size = self.mainOutlineSizeCard.spinBox.value()
 
@@ -452,13 +524,15 @@ class SubtitleStyleInterface(QWidget):
         sub_color_hex = self.subColorCard.colorPicker.color.name()
         sub_outline_hex = self.subOutlineColorCard.colorPicker.color.name()
         sub_color = f"&H00{sub_color_hex[5:7]}{sub_color_hex[3:5]}{sub_color_hex[1:3]}"
-        sub_outline_color = f"&H00{sub_outline_hex[5:7]}{sub_outline_hex[3:5]}{sub_outline_hex[1:3]}"
+        sub_outline_color = (
+            f"&H00{sub_outline_hex[5:7]}{sub_outline_hex[3:5]}{sub_outline_hex[1:3]}"
+        )
         sub_spacing = self.subSpacingCard.spinBox.value()
         sub_outline_size = self.subOutlineSizeCard.spinBox.value()
 
         # 生成样式字符串
-        main_style = f"Style: Default,{main_font},{main_size},{main_color},&H000000FF,{main_outline_color},&H00000000,-1,0,0,0,100,100,{main_spacing},0,1,{main_outline_size},0,2,10,10,{vertical_spacing},1"
-        sub_style = f"Style: Secondary,{sub_font},{sub_size},{sub_color},&H000000FF,{sub_outline_color},&H00000000,-1,0,0,0,100,100,{sub_spacing},0,1,{sub_outline_size},0,2,10,10,{vertical_spacing},1"
+        main_style = f"Style: Default,{main_font},{main_size},{main_color},&H000000FF,{main_outline_color},&H00000000,-1,0,0,0,100,100,{main_spacing},0,1,{main_outline_size},0,2,10,10,{vertical_spacing},1,\q1"
+        sub_style = f"Style: Secondary,{sub_font},{sub_size},{sub_color},&H000000FF,{sub_outline_color},&H00000000,-1,0,0,0,100,100,{sub_spacing},0,1,{sub_outline_size},0,2,10,10,{vertical_spacing},1,\q1"
 
         return f"[V4+ Styles]\n{style_format}\n{main_style}\n{sub_style}"
 
@@ -481,8 +555,23 @@ class SubtitleStyleInterface(QWidget):
         elif layout == "仅原文":
             main_text, sub_text = main_text, None
 
+        # 获取预览方向
+        orientation = self.orientationCard.comboBox.currentText()
+        preview_image = (
+            DEFAULT_BG_LANDSCAPE if orientation == "横屏" else DEFAULT_BG_PORTRAIT
+        )
+        path = preview_image["path"]
+        width = preview_image["width"]
+        height = preview_image["height"]
+
         # 创建预览线程
-        self.preview_thread = PreviewThread(style_str, (main_text, sub_text))
+        self.preview_thread = PreviewThread(
+            style_str=style_str,
+            preview_text=(main_text, sub_text),
+            bg_path=path,
+            width=width,
+            height=height,
+        )
         self.preview_thread.previewReady.connect(self.onPreviewReady)
         self.preview_thread.start()
 
@@ -519,23 +608,23 @@ class SubtitleStyleInterface(QWidget):
         # 设置标志位，防止触发onSettingChanged
         self._loading_style = True
 
-        with open(style_path, 'r', encoding='utf-8') as f:
+        with open(style_path, "r", encoding="utf-8") as f:
             style_content = f.read()
 
         # 解析样式内容
-        for line in style_content.split('\n'):
-            if line.startswith('Style: Default'):
+        for line in style_content.split("\n"):
+            if line.startswith("Style: Default"):
                 # 解析主字幕样式
-                parts = line.split(',')
+                parts = line.split(",")
                 self.mainFontCard.setCurrentText(parts[1])
                 self.mainSizeCard.spinBox.setValue(int(parts[2]))
-                
+
                 vertical_spacing = int(parts[21])
                 self.verticalSpacingCard.spinBox.setValue(vertical_spacing)
 
                 # 将 &HAARRGGBB 格式转换为 QColor
                 primary_color = parts[3].strip()
-                if primary_color.startswith('&H'):
+                if primary_color.startswith("&H"):
                     # 移除 &H 前缀,转换为 RGB
                     color_hex = primary_color[2:]
                     alpha = int(color_hex[0:2], 16)
@@ -545,7 +634,7 @@ class SubtitleStyleInterface(QWidget):
                     self.mainColorCard.setColor(QColor(red, green, blue, alpha))
 
                 outline_color = parts[5].strip()
-                if outline_color.startswith('&H'):
+                if outline_color.startswith("&H"):
                     color_hex = outline_color[2:]
                     alpha = int(color_hex[0:2], 16)
                     blue = int(color_hex[2:4], 16)
@@ -555,14 +644,14 @@ class SubtitleStyleInterface(QWidget):
 
                 self.mainSpacingCard.spinBox.setValue(float(parts[13]))
                 self.mainOutlineSizeCard.spinBox.setValue(float(parts[16]))
-            elif line.startswith('Style: Secondary'):
+            elif line.startswith("Style: Secondary"):
                 # 解析副字幕样式
-                parts = line.split(',')
+                parts = line.split(",")
                 self.subFontCard.setCurrentText(parts[1])
                 self.subSizeCard.spinBox.setValue(int(parts[2]))
                 # 将 &HAARRGGBB 格式转换为 QColor
                 primary_color = parts[3].strip()
-                if primary_color.startswith('&H'):
+                if primary_color.startswith("&H"):
                     color_hex = primary_color[2:]
                     alpha = int(color_hex[0:2], 16)
                     blue = int(color_hex[2:4], 16)
@@ -571,7 +660,7 @@ class SubtitleStyleInterface(QWidget):
                     self.subColorCard.setColor(QColor(red, green, blue, alpha))
 
                 outline_color = parts[5].strip()
-                if outline_color.startswith('&H'):
+                if outline_color.startswith("&H"):
                     color_hex = outline_color[2:]
                     alpha = int(color_hex[0:2], 16)
                     blue = int(color_hex[2:4], 16)
@@ -592,13 +681,13 @@ class SubtitleStyleInterface(QWidget):
 
         # 显示加载成功提示
         InfoBar.success(
-            title=self.tr('成功'),
-            content=self.tr('已加载样式 ') + style_name,
+            title=self.tr("成功"),
+            content=self.tr("已加载样式 ") + style_name,
             orient=Qt.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
             duration=1500,
-            parent=self
+            parent=self,
         )
 
     def createNewStyle(self):
@@ -612,13 +701,13 @@ class SubtitleStyleInterface(QWidget):
             # 检查是否已存在同名样式
             if (SUBTITLE_STYLE_PATH / f"{style_name}.txt").exists():
                 InfoBar.warning(
-                    title=self.tr('警告'),
-                    content=self.tr('样式 ') + style_name + self.tr(' 已存在'),
+                    title=self.tr("警告"),
+                    content=self.tr("样式 ") + style_name + self.tr(" 已存在"),
                     orient=Qt.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
                     duration=2000,
-                    parent=self
+                    parent=self,
                 )
                 return
 
@@ -631,13 +720,13 @@ class SubtitleStyleInterface(QWidget):
 
             # 显示创建成功提示
             InfoBar.success(
-                title=self.tr('成功'),
-                content=self.tr('已创建新样式 ') + style_name,
+                title=self.tr("成功"),
+                content=self.tr("已创建新样式 ") + style_name,
                 orient=Qt.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
                 duration=2000,
-                parent=self
+                parent=self,
             )
 
     def saveStyle(self, style_name):
@@ -652,19 +741,19 @@ class SubtitleStyleInterface(QWidget):
         style_content = self.generateAssStyles()
         style_path = SUBTITLE_STYLE_PATH / f"{style_name}.txt"
 
-        with open(style_path, 'w', encoding='utf-8') as f:
+        with open(style_path, "w", encoding="utf-8") as f:
             f.write(style_content)
 
 
 class StyleNameDialog(MessageBoxBase):
-    """ 样式名称输入对话框 """
+    """样式名称输入对话框"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.titleLabel = BodyLabel(self.tr('新建样式'), self)
+        self.titleLabel = BodyLabel(self.tr("新建样式"), self)
         self.nameLineEdit = LineEdit(self)
 
-        self.nameLineEdit.setPlaceholderText(self.tr('输入样式名称'))
+        self.nameLineEdit.setPlaceholderText(self.tr("输入样式名称"))
         self.nameLineEdit.setClearButtonEnabled(True)
 
         # 添加控件到布局
@@ -672,8 +761,8 @@ class StyleNameDialog(MessageBoxBase):
         self.viewLayout.addWidget(self.nameLineEdit)
 
         # 设置按钮文本
-        self.yesButton.setText(self.tr('确定'))
-        self.cancelButton.setText(self.tr('取消'))
+        self.yesButton.setText(self.tr("确定"))
+        self.cancelButton.setText(self.tr("取消"))
 
         self.widget.setMinimumWidth(350)
         self.yesButton.setDisabled(True)
