@@ -717,7 +717,7 @@ class TranslatorFactory:
                     update_callback=update_callback,
                 )
             elif translator_type == TranslatorType.GOOGLE:
-                batch_num = 3
+                batch_num = 5
                 return GoogleTranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,
@@ -725,7 +725,7 @@ class TranslatorFactory:
                     update_callback=update_callback,
                 )
             elif translator_type == TranslatorType.BING:
-                batch_num = 3
+                batch_num = 10
                 return BingTranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,
@@ -733,7 +733,7 @@ class TranslatorFactory:
                     update_callback=update_callback,
                 )
             elif translator_type == TranslatorType.DEEPLX:
-                batch_num = 3
+                batch_num = 5
                 return DeepLXTranslator(
                     thread_num=thread_num,
                     batch_num=batch_num,
