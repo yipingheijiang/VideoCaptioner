@@ -16,7 +16,7 @@ def test_openai(base_url, api_key, model):
     try:
         # 创建OpenAI客户端并发送请求到OpenAI API
         response = openai.OpenAI(
-            base_url=base_url, api_key=api_key, timeout=15
+            base_url=base_url, api_key=api_key, timeout=10
         ).chat.completions.create(
             model=model,
             messages=[
@@ -36,7 +36,7 @@ def get_openai_models(base_url, api_key):
     try:
         # 创建OpenAI客户端并获取模型列表
         models = openai.OpenAI(
-            base_url=base_url, api_key=api_key, timeout=10
+            base_url=base_url, api_key=api_key, timeout=5
         ).models.list()
 
         # 根据不同模型设置权重进行排序
