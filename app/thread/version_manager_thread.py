@@ -204,4 +204,4 @@ class VersionManager(QObject):
             self.checkAnnouncement()
             self.checkCompleted.emit()
         except Exception as e:
-            logger.exception("执行版本和公告检查失败: %s", str(e))
+            logger.exception("执行版本和公告检查失败: %s")
