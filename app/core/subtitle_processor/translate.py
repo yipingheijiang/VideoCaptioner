@@ -404,7 +404,10 @@ class GoogleTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        target_lang = self.lang_map.get(self.target_language, "zh-CN")
+        if self.target_language in self.lang_map.values():
+            target_lang = self.target_language
+        else:
+            target_lang = self.lang_map.get(self.target_language, "zh-CN")
 
         for idx, text in subtitle_chunk.items():
             try:
@@ -475,7 +478,10 @@ class BingTranslator(BaseTranslator):
             update_callback=update_callback,
         )
         self.session = requests.Session()
-        self.endpoint = "https://www.bing.com/translator"
+        self.auth_endpoint = "https://edge.microsoft.com/translate/auth"
+        self.translate_endpoint = (
+            "https://api-edge.cognitive.microsofttranslator.com/translate"
+        )
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
         }
@@ -506,14 +512,10 @@ class BingTranslator(BaseTranslator):
     def _init_session(self):
         """初始化会话，获取必要的token"""
         try:
-            response = self.session.get(self.endpoint, timeout=self.timeout)
+            response = self.session.get(self.auth_endpoint, timeout=self.timeout)
             response.raise_for_status()
-            self.url = response.url[:-10]
-            self.ig = re.findall(r'"ig":"(.*?)"', response.text)[0]
-            self.iid = re.findall(r'data-iid="(.*?)"', response.text)[-1]
-            self.key, self.token = re.findall(
-                r'params_AbusePreventionHelper\s=\s\[(.*?),"(.*?)",', response.text
-            )[0]
+            self.auth_token = response.text
+            self.headers["authorization"] = f"Bearer {self.auth_token}"
         except Exception as e:
             logger.error(f"初始化必应翻译会话失败: {str(e)}")
             raise RuntimeError(f"初始化必应翻译会话失败: {str(e)}")
@@ -521,52 +523,76 @@ class BingTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        target_lang = self.lang_map.get(self.target_language, "zh-Hans")
+        if self.target_language in self.lang_map.values():
+            target_lang = self.target_language
+        else:
+            target_lang = self.lang_map.get(self.target_language, "zh-Hans")
+
+        # 准备批量翻译的数据
+        texts_to_translate = []
+        idx_map = []
 
         for idx, text in subtitle_chunk.items():
+            # 检查缓存
+            cache_params = {"target_language": target_lang}
+            cache_result = self.cache_manager.get_translation(
+                text, TranslatorType.BING.value, **cache_params
+            )
+
+            if cache_result:
+                result[idx] = cache_result
+                logger.debug(f"使用缓存的Bing翻译结果：{idx}")
+            else:
+                texts_to_translate.append({"Text": text[:5000]})  # 限制文本长度
+                idx_map.append(idx)
+
+        if texts_to_translate:
             try:
-                # 检查缓存
-                cache_params = {"target_language1": target_lang}
-                cache_result = self.cache_manager.get_translation(
-                    text, TranslatorType.BING.value, **cache_params
-                )
+                params = {
+                    "to": target_lang,
+                    "api-version": "3.0",
+                    "includeSentenceLength": "true",
+                }
 
-                if cache_result:
-                    result[idx] = cache_result
-                    logger.info(f"使用缓存的Bing翻译结果：{idx}")
-                    continue
-
-                text = text[:1000]  # bing translate max length
                 response = self.session.post(
-                    f"{self.url}ttranslatev3?IG={self.ig}&IID={self.iid}",
-                    data={
-                        "fromLang": "auto-detect",
-                        "to": target_lang,
-                        "text": text,
-                        "token": self.token,
-                        "key": self.key,
-                    },
+                    self.translate_endpoint,
+                    params=params,
                     headers=self.headers,
+                    json=texts_to_translate,
                     timeout=self.timeout,
                 )
                 response.raise_for_status()
-                translated_text = response.json()[0]["translations"][0]["text"]
+                translations = response.json()
 
-                # 保存到缓存
-                self.cache_manager.set_translation(
-                    text, translated_text, TranslatorType.BING.value, **cache_params
-                )
+                # 处理翻译结果
+                for i, translation in enumerate(translations):
+                    idx = idx_map[i]
+                    translated_text = translation["translations"][0]["text"]
 
-                result[idx] = translated_text
+                    # 保存到缓存
+                    original_text = texts_to_translate[i]["Text"]
+                    self.cache_manager.set_translation(
+                        original_text,
+                        translated_text,
+                        TranslatorType.BING.value,
+                        **{"target_language": target_lang},
+                    )
+
+                    result[idx] = translated_text
+
             except Exception as e:
-                logger.error(f"必应翻译失败 {idx}: {str(e)}")
-                result[idx] = "ERROR"
+                logger.error(f"必应翻译失败: {str(e)}")
                 # 如果是token过期，尝试重新初始化会话
-                if "token" in str(e).lower():
+                if "token" in str(e).lower() or response.status_code in [401, 403]:
                     try:
                         self._init_session()
                     except Exception as e:
                         logger.error(f"重新初始化必应翻译会话失败: {str(e)}")
+                # 对于失败的翻译，标记为错误
+                for idx in idx_map:
+                    if idx not in result:
+                        result[idx] = "ERROR"
+
         return result
 
 
@@ -617,7 +643,10 @@ class DeepLXTranslator(BaseTranslator):
     def _translate_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """翻译字幕块"""
         result = {}
-        target_lang = self.lang_map.get(self.target_language, "zh").lower()
+        if self.target_language in self.lang_map.values():
+            target_lang = self.target_language
+        else:
+            target_lang = self.lang_map.get(self.target_language, "zh").lower()
 
         for idx, text in subtitle_chunk.items():
             try:
