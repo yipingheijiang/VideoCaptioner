@@ -100,8 +100,8 @@ class TranslatorServiceEnum(Enum):
 
     OPENAI = "OpenAI"
     DEEPLX = "DeepLx 翻译"
-    BING = "Bing 翻译"
-    GOOGLE = "Google 翻译"
+    BING = "微软翻译"
+    GOOGLE = "谷歌翻译"
 
 
 class VadMethodEnum(Enum):
