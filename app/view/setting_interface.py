@@ -247,8 +247,8 @@ class SettingInterface(ScrollArea):
         self.llmServiceCard = ComboBoxSettingCard(
             cfg.llm_service,
             FIF.ROBOT,
-            self.tr("LLM服务"),
-            self.tr("选择LLM服务"),
+            self.tr("LLM服务)"),
+            self.tr("选择大服务，用于字幕断句、字幕优化、字幕翻译（如果选择"),
             texts=[service.value for service in cfg.llm_service.validator.options],
             parent=self.llmGroup,
         )
@@ -289,6 +289,14 @@ class SettingInterface(ScrollArea):
                 "api_base_cfg": cfg.ollama_api_base,
                 "model_cfg": cfg.ollama_model,
                 "default_base": "http://localhost:11434/v1",
+                "default_models": ["qwen2.5:7b"],
+            },
+            LLMServiceEnum.LM_STUDIO: {
+                "prefix": "LM Studio",
+                "api_key_cfg": cfg.lm_studio_api_key,
+                "api_base_cfg": cfg.lm_studio_api_base,
+                "model_cfg": cfg.lm_studio_model,
+                "default_base": "http://localhost:1234/v1",
                 "default_models": ["qwen2.5:7b"],
             },
             LLMServiceEnum.GEMINI: {

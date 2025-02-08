@@ -138,6 +138,10 @@ class TaskFactory:
             base_url = cfg.ollama_api_base.value
             api_key = cfg.ollama_api_key.value
             llm_model = cfg.ollama_model.value
+        elif current_service == LLMServiceEnum.LM_STUDIO:
+            base_url = cfg.lm_studio_api_base.value
+            api_key = cfg.lm_studio_api_key.value
+            llm_model = cfg.lm_studio_model.value
         elif current_service == LLMServiceEnum.GEMINI:
             base_url = cfg.gemini_api_base.value
             api_key = cfg.gemini_api_key.value

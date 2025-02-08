@@ -93,6 +93,12 @@ class Config(QConfig):
     ollama_api_key = ConfigItem("LLM", "Ollama_API_Key", "")
     ollama_api_base = ConfigItem("LLM", "Ollama_API_Base", "http://localhost:11434/v1")
 
+    lm_studio_model = ConfigItem("LLM", "LmStudio_Model", "qwen2.5:7b")
+    lm_studio_api_key = ConfigItem("LLM", "LmStudio_API_Key", "")
+    lm_studio_api_base = ConfigItem(
+        "LLM", "LmStudio_API_Base", "http://localhost:1234/v1"
+    )
+
     gemini_model = ConfigItem("LLM", "Gemini_Model", "gemini-pro")
     gemini_api_key = ConfigItem("LLM", "Gemini_API_Key", "")
     gemini_api_base = ConfigItem(
