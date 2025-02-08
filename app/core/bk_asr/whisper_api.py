@@ -23,7 +23,7 @@ class WhisperAPI(BaseASR):
         use_cache: bool = False,
     ):
         """
-        初始化 WhisperCPPASR
+        初始化 Whisper API
 
         Args:
             audio_path: 音频文件路径
