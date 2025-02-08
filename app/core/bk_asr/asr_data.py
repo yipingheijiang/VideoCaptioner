@@ -314,27 +314,42 @@ class ASRData:
             start_time, end_time = seg.to_ass_ts()
             original = seg.text
             translated = seg.translated_text
-            if layout == "译文在上" and translated:
-                ass_content += dialogue_template.format(
-                    start_time, end_time, "Secondary", original
-                )
-                ass_content += dialogue_template.format(
-                    start_time, end_time, "Default", translated
-                )
-            elif layout == "原文在上" and translated:
-                ass_content += dialogue_template.format(
-                    start_time, end_time, "Secondary", translated
-                )
-                ass_content += dialogue_template.format(
-                    start_time, end_time, "Default", original
-                )
+
+            # 检查是否有译文
+            has_translation = bool(translated and translated.strip())
+
+            if layout == "译文在上":
+                if has_translation:
+                    ass_content += dialogue_template.format(
+                        start_time, end_time, "Secondary", original
+                    )
+                    ass_content += dialogue_template.format(
+                        start_time, end_time, "Default", translated
+                    )
+                else:
+                    ass_content += dialogue_template.format(
+                        start_time, end_time, "Default", original
+                    )
+            elif layout == "原文在上":
+                if has_translation:
+                    ass_content += dialogue_template.format(
+                        start_time, end_time, "Secondary", translated
+                    )
+                    ass_content += dialogue_template.format(
+                        start_time, end_time, "Default", original
+                    )
+                else:
+                    ass_content += dialogue_template.format(
+                        start_time, end_time, "Default", original
+                    )
             elif layout == "仅原文":
                 ass_content += dialogue_template.format(
                     start_time, end_time, "Default", original
                 )
-            elif layout == "仅译文" and translated:
+            elif layout == "仅译文":
+                text = translated if has_translation else original
                 ass_content += dialogue_template.format(
-                    start_time, end_time, "Default", translated
+                    start_time, end_time, "Default", text
                 )
 
         if save_path:
