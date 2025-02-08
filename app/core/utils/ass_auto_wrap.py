@@ -159,33 +159,6 @@ def auto_wrap_ass_file(
     if video_width is None:
         video_width = play_res_x
 
-    # 更新ASS文件中的分辨率设置
-    if video_width is not None:
-        # 检查是否存在PlayResX设置
-        if "PlayResX:" in ass_content:
-            ass_content = re.sub(
-                r"PlayResX:\s*\d+", f"PlayResX: {video_width}", ass_content
-            )
-        else:
-            # 在[Script Info]部分添加PlayResX设置
-            ass_content = ass_content.replace(
-                "[Script Info]",
-                f"[Script Info]\nPlayResX: {video_width}",
-            )
-
-    if video_height is not None:
-        # 检查是否存在PlayResY设置
-        if "PlayResY:" in ass_content:
-            ass_content = re.sub(
-                r"PlayResY:\s*\d+", f"PlayResY: {video_height}", ass_content
-            )
-        else:
-            # 在[Script Info]部分添加PlayResY设置
-            ass_content = ass_content.replace(
-                "[Script Info]",
-                f"[Script Info]\nPlayResY: {video_height}",
-            )
-
     # 计算最大文本宽度（考虑边距）
     max_text_width = int(video_width * 0.99)  # 留出1%的边距
 
