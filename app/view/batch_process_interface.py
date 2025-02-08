@@ -64,7 +64,7 @@ class BatchProcessInterface(QWidget):
         # 任务类型选择
         self.task_type_combo = ComboBox()
         self.task_type_combo.addItems([str(task_type) for task_type in BatchTaskType])
-        self.task_type_combo.setCurrentText(str(BatchTaskType.TRANSCRIBE))
+        self.task_type_combo.setCurrentText(str(BatchTaskType.FULL_PROCESS))
 
         # 控制按钮
         self.add_file_btn = PushButton("添加文件", icon=FIF.ADD)
@@ -204,8 +204,8 @@ class BatchProcessInterface(QWidget):
                 self.task_type_combo.setCurrentText(str(BatchTaskType.SUBTITLE))
                 task_type = BatchTaskType.SUBTITLE
             elif is_media:
-                self.task_type_combo.setCurrentText(str(BatchTaskType.TRANSCRIBE))
-                task_type = BatchTaskType.TRANSCRIBE
+                self.task_type_combo.setCurrentText(str(BatchTaskType.FULL_PROCESS))
+                task_type = BatchTaskType.FULL_PROCESS
 
         # 过滤文件类型
         valid_files = self.filter_files(valid_files, task_type)
