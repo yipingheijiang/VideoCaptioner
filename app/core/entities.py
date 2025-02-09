@@ -99,7 +99,7 @@ class TranscribeModelEnum(Enum):
 class TranslatorServiceEnum(Enum):
     """翻译器服务"""
 
-    OPENAI = "OpenAI"
+    OPENAI = "LLM 大模型翻译"
     DEEPLX = "DeepLx 翻译"
     BING = "微软翻译"
     GOOGLE = "谷歌翻译"
