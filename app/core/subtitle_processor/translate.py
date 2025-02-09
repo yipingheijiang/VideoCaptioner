@@ -27,9 +27,10 @@ from app.core.subtitle_processor.prompt import (
 )
 from app.core.storage.cache_manager import CacheManager
 from app.config import CACHE_PATH
+from app.core.utils.logger import setup_logger
 
 
-logger = logging.getLogger("subtitle_translator")
+logger = setup_logger("subtitle_translator")
 
 
 class TranslatorType(Enum):

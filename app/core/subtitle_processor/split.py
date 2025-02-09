@@ -17,12 +17,14 @@ from app.core.subtitle_processor.prompt import (
     SPLIT_PROMPT_SEMANTIC,
     SPLIT_PROMPT_SENTENCE,
 )
+from app.core.utils.logger import setup_logger
 
-logger = logging.getLogger("subtitle_splitter")
-# logger.setLevel(logging.DEBUG)
+logger = setup_logger("subtitle_splitter")
 
 # 字幕分段的配置常量
 MAX_WORD_COUNT_CJK = 25  # 中日韩文本最大字数
+
+
 MAX_WORD_COUNT_ENGLISH = 18  # 英文文本最大单词数
 SEGMENT_THRESHOLD = 300  # 每个分段的最大字数
 MAX_GAP = 1500  # 允许每个词语之间的最大时间间隔（毫秒）
@@ -458,6 +460,7 @@ class SubtitleSplitter:
             )
             if cached_result:
                 try:
+                    logger.info(f"使用缓存数据进行分段，文本长度: {count_words(txt)}")
                     sentences = json.loads(cached_result)
                     return self._merge_segments_based_on_sentences(segments, sentences)
                 except json.JSONDecodeError as e:
