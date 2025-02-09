@@ -136,10 +136,10 @@ class SubtitleThread(QThread):
                 splitter = SubtitleSplitter(
                     thread_num=subtitle_config.thread_num,
                     model=subtitle_config.llm_model,
-                    temperature=0.1,
+                    temperature=0.3,
                     timeout=60,
                     retry_times=1,
-                    split_type="semantic",
+                    split_type=subtitle_config.split_type,
                     max_word_count_cjk=subtitle_config.max_word_count_cjk,
                     max_word_count_english=subtitle_config.max_word_count_english,
                 )
