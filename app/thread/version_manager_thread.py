@@ -55,7 +55,7 @@ class VersionManager(QObject):
             response = requests.get(url, timeout=30, headers=headers)
             response.raise_for_status()
         except requests.RequestException as e:
-            logger.exception("Failed to fetch version info: %s", e)
+            logger.info("Failed to fetch version info: %s")
             return {}
 
         # 解析 JSON
