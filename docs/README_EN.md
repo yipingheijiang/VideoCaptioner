@@ -46,7 +46,7 @@ For detailed results of subtitle and video synthesis, please refer to the [TED V
 
 The software is lightweight, with a package size of less than 60MB, and includes all necessary environments. Download and run directly.
 
-1. Download the latest version of the executable from the [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) page. Or: [Lanzou Cloud Download](https://wwwm.lanzoue.com/ixsFn2n14bzc)
+1. Download the latest version of the executable from the [Release](https://github.com/WEIFENG2333/VideoCaptioner/releases) page. Or: [Lanzou Cloud Download](https://wwwm.lanzoue.com/iam1L2n8n3za)
 
 2. Open the installer to install.
 

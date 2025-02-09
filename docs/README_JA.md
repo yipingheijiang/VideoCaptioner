@@ -45,7 +45,7 @@ Kaka 字幕アシスタント（VideoCaptioner）は操作が簡単で、高性�
 
 このソフトウェアは軽量で、パッケージサイズは60MB未満であり、必要な環境がすべて含まれています。ダウンロードして直接実行できます。
 
-1. [リリースページ](https://github.com/WEIFENG2333/VideoCaptioner/releases)から最新バージョンの実行ファイルをダウンロードします。または：[Lanzou Cloud Download](https://wwwm.lanzoue.com/ixsFn2n14bzc)
+1. [リリースページ](https://github.com/WEIFENG2333/VideoCaptioner/releases)から最新バージョンの実行ファイルをダウンロードします。または：[Lanzou Cloud Download](https://wwwm.lanzoue.com/iam1L2n8n3za)
 
 2. インストーラーを開いてインストールします。
 
