@@ -997,7 +997,6 @@ class SubtitleSplitter:
         self.is_running = False
         if hasattr(self, "executor") and self.executor is not None:
             try:
-                logger.info("正在关闭线程池")
                 self.executor.shutdown(wait=False, cancel_futures=True)
             except Exception as e:
                 logger.error(f"关闭线程池时出错：{str(e)}")

@@ -14,8 +14,9 @@ from app.core.storage.cache_manager import CacheManager
 from app.core.utils import json_repair
 from app.core.subtitle_processor.alignment import SubtitleAligner
 from app.core.subtitle_processor.prompt import OPTIMIZER_PROMPT
+from app.core.utils.logger import setup_logger
 
-logger = logging.getLogger("subtitle_optimizer")
+logger = setup_logger("subtitle_optimizer")
 
 
 class SubtitleOptimizer:
@@ -86,7 +87,6 @@ class SubtitleOptimizer:
 
             return ASRData(new_segments)
         except Exception as e:
-            raise e
             logger.error(f"优化失败：{str(e)}")
             raise RuntimeError(f"优化失败：{str(e)}")
 
@@ -137,9 +137,9 @@ class SubtitleOptimizer:
 
     def _optimize_chunk(self, subtitle_chunk: Dict[str, str]) -> Dict[str, str]:
         """优化字幕块"""
-        # logger.info(
-        #     f"[+]正在优化字幕：{next(iter(subtitle_chunk))} - {next(reversed(subtitle_chunk))}"
-        # )
+        logger.info(
+            f"[+]正在优化字幕：{next(iter(subtitle_chunk))} - {next(reversed(subtitle_chunk))}"
+        )
         user_prompt = f"Correct the following subtitles. Keep the original language, do not translate:\n<input_subtitle>{str(subtitle_chunk)}</input_subtitle>"
         if self.custom_prompt:
             user_prompt += (
@@ -180,7 +180,6 @@ class SubtitleOptimizer:
 
         # 解析结果
         result: Dict[str, str] = json_repair.loads(response.choices[0].message.content)  # type: ignore
-        print(result)
 
         # 修复字幕对齐
         aligned_result = self._repair_subtitle(subtitle_chunk, result)
@@ -242,7 +241,6 @@ class SubtitleOptimizer:
         self.is_running = False
         if hasattr(self, "executor") and self.executor is not None:
             try:
-                logger.info("正在关闭线程池")
                 self.executor.shutdown(wait=False, cancel_futures=True)
             except Exception as e:
                 logger.error(f"关闭线程池时出错：{str(e)}")
