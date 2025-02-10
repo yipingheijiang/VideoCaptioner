@@ -167,7 +167,7 @@ LLM 大模型是用来字幕段句、字幕优化、以及字幕翻译（如果�
 
 | 配置项 | 说明 |
 |--------|------|
-| SiliconCloud | [SiliconCloud 官网](https://cloud.siliconflow.cn)配置方法请参考[配置文档](./docs/llm_config.md) |
+| SiliconCloud | [SiliconCloud 官网](https://cloud.siliconflow.cn/i/onCHcaDx)配置方法请参考[配置文档](./docs/llm_config.md) |
 | DeepSeek | [DeepSeek 官网](https://platform.deepseek.com) |
 | Ollama | [Ollama 官网](https://ollama.com) |
 | 内置模型 | 内置基础大语言模型（`gpt-4o-mini`）(公益服务不稳定，强烈建议请使用自己的模型API) |
