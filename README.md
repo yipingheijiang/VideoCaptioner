@@ -137,7 +137,7 @@ docker run -d \
 软件利用大语言模型(LLM)在理解上下文方面的优势，对语音识别生成的字幕进一步处理。有效修正错别字、统一专业术语，让字幕内容更加准确连贯，为用户带来出色的观看体验！
 
 #### 1. 多平台视频下载与处理
-- 支持国内外主流视频平台（B站、Youtube等）
+- 支持国内外主流视频平台（B站、Youtube、小红书、TikTok、X、西瓜视频、抖音等）
 - 自动提取视频原有字幕处理
 
 #### 2. 专业的语音识别引擎
@@ -231,7 +231,7 @@ Whisper 版本有 WhisperCpp 和 fasterWhisper（推荐） 两种，后者效果
 
 
 
-### 5. Cookie 配置说明
+### 6. Cookie 配置说明
 
 如果使用URL下载功能时，如果遇到以下情况:
 1. 下载视频网站需要登录信息才可以下载；
@@ -272,12 +272,10 @@ Whisper 版本有 WhisperCpp 和 fasterWhisper（推荐） 两种，后者效果
 - 软字幕：开启后，字幕不会烧录到视频中，处理速度极快。但是软字幕需要一些播放器（如PotPlayer）支持才可以进行显示播放。而且软字幕的样式不是软件内调整的字幕样式，而是播放器默认的白色样式。
 
 
-
-
 安装软件的主要目录结构说明如下：
 ```
 VideoCaptioner/
-├── runtime/                    # 运行环境目录（不用更改）
+├── runtime/                    # 运行环境目录
 ├── resources/               # 软件资源文件目录（二进制程序、图标等,以及下载的faster-whisper程序）
 ├── work-dir/               # 工作目录，处理完成的视频和字幕文件保存在这里
 ├── AppData/                    # 应用数据目录
@@ -401,15 +399,21 @@ VideoCaptioner/
 - 统一和完善软件内部功能
 </details>
 
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=WEIFENG2333/VideoCaptioner&type=Date)](https://star-history.com/#WEIFENG2333/VideoCaptioner&Date)
 
 ## 💖 支持作者
 
 如果觉得项目对你有帮助，可以给项目点个Star，这将是对我最大的鼓励和支持！
 
+<details>
+<summary>捐助支持</summary>
 <div align="center">
   <img src="./docs/images/alipay.jpg" alt="支付宝二维码" width="30%">
   <img src="./docs/images/wechat.jpg" alt="微信二维码" width="30%">
 </div>
+</details>
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=WEIFENG2333/VideoCaptioner&type=Date)](https://star-history.com/#WEIFENG2333/VideoCaptioner&Date)
+
+
