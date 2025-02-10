@@ -167,20 +167,34 @@ LLM 大模型是用来字幕段句、字幕优化、以及字幕翻译（如果�
 
 | 配置项 | 说明 |
 |--------|------|
-| SiliconCloud | [SiliconCloud 官网](https://cloud.siliconflow.cn/i/onCHcaDx)配置方法请参考[配置文档](./docs/llm_config.md) |
-| DeepSeek | [DeepSeek 官网](https://platform.deepseek.com)，建议使用 `deepseek-v3` 模型 |
-| Ollama | [Ollama 官网](https://ollama.com) |
+| SiliconCloud | [SiliconCloud 官网](https://cloud.siliconflow.cn/i/onCHcaDx)配置方法请参考[配置文档](./docs/llm_config.md)<br>该并发较低，建议把线程设置为5以下。 |
+| DeepSeek | [DeepSeek 官网](https://platform.deepseek.com)，建议使用 `deepseek-v3` 模型，<br>最近服务好像并不太稳定。 |
+| Ollama本地 | [Ollama 官网](https://ollama.com) |
+
 | 内置模型 | 内置基础大语言模型（`gpt-4o-mini`）(公益服务不稳定，强烈建议请使用自己的模型API) |
 | OpenAI兼容接口 | 如果有其他服务商的API，可直接在软件中填写。base_url 和api_key |
 
 推荐模型: 追求更高质量可选用 `Claude-3.5-sonnet` 或 `gpt-4o` `deepseek-v3` 等。
 
-注：如果用的 API 服务商不支持高并发，请在软件设置中将“线程数”调低，避免请求速率过大导致服务返回错误。
+注：如果用的 API 服务商不支持高并发，请在软件设置中将“线程数”调低，避免请求错误。
+
+---
+
+如果希望高并发，或者希望在国内使用 OpenAI 或者 Claude 等大模型。可使用本项目的API中转站： [https://api.videocaptioner.cn](https://api.videocaptioner.cn)，其支持高并发，性价比高，且有国内外大量模型可挑选。
+
+注册获取key之后，设置中按照下面配置：
+
+BaseURL: `https://api.videocaptioner.cn/v1`
+
+API-key: `个人中心-API 令牌页面自行获取。`
+
+---
 
 ## 2. 翻译配置
 
 | 配置项 | 说明 |
 |--------|------|
+
 | LLM 大模型翻译 | 🌟 翻译质量最好的选择。使用 AI 大模型进行翻译,能更好理解上下文,翻译更自然。需要在设置中配置 LLM API(比如 OpenAI、DeepSeek 等) |
 | DeepLx 翻译 |  翻译较可靠。基于 DeepL 翻译, 需要要配置自己的后端接口。 |
 | 微软翻译 | 使用微软的翻译服务, 速度非常快 |
