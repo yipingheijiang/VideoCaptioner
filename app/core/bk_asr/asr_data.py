@@ -518,13 +518,14 @@ class ASRData:
         )
         blocks = re.split(r"\n\s*\n", srt_str.strip())
 
-        # 如果超过90%的块都超过4行，说明可能包含翻译文本
+        # 如果超过96%的块都超过4行，说明可能包含翻译文本
         blocks_lines_count = [len(block.splitlines()) for block in blocks]
         if (
-            all(count <= 4 for count in blocks_lines_count)
+            len(blocks_lines_count) > 0
+            and all(count <= 4 for count in blocks_lines_count)
             and sum(count == 4 for count in blocks_lines_count)
             / len(blocks_lines_count)
-            > 0.9
+            >= 0.96
         ):
             has_translated_subtitle = True
         else:
@@ -532,7 +533,7 @@ class ASRData:
 
         for block in blocks:
             lines = block.splitlines()
-            if len(lines) < 3:
+            if len(lines) < 3:  # 至少需要3行：序号、时间戳和文本
                 continue
 
             match = srt_time_pattern.match(lines[1])
@@ -557,7 +558,7 @@ class ASRData:
                 ]
             )
 
-            if has_translated_subtitle:
+            if has_translated_subtitle and len(lines) >= 4:
                 text = lines[2]
                 translated_text = lines[3]
                 segments.append(
