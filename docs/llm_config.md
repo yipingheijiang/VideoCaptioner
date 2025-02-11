@@ -37,7 +37,7 @@ API Key： 将 SiliconCloud 平台的密钥粘贴到此处。
 
 # 中转站配置
 
-1. 先在 [本项目的中转站](https://api.videocaptioner.cn) 注册账号
+1. 先在 [本项目的中转站](https://api.videocaptioner.cn/register?aff=UrLB) 注册账号
 ,通过此链接注册默认赠送 $0.4 测试余额。
 
 2. 然后获取 API Key： [https://api.videocaptioner.cn/token](https://api.videocaptioner.cn/token)
