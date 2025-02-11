@@ -203,9 +203,9 @@ class BatchProcessInterface(QWidget):
             if is_subtitle:
                 self.task_type_combo.setCurrentText(str(BatchTaskType.SUBTITLE))
                 task_type = BatchTaskType.SUBTITLE
-            elif is_media:
-                self.task_type_combo.setCurrentText(str(BatchTaskType.FULL_PROCESS))
-                task_type = BatchTaskType.FULL_PROCESS
+            # elif is_media:
+            #     self.task_type_combo.setCurrentText(str(BatchTaskType.FULL_PROCESS))
+            #     task_type = BatchTaskType.FULL_PROCESS
 
         # 过滤文件类型
         valid_files = self.filter_files(valid_files, task_type)
