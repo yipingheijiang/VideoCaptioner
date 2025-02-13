@@ -50,7 +50,7 @@ BaseURL: `https://api.videocaptioner.cn/v1`
 
 API-key: `上面获取的API Key`
 
-💡 模型选择建议 (本人在各质量层级中精选出的高性价比模型)： 
+💡 模型选择建议 (本人在各质量层级中选出的高性价比模型)： 
 
  - 高质量之选： `claude-3-5-sonnet-20241022` (耗费比例：3) 
 
