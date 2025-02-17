@@ -5,9 +5,10 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from app.core.bk_asr.asr_data import ASRData, from_subtitle_file
+from app.core.bk_asr.asr_data import ASRData
 from app.core.bk_asr.bcut import BcutASR
-from app.core.subtitle_processor.optimization import SubtitleOptimizer
+from app.core.subtitle_processor.optimize import SubtitleOptimizer
+from app.core.subtitle_processor.translate import TranslatorFactory, TranslatorType
 from app.core.utils.video_utils import video2audio
 
 # 配置日志记录
@@ -16,11 +17,11 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler()],
 )
-
 logger = logging.getLogger(__name__)
 
-os.environ["OPENAI_BASE_URL"] = "https://dg.bkfeng.top/v1"
-os.environ["OPENAI_API_KEY"] = "sk-0000"
+# 设置环境变量
+os.environ["OPENAI_BASE_URL"] = os.getenv("OPENAI_BASE_URL")
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 # 设置自定义样式
 st.set_page_config(
@@ -293,7 +294,20 @@ def translation_page():
 
         target_language = st.selectbox(
             "选择要翻译成的目标语言",
-            ["英文", "中文", "日文", "韩文"],
+            [
+                "英语",
+                "简体中文",
+                "繁体中文",
+                "日本語",
+                "韩语",
+                "粤语",
+                "法语",
+                "德语",
+                "西班牙语",
+                "俄语",
+                "葡萄牙语",
+                "土耳其语",
+            ],
             index=0,
             help="选择要将字幕翻译成的目标语言",
         )
@@ -319,7 +333,7 @@ def translation_page():
 
         # 显示原始字幕预览
         with st.expander("原始字幕预览"):
-            asr_data = from_subtitle_file(str(subtitle_path))
+            asr_data = ASRData.from_subtitle_file(str(subtitle_path))
             st.session_state.asr_data = asr_data
             subtitle_json = st.session_state.asr_data.to_json()
             df = pd.DataFrame(
@@ -342,12 +356,13 @@ def translation_page():
                 try:
                     logger.info(f"开始翻译字幕文件: {subtitle_file.name}")
                     # 读取字幕文件
-                    asr_data = from_subtitle_file(str(subtitle_path))
+                    asr_data = ASRData.from_subtitle_file(str(subtitle_path))
 
                     logger.info(f"目标语言: {target_language}")
                     # 创建优化器实例（用于翻译）
-                    optimizer = SubtitleOptimizer(
-                        target_language=target_language, thread_num=5, batch_num=10
+                    translator = TranslatorFactory.create_translator(
+                        translator_type=TranslatorType.BING,
+                        target_language=target_language,
                     )
 
                     # 准备字幕数据
@@ -359,14 +374,8 @@ def translation_page():
 
                     # 执行翻译
                     logger.info("开始多线程翻译")
-                    translated_result = optimizer.optimizer_multi_thread(
-                        subtitle_json, translate=True
-                    )
+                    asr_data = translator.translate_subtitle(asr_data)
                     logger.info("翻译完成")
-
-                    # 更新字幕内容
-                    for i, subtitle_text in translated_result.items():
-                        asr_data.segments[int(i) - 1].text = subtitle_text
 
                     # 保存翻译后的字幕
                     st.session_state.translated_content = asr_data.to_srt()
